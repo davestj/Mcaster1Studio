@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <filter id="sh"><feDropShadow dx="0" dy="1" stdDeviation="0.5" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect x="1" y="1" width="22" height="22" rx="4" fill="#e8f5ee" stroke="#b8dfc8" stroke-width="0.5" filter="url(#sh)"/>
+  <!-- Plus glyph -->
+  <line x1="12" y1="6" x2="12" y2="18" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="6"  y1="12" x2="18" y2="12" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

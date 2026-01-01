@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- DJ surface: vinyl record with headphones suggestion -->
+  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+  <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.2" opacity="0.6"/>
+  <circle cx="12" cy="12" r="2" fill="currentColor"/>
+  <!-- Grooves -->
+  <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="0.8" opacity="0.3"/>
+  <!-- Crossfader line at bottom -->
+  <line x1="5" y1="22" x2="19" y2="22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <rect x="10" y="20" width="4" height="4" rx="1" fill="currentColor"/>
+</svg>

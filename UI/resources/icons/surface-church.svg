@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Church surface: cross + broadcast indicator -->
+  <line x1="12" y1="2" x2="12" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <line x1="7" y1="6" x2="17" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <!-- Church building body -->
+  <path d="M5 14 L5 22 L19 22 L19 14 L12 10 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+  <!-- Door -->
+  <rect x="10" y="18" width="4" height="4" rx="2 2 0 0" fill="currentColor" opacity="0.6"/>
+</svg>

@@ -1,0 +1,12 @@
+// Mcaster1Studio Windows Application Icon Resource
+// Generated from app-icon.ico (PNG-converted from app-icon-256.svg)
+// To regenerate: use ImageMagick or Inkscape to export SVG → ICO:
+//   inkscape --export-type=png --export-width=256 app-icon-256.svg -o tmp256.png
+//   inkscape --export-type=png --export-width=128 app-icon-128.svg -o tmp128.png
+//   inkscape --export-type=png --export-width=64  app-icon-64.svg  -o tmp64.png
+//   inkscape --export-type=png --export-width=48  app-icon-48.svg  -o tmp48.png
+//   inkscape --export-type=png --export-width=32  app-icon-32.svg  -o tmp32.png
+//   inkscape --export-type=png --export-width=16  app-icon-16.svg  -o tmp16.png
+//   magick convert tmp256.png tmp128.png tmp64.png tmp48.png tmp32.png tmp16.png app-icon.ico
+
+IDI_ICON1 ICON "app-icon.ico"

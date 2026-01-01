@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#fef3c7"/>
+      <stop offset="55%"  stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/>
+    </filter>
+    <filter id="ico">
+      <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#92400e" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Cue: vertical bar + play triangle -->
+  <rect x="7" y="9" width="3.5" height="14" rx="1.75" fill="#ffffff" filter="url(#ico)"/>
+  <polygon points="12.5,9 12.5,23 24,16" fill="#ffffff" filter="url(#ico)"/>
+</svg>

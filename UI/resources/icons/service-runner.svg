@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#99f6e4"/>
+      <stop offset="55%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/></filter>
+    <filter id="ico"><feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#115e59" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Clipboard / rundown list -->
+  <rect x="9" y="7" width="14" height="18" rx="2" fill="none" stroke="#fff" stroke-width="1.2" filter="url(#ico)"/>
+  <!-- Clipboard top clip -->
+  <rect x="13" y="5" width="6" height="4" rx="1" fill="#fff" opacity="0.8"/>
+  <!-- List items (checkmarks + lines) -->
+  <circle cx="12" cy="13" r="1.2" fill="#22c55e"/>
+  <line x1="15" y1="13" x2="20" y2="13" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+  <circle cx="12" cy="17" r="1.2" fill="#ef4444"/>
+  <line x1="15" y1="17" x2="20" y2="17" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+  <circle cx="12" cy="21" r="1.2" fill="#fff" opacity="0.4"/>
+  <line x1="15" y1="21" x2="20" y2="21" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+</svg>

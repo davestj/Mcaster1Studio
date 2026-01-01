@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.28)
+add_library(PodAnalyticsModule STATIC PodAnalyticsModule.cpp PodAnalyticsModule.h)
+target_include_directories(PodAnalyticsModule PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(PodAnalyticsModule PUBLIC Mcaster1Core Qt6::Core Qt6::Gui Qt6::Widgets)
+target_compile_definitions(PodAnalyticsModule PRIVATE MCASTER1PLUGIN_EXPORTS)

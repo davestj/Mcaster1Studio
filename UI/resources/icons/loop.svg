@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ede9fe"/>
+      <stop offset="55%"  stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#5b21b6" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Loop circular arrow -->
+  <path d="M7,17 A9,9 0 1,1 23,17" fill="none" stroke="#ffffff" stroke-width="2.5"
+        stroke-linecap="round"/>
+  <!-- Arrow head -->
+  <polygon points="19.5,12 23,17 27,14" fill="#ffffff"/>
+</svg>

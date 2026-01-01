@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="55%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/></filter>
+    <filter id="ico"><feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#78350f" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Podcast microphone (circle head + stick + base) -->
+  <g filter="url(#ico)">
+    <circle cx="16" cy="11.5" r="3.5" fill="none" stroke="#fff" stroke-width="1.6"/>
+    <line x1="16" y1="15" x2="16" y2="20" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M11 17.5 Q11 21.5 16 21.5 Q21 21.5 21 17.5" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>
+    <line x1="16" y1="21.5" x2="16" y2="24" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="12.5" y1="24" x2="19.5" y2="24" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+</svg>

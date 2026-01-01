@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <!-- List lines -->
+  <line x1="1" y1="3"  x2="10" y2="3"  stroke="#6b6560" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="1" y1="7"  x2="10" y2="7"  stroke="#6b6560" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="1" y1="11" x2="7"  y2="11" stroke="#6b6560" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Play triangle -->
+  <polygon points="12,5.5 12,12.5 16,9" fill="#1c5caa"/>
+</svg>

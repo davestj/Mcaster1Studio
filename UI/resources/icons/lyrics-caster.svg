@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bfdbfe"/>
+      <stop offset="55%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/></filter>
+    <filter id="ico"><feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#1e3a8a" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Music note -->
+  <circle cx="12" cy="20" r="2.5" fill="#fff" filter="url(#ico)"/>
+  <line x1="14.5" y1="20" x2="14.5" y2="10" stroke="#fff" stroke-width="1.4"/>
+  <path d="M14.5,10 Q18,8 21,11 Q18,9 14.5,12" fill="#fff"/>
+  <!-- Text lines representing lyrics -->
+  <line x1="18" y1="17" x2="25" y2="17" stroke="#fff" stroke-width="1.0" stroke-linecap="round" opacity="0.8"/>
+  <line x1="18" y1="20" x2="24" y2="20" stroke="#fff" stroke-width="1.0" stroke-linecap="round" opacity="0.6"/>
+  <line x1="18" y1="23" x2="23" y2="23" stroke="#fff" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+</svg>

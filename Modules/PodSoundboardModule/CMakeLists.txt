@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.28)
+add_library(PodSoundboardModule STATIC PodSoundboardModule.cpp PodSoundboardModule.h)
+target_include_directories(PodSoundboardModule PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(PodSoundboardModule PUBLIC Mcaster1Core Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Multimedia)
+target_compile_definitions(PodSoundboardModule PRIVATE MCASTER1PLUGIN_EXPORTS)

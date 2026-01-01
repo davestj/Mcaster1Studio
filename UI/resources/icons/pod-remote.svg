@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bae6fd"/>
+      <stop offset="55%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/></filter>
+    <filter id="ico"><feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#075985" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Two person silhouettes connected by signal waves -->
+  <g filter="url(#ico)">
+    <!-- Person 1 (left) -->
+    <circle cx="9" cy="13" r="2.2" fill="#fff"/>
+    <path d="M5.5 21 Q5.5 17.5 9 17.5 Q12.5 17.5 12.5 21" fill="#fff"/>
+    <!-- Person 2 (right) -->
+    <circle cx="23" cy="13" r="2.2" fill="#fff"/>
+    <path d="M19.5 21 Q19.5 17.5 23 17.5 Q26.5 17.5 26.5 21" fill="#fff"/>
+    <!-- Signal waves between them -->
+    <path d="M13.5 15 Q16 13 18.5 15" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M14.5 12.5 Q16 10 17.5 12.5" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+  </g>
+</svg>

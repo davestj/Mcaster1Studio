@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.28)
+add_library(PodPublisherModule STATIC PodPublisherModule.cpp PodPublisherModule.h)
+target_include_directories(PodPublisherModule PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(PodPublisherModule PUBLIC Mcaster1Core Qt6::Core Qt6::Gui Qt6::Widgets)
+target_compile_definitions(PodPublisherModule PRIVATE MCASTER1PLUGIN_EXPORTS)

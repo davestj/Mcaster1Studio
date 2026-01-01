@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/icons">
+        <!-- Phase 1: placeholder — icons added as surfaces/modules are built -->
+    </qresource>
+</RCC>

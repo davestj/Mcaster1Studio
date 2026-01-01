@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <!-- Microphone body -->
+  <rect x="5.5" y="1" width="5" height="8" rx="2.5" fill="#96897c" stroke="#6b6560" stroke-width="0.5"/>
+  <!-- Arc below mic -->
+  <path d="M3 8c0 2.76 2.24 5 5 5s5-2.24 5-5" stroke="#1c5caa" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Stand -->
+  <line x1="8" y1="13" x2="8" y2="15" stroke="#1c5caa" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="5" y1="15" x2="11" y2="15" stroke="#1c5caa" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- PTT/push indicator dot (red = active) -->
+  <circle cx="12" cy="13" r="2.5" fill="#dc2626"/>
+  <rect x="10.8" y="12.2" width="2.4" height="1.6" rx="0.4" fill="white"/>
+</svg>

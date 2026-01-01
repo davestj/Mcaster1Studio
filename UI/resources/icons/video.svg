@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <!-- Video camera body -->
+  <rect x="1" y="3" width="10" height="10" rx="1.5" fill="none" stroke="#6b6560" stroke-width="1.2"/>
+  <polygon points="4.5,5.5 4.5,10.5 9,8" fill="#1c5caa"/>
+  <!-- Camera lens/tape extension -->
+  <polyline points="11,5.5 15,3.5 15,12.5 11,10.5" fill="none" stroke="#6b6560" stroke-width="1.2" stroke-linejoin="round"/>
+</svg>

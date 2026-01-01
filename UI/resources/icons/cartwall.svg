@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <!-- 2x2 grid of cart buttons -->
+  <rect x="1" y="1" width="6" height="6" rx="1" fill="#4a7a3a" stroke="#6b6560" stroke-width="0.6"/>
+  <rect x="9" y="1" width="6" height="6" rx="1" fill="#3a5a7a" stroke="#6b6560" stroke-width="0.6"/>
+  <rect x="1" y="9" width="6" height="6" rx="1" fill="#7a5a3a" stroke="#6b6560" stroke-width="0.6"/>
+  <rect x="9" y="9" width="6" height="6" rx="1" fill="#6a3a6a" stroke="#6b6560" stroke-width="0.6"/>
+  <!-- Play triangles in each cell -->
+  <polygon points="3,2.5 3,5.5 5.5,4" fill="white" opacity="0.8"/>
+  <polygon points="11,2.5 11,5.5 13.5,4" fill="white" opacity="0.8"/>
+  <polygon points="3,10.5 3,13.5 5.5,12" fill="white" opacity="0.8"/>
+  <polygon points="11,10.5 11,13.5 13.5,12" fill="white" opacity="0.8"/>
+</svg>

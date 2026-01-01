@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56">
+  <filter id="sh"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.2"/></filter>
+  <!-- Vinyl body (conventionally dark) -->
+  <circle cx="28" cy="28" r="26" fill="#2a2a2a" stroke="#555" stroke-width="0.5" filter="url(#sh)"/>
+  <!-- Groove rings -->
+  <circle cx="28" cy="28" r="23" fill="none" stroke="#3a3a3a" stroke-width="0.7"/>
+  <circle cx="28" cy="28" r="20" fill="none" stroke="#3a3a3a" stroke-width="0.6"/>
+  <circle cx="28" cy="28" r="17" fill="none" stroke="#3a3a3a" stroke-width="0.5"/>
+  <circle cx="28" cy="28" r="14" fill="none" stroke="#3a3a3a" stroke-width="0.4"/>
+  <!-- Label area: cream color (visible contrast against dark vinyl) -->
+  <circle cx="28" cy="28" r="10" fill="#f0e8d0" stroke="#c8b890" stroke-width="0.5"/>
+  <!-- Center spindle hole -->
+  <circle cx="28" cy="28" r="2" fill="#1a1814"/>
+</svg>

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "mcaster1studio",
+  "version": "0.1.0",
+  "description": "Mcaster1Studio - Broadcast Automation Software Suite",
+  "dependencies": [
+    {
+      "name": "portaudio",
+      "features": ["asio"]
+    },
+    "opus",
+    "libopusenc",
+    "libvorbis",
+    "libogg",
+    "libflac",
+    "fdk-aac",
+    "curl",
+    "openssl",
+    "libxml2",
+    "libyaml",
+    "libmariadb",
+    "sqlite3",
+    "taglib",
+    "zlib",
+    "libiconv",
+    {
+      "name": "ffmpeg",
+      "features": ["avcodec", "avformat", "avdevice", "avfilter", "swresample", "swscale", "opus", "vpx", "x264", "gpl"]
+    }
+  ]
+}

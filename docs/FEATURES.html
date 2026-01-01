@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mcaster1Studio — Feature Reference</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#0c1a2e; --raised:#1e3a5f;
+    --blue:#0ea5e9; --cyan:#38bdf8; --green:#22c55e;
+    --red:#ef4444; --amber:#f59e0b; --purple:#a78bfa;
+    --text:#e2e8f0; --muted:#64748b; --border:#1e3a5f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Inter,Arial,sans-serif;
+       font-size:14px;line-height:1.6;padding:24px 32px;max-width:1300px;margin:0 auto}
+  h1{color:var(--cyan);font-size:2rem;margin-bottom:4px;letter-spacing:-0.5px}
+  h2{color:var(--cyan);font-size:1.15rem;margin:36px 0 10px;
+     border-bottom:1px solid var(--border);padding-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+  h3{color:var(--blue);font-size:1rem;margin:18px 0 6px}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:28px}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{color:var(--cyan)}
+
+  .badge{display:inline-block;border-radius:12px;padding:2px 10px;
+         font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+  .done  {background:#14532d;color:#4ade80;border:1px solid #16a34a}
+  .wip   {background:#1e3a5f;color:#38bdf8;border:1px solid #0ea5e9}
+  .pend  {background:#1c1917;color:#78716c;border:1px solid #44403c}
+  .new   {background:#4a1d96;color:#c4b5fd;border:1px solid #7c3aed}
+
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0 20px}
+  th{background:var(--raised);color:var(--cyan);padding:7px 12px;text-align:left;
+     font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;
+     border-bottom:1px solid var(--blue)}
+  td{padding:7px 12px;border-bottom:1px solid #0d1a2e;color:var(--text);vertical-align:top}
+  tr:hover td{background:#0a1422}
+
+  code{background:#060d18;border:1px solid #1e293b;border-radius:3px;
+       padding:1px 5px;font-family:"Consolas","Courier New",monospace;
+       font-size:.84em;color:var(--cyan)}
+
+  .box{background:var(--panel);border:1px solid var(--border);
+       border-left:3px solid var(--blue);border-radius:4px;
+       padding:10px 14px;margin:10px 0;font-size:.88rem;color:#94a3b8}
+  .box.g{border-left-color:var(--green)}
+  .box.a{border-left-color:var(--amber)}
+  .box.r{border-left-color:var(--red)}
+  .box.p{border-left-color:var(--purple)}
+
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media(max-width:900px){.cols2,.cols3{grid-template-columns:1fr}}
+
+  ul{margin:6px 0 10px 20px;color:#94a3b8;font-size:.88rem;line-height:1.7}
+  ul li strong{color:var(--text)}
+
+  .feature-card{background:var(--panel);border:1px solid var(--border);
+    border-radius:6px;padding:14px 16px;margin-bottom:12px}
+  .feature-card h3{margin-top:0;color:var(--cyan)}
+  .feature-card ul{margin-top:6px}
+
+  footer{margin-top:56px;color:var(--muted);font-size:.8rem;
+         border-top:1px solid var(--border);padding-top:12px}
+</style>
+</head>
+<body>
+
+<h1>Mcaster1Studio</h1>
+<p class="sub">Feature Reference &mdash; All implemented capabilities &mdash; Last updated: 2026-03-10 (v0.2.0)</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Window &amp; Shell</h2>
+<div class="cols2">
+<div class="feature-card">
+  <h3>AppRibbon <span class="badge new">Phase B</span></h3>
+  <ul>
+    <li><strong>48px window-level ribbon</strong> above all surface tabs</li>
+    <li><strong>Drag-drop RibbonBox widgets</strong> — reorder by dragging the grip handle; blue drop indicator</li>
+    <li><strong>Hover ×</strong> to remove any ribbon box</li>
+    <li><strong>+ Add button</strong> — inline picker: Clock · Weather · VU Meter</li>
+    <li><strong>● ON AIR toggle</strong> — checkable, turns red when active</li>
+    <li>MIME: <code>application/x-m1-ribbon-box</code></li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Surface Tabs <span class="badge done">Phase 1–A</span></h3>
+  <ul>
+    <li>One tab per open surface; minimum one always kept</li>
+    <li><strong>+ button</strong> opens Surfaces menu to add any surface type</li>
+    <li><strong>Double-click</strong> tab to inline-rename</li>
+    <li><strong>Right-click</strong> tab → <strong>Add Module ▶</strong> submenu (14 modules) <span class="badge new">Phase B</span></li>
+    <li>Right-click → Rename / Close Surface</li>
+    <li>Custom Surface dialog: name + module checkbox list</li>
+    <li>Session persistence — open surfaces restored on next launch</li>
+  </ul>
+</div>
+</div>
+
+<h2>Ribbon Box Widgets</h2>
+<div class="cols3">
+<div class="feature-card">
+  <h3>Clock Widget <span class="badge done">Phase A</span></h3>
+  <ul>
+    <li>Ticking live clock — HH:MM:SS</li>
+    <li>Timezone selector (any Qt-supported TZ)</li>
+    <li>Shows timezone abbreviation below time</li>
+    <li>Right-click to configure timezone</li>
+    <li>Also available as full surface module</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Weather Widget <span class="badge new">Phase B</span></h3>
+  <ul>
+    <li>Free data from <code>wttr.in</code> — no API key required</li>
+    <li>Shows city name, temperature, condition description</li>
+    <li>Auto-refresh every 30 minutes</li>
+    <li>Right-click → Configure: city/zip, °F or °C</li>
+    <li>Settings persisted in QSettings per instance</li>
+    <li>Graceful "Unavailable" error state</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Compact VU Meter <span class="badge new">Phase B</span></h3>
+  <ul>
+    <li>120×44px horizontal L/R bars with segmented fill</li>
+    <li>Peak-hold tick per channel</li>
+    <li>Device name label (truncated)</li>
+    <li>Fed from <code>EventBus::audioLevelsChanged</code></li>
+    <li>Same <code>VUMeterWidget</code> class — <code>setCompact(true)</code> mode</li>
+  </ul>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Surface Layout</h2>
+<div class="cols2">
+<div class="feature-card">
+  <h3>Surface Ribbon <span class="badge done">Phase A</span></h3>
+  <ul>
+    <li>Per-surface 32px strip at top of each surface</li>
+    <li>Surface name label (left)</li>
+    <li>ON AIR indicator button</li>
+    <li>Action buttons (configurable)</li>
+    <li>Pinned Clock widget (right) — independent timezone per surface</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Module Docks <span class="badge done">Phase 4</span></h3>
+  <ul>
+    <li>Horizontal <code>QSplitter</code> — resize modules by dragging handles</li>
+    <li><strong>Drag title bar</strong> to reorder; blue drop indicator line</li>
+    <li><strong>Float</strong> dock to free-floating Tool window; re-dock by dropping back</li>
+    <li><strong>Pin</strong> to lock position</li>
+    <li><strong>Minimize to tray</strong> — chip appears in bottom tray strip</li>
+    <li><strong>Close</strong> — removes module from surface</li>
+    <li>Each dock shows module icon + display name in title bar</li>
+  </ul>
+</div>
+</div>
+
+<div class="cols2">
+<div class="feature-card">
+  <h3>Surface Tray <span class="badge done">Phase A</span></h3>
+  <ul>
+    <li>40px strip at bottom of every surface</li>
+    <li><strong>Pinned area (left)</strong> — LOG button, SCHED button, any custom widgets</li>
+    <li><strong>Minimized area (right)</strong> — scrollable chips; click chip to restore dock</li>
+    <li>LOG button shows unread count badge in real-time</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Surface Event Log <span class="badge done">Phase A</span></h3>
+  <ul>
+    <li>Per-surface timestamped event log (up to 2000 entries)</li>
+    <li>Color-coded categories: ERROR · SCHED · DECK · ENCODER</li>
+    <li>Floating dialog with live updates and Clear button</li>
+    <li>Unread count badge on LOG tray button</li>
+    <li>All module actions automatically logged</li>
+  </ul>
+</div>
+</div>
+
+<div class="feature-card">
+  <h3>Surface Automation Scheduler <span class="badge done">Phase A</span></h3>
+  <ul>
+    <li>Per-surface time-triggered event scheduler (30-second poll resolution)</li>
+    <li>Event types: <strong>Load Playlist · Insert Jingle · Insert Video · Load Media · Run Command</strong></li>
+    <li>Each event: time, label, target file/data, one-shot or repeating</li>
+    <li>Enable/disable individual events without removing them</li>
+    <li>Full editor dialog via SCHED tray button</li>
+    <li>Fires signals: <code>loadPlaylist · insertJingle · insertVideo · loadMedia · eventFired</code></li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Module Reference</h2>
+
+<table>
+  <tr>
+    <th>Module</th><th>Plugin ID</th><th>Key Features</th><th>Status</th>
+  </tr>
+  <tr>
+    <td><strong>VU Meter</strong></td>
+    <td><code>com.mcaster1.vumeter</code></td>
+    <td>
+      Stereo VU/PPM bars · segmented fill · peak hold (3s) · clip LED ·
+      20 fps smooth ballistics · compact ribbon mode (horizontal bars) ·
+      device name label · surface mode or ribbon box mode
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Deck A / B / Combined</strong></td>
+    <td><code>com.mcaster1.deck</code> / <code>.deck.a</code> / <code>.deck.b</code></td>
+    <td>
+      Dual transport player · track history list · BPM detect · pitch/speed control ·
+      crossfader (A&#8596;B) · cue point · loop · 4 hot cue pads · 3-band EQ ·
+      hi-res inline VU meter (smooth gradient fill, 30fps, 3-zone coloring) ·
+      browser tabs (History/Library/Playlist/Queue) · HTTP stream playback (FFmpeg + ICY) ·
+      smart play button (empty deck menu) · drag-from-library · AutoDJ hand-off ·
+      rich metadata extraction (TagLib: artist/title/album/genre/year/BPM)
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Media Library</strong></td>
+    <td><code>com.mcaster1.library</code></td>
+    <td>
+      SQLite (default) or MySQL/MariaDB backend · TagLib scanner · folder watch · search/filter ·
+      MusicBrainz lookup · drag to deck (text/uri-list) · right-click to deck A or B
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Encoder</strong></td>
+    <td><code>com.mcaster1.encoder</code></td>
+    <td>
+      8 simultaneous slots · 7 codecs (MP3/Opus/Vorbis/FLAC/AAC-LC/HE-AAC-v1/HE-AAC-v2) ·
+      7-state machine (Idle/Starting/Connecting/Streaming/Reconnecting/Sleep/Error) ·
+      Icecast2 / Shoutcast / Mcaster1DNAS · ICY 1.x + ICY 2.2 metadata push ·
+      per-slot DSP chain (10-band EQ + AGC + PTT duck) · lock-free SPSC ring buffer ·
+      hi-res VU meter panel (per-slot L/R bars, broadcast ballistics) ·
+      QTableWidget list-view UI · 5-tab config dialog · DnasPoller live listener stats ·
+      auto-reconnect watchdog with sleep/wake
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Effects Rack</strong></td>
+    <td><code>com.mcaster1.effects</code></td>
+    <td>
+      19" virtual rack UI · IEffectUnit DLL ABI · bypass per slot ·
+      RT chain in audio callback · 6 built-in DSP units: EQ31 · Sonic Maximizer ·
+      Compressor/Limiter · AGC · Mic Preamp · Stereo Width
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Metadata</strong></td>
+    <td><code>com.mcaster1.metadata</code></td>
+    <td>
+      ICY 2.2 full editor — 70+ fields across 8 groups (Station · Show · Track · DJ ·
+      Social · Podcast · Broadcast · Content) · HTTP PUT push to DNAS ·
+      ICY 1.x StreamTitle= always sent for compatibility
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Playlist / AutoDJ</strong></td>
+    <td><code>com.mcaster1.playlist</code></td>
+    <td>
+      Clock template editor · category-based rotation · artist/title separation ·
+      AutoDJ mode (auto-advances on track end) · drag-and-drop queue reorder ·
+      broadcast logger
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Push-to-Talk</strong></td>
+    <td><code>com.mcaster1.ptt</code></td>
+    <td>
+      Latched and momentary modes · mic gain · RT mix into audio callback chain ·
+      keyboard shortcut binding · LED indicator
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Podcast</strong></td>
+    <td><code>com.mcaster1.podcast</code></td>
+    <td>
+      Multi-track recorder (up to 4 tracks) · lock-free SPSC ring buffers ·
+      WAV export · chapter markers · 20ms drain timer · works alongside PTT
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Video</strong></td>
+    <td><code>com.mcaster1.video</code></td>
+    <td>
+      QMediaPlayer-based player · video playlist · RTMP output stub ·
+      social cast integration · fullscreen preview
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Stream Monitor</strong></td>
+    <td><code>com.mcaster1.monitor</code></td>
+    <td>
+      Polls Icecast2 / Shoutcast / Mcaster1DNAS servers · listener count chart
+      (60-sample ring buffer) · custom QPainter chart widget · configurable poll interval
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Clock</strong></td>
+    <td><code>com.mcaster1.clock</code></td>
+    <td>
+      Ticking HH:MM:SS display · timezone selector · compact ribbon widget ·
+      independent instance per surface; also default-pinned to each surface ribbon
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Cart Wall</strong></td>
+    <td><code>com.mcaster1.cartwall</code></td>
+    <td>
+      Instant-play audio grid (4&times;4 default, up to 8&times;8) · CartPlayer (QAudioDecoder &rarr; float32 PCM) ·
+      colored grid buttons with play indicator · F1&ndash;F12 shortcuts ·
+      integrated into RT audio callback chain after PTT
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Queue (AutoDJ)</strong></td>
+    <td><code>com.mcaster1.queue</code></td>
+    <td>
+      Track queue for AutoDJ mode · drag-and-drop reorder · feeds Deck A on track end ·
+      wired to Playlist rotation engine
+    </td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td colspan="4" style="background:#1e3a5f;color:#38bdf8;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px">Church Surface Modules (12)</td>
+  </tr>
+  <tr>
+    <td><strong>Timer / Clock</strong></td>
+    <td><code>com.mcaster1.church.timerclock</code></td>
+    <td>Countdown/count-up service timers · configurable presets · visual time alerts</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Graphics Engine</strong></td>
+    <td><code>com.mcaster1.church.graphics</code></td>
+    <td>Central rendering pipeline for visual overlays (lyrics, scripture, announcements)</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Lyrics Caster</strong></td>
+    <td><code>com.mcaster1.church.lyrics</code></td>
+    <td>Worship lyrics display · verse/chorus navigation · CCLI song database integration · GraphicsEngine output</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Scripture Caster</strong></td>
+    <td><code>com.mcaster1.church.scripture</code></td>
+    <td>Bible verse display · book/chapter/verse navigation · multiple translations · GraphicsEngine output</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Announce Caster</strong></td>
+    <td><code>com.mcaster1.church.announce</code></td>
+    <td>Announcement/bulletin overlay · rich text · scheduling · rotation · GraphicsEngine output</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>TelePrompter</strong></td>
+    <td><code>com.mcaster1.church.teleprompt</code></td>
+    <td>Scrolling teleprompter · adjustable speed/size/mirroring · sermon notes · GraphicsEngine binding</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Media Caster</strong></td>
+    <td><code>com.mcaster1.church.mediacaster</code></td>
+    <td>Video/image overlay source · backgrounds · loops · media playback · GraphicsEngine output</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Stage Monitor</strong></td>
+    <td><code>com.mcaster1.church.stagemon</code></td>
+    <td>Confidence monitor: current lyrics, next slide, timer, notes · for worship team stage display</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Audio Mixer</strong></td>
+    <td><code>com.mcaster1.church.audiomix</code></td>
+    <td>Multi-channel church audio mixer · per-channel gain/mute/solo/EQ/aux sends · master bus</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Transcription Recorder</strong></td>
+    <td><code>com.mcaster1.church.transcriberec</code></td>
+    <td>Live sermon transcription recorder · PTT integration · SPSC ring buffer · WAV export</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Production Switcher</strong></td>
+    <td><code>com.mcaster1.church.switchcaster</code></td>
+    <td>Program/Preview bus · Cut/Dissolve/Fade-to-Black transitions · lower third · all visual source module bindings · 10fps preview / 60fps transition</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Service Runner</strong></td>
+    <td><code>com.mcaster1.church.servicerunner</code></td>
+    <td>Service rundown with timed segments (Welcome/Worship/Prayer/Scripture/Sermon/Offering/etc.) · auto-advance · TimerClock integration · JSON template save/load</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td colspan="4" style="background:#1e3a5f;color:#38bdf8;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px">Podcast Surface Modules (13)</td>
+  </tr>
+  <tr>
+    <td><strong>Podcast Mixer</strong></td>
+    <td><code>com.mcaster1.podcast.mixer</code></td>
+    <td>6-channel mixer (Host, Guest 1-2, Soundboard, Music, Phone) · per-channel gain/volume/pan/mute/solo/EQ/aux · VU bars · master bus · headphone volume</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Podcast PTT</strong></td>
+    <td><code>com.mcaster1.podcast.ptt</code></td>
+    <td>Enhanced Push-to-Talk · Hold/Toggle/AlwaysOn modes · Cough button · Talkback · VAD (voice activity detection) · full DSP params</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Podcast Recorder</strong></td>
+    <td><code>com.mcaster1.podcast.recorder</code></td>
+    <td>Multi-track WAV recorder · show/episode metadata · markers with labels · take management · time display · ring buffer recording · WAV header writing</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Podcast Soundboard</strong></td>
+    <td><code>com.mcaster1.podcast.soundboard</code></td>
+    <td>Sound pad grid with banks (Intro/Outro, Sound FX, Music Beds) · QMediaPlayer per pad · OneShot/Toggle/Loop modes · custom colors · keyboard shortcuts · JSON serialization</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Podcast Effects</strong></td>
+    <td><code>com.mcaster1.podcast.fx</code></td>
+    <td>7-processor voice FX chain: Noise Gate, Compressor, De-Esser, Parametric EQ, High-Pass Filter, Limiter, LUFS Meter · per-processor bypass · reorderable chain · RT-safe DSP</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Podcast Editor</strong></td>
+    <td><code>com.mcaster1.podcast.editor</code></td>
+    <td>DAW-style waveform editor · timeline with markers · region selection · cut/trim stubs · playback with position indicator · zoom/scroll · QMediaPlayer backend</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Podcast Encoder</strong></td>
+    <td><code>com.mcaster1.podcast.encode</code></td>
+    <td>Multi-format export (MP3/AAC/OGG/FLAC/Opus) · bitrate/samplerate/channels config · ID3 metadata form · LUFS normalization target · job queue with progress</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Podcast Transcription</strong></td>
+    <td><code>com.mcaster1.podcast.transcribe</code></td>
+    <td>Transcript segment editor (time/speaker/text/confidence) · speaker labels · SRT/VTT export · chapter marker generation · Whisper integration (v2)</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Show Notes</strong></td>
+    <td><code>com.mcaster1.podcast.shownotes</code></td>
+    <td>WYSIWYG editor · bold/italic/link/timestamp toolbar · templates (Standard/Interview/Solo) · chapter markers · resource links · guest bios · HTML/Markdown/text export</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>RSS Feed</strong></td>
+    <td><code>com.mcaster1.podcast.rss</code></td>
+    <td>RSS 2.0 + iTunes namespace feed generator · show settings · episode table · feed validation · XML preview · file export</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Publisher</strong></td>
+    <td><code>com.mcaster1.podcast.publisher</code></td>
+    <td>Multi-target publishing: Local Copy (v1), SFTP/FTP/HTTP (v2) · target management · per-target progress</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Podcast Analytics</strong></td>
+    <td><code>com.mcaster1.podcast.analytics</code></td>
+    <td>Episode stats dashboard · downloads/subscribers/growth trend · bar chart · episode data table · CSV export</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td><strong>Remote Guests</strong></td>
+    <td><code>com.mcaster1.podcast.remote</code></td>
+    <td>Up to 4 remote guests · status indicators · audio level bars · mute/admit controls · join URL generation · WebRTC (v2)</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+  <tr>
+    <td colspan="4" style="background:#1e3a5f;color:#38bdf8;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px">System Modules</td>
+  </tr>
+  <tr>
+    <td><strong>System Health</strong></td>
+    <td><code>com.mcaster1.health</code></td>
+    <td>CPU/memory monitoring · encoder status summary · deck status · 2s refresh · Prometheus /metrics endpoint (v2)</td>
+    <td><span class="badge done">&#10003; Done</span></td>
+  </tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Theming</h2>
+<div class="cols3">
+<div class="feature-card">
+  <h3>Dark (Default)</h3>
+  <ul>
+    <li>Deep navy (#0f172a) background</li>
+    <li>Sky-blue (#0ea5e9) accents + borders</li>
+    <li>Broadcast green (#22c55e) for play/active states</li>
+    <li>Segmented VU bars: green → amber → red</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Classic — SAM Broadcaster Style</h3>
+  <ul>
+    <li>Warm dark brown (#2a1e14) background</li>
+    <li>Amber gold (#d4891e) accents</li>
+    <li>Chrome/nickel gradient buttons</li>
+    <li>Cream (#f0e6d8) primary text</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Enterprise Pro — Light</h3>
+  <ul>
+    <li>White/sand (#fdf8f0) background</li>
+    <li>Steel blue (#2980b9) accents</li>
+    <li>Tan/gold ribbon and tray gradients</li>
+    <li>Dark navy text (#2c3e50)</li>
+  </ul>
+</div>
+</div>
+<p style="color:var(--muted);font-size:.85rem;margin-top:4px">
+  Theme selectable live via <strong>File → Preferences → Appearance</strong>. No restart required.
+  Applied via <code>QApplication::setStyleSheet()</code> using <code>objectName</code>-based QSS selectors.
+</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Audio Engine</h2>
+<table>
+  <tr><th>Feature</th><th>Detail</th></tr>
+  <tr><td>Audio I/O</td><td>PortAudio 19.7 with ASIO SDK support</td></tr>
+  <tr><td>RT callback chain</td><td>deck → PTT → cartwall → effects → podcast → encoder (strict order)</td></tr>
+  <tr><td>Peak metering</td><td><code>std::atomic&lt;float&gt;</code> — RT safe, post-gain measurement, polled at 20-30fps by VU timers</td></tr>
+  <tr><td>EventBus</td><td><code>audioLevelsChanged(inL, inR, outL, outR)</code> — queued connection to Qt thread</td></tr>
+  <tr><td>Thread safety</td><td>No Qt calls, no allocation, no mutex waits in <code>onAudioBlock()</code></td></tr>
+  <tr><td>Sample rates</td><td>44100 / 48000 Hz (configurable in Preferences)</td></tr>
+  <tr><td>Buffer sizes</td><td>128 / 256 / 512 / 1024 frames (configurable)</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>ICY Protocol Compliance</h2>
+<div class="box r">
+  <strong>Non-negotiable:</strong> ALL encoder targets MUST always send ICY 1.x <code>StreamTitle=</code>
+  even when also sending ICY 2.2. Backward compatibility is mandatory.
+</div>
+<table>
+  <tr><th>Server</th><th>ICY 1.x</th><th>ICY 2.2</th><th>Push Method</th></tr>
+  <tr><td>Icecast2</td><td>✅ Required</td><td>❌ N/A</td><td>HTTP GET <code>/admin/metadata?mode=updinfo&amp;song=…</code></td></tr>
+  <tr><td>Shoutcast v1/v2</td><td>✅ Required</td><td>❌ N/A</td><td>In-stream at icy-metaint boundaries</td></tr>
+  <tr><td>Mcaster1DNAS</td><td>✅ Required</td><td>✅ Required</td><td>HTTP PUT + <code>Icy-Version: 2.2</code> header</td></tr>
+</table>
+
+<h3>ICY 2.2 Groups (70+ fields)</h3>
+<table>
+  <tr><th>Group</th><th>Prefix</th><th>Key Fields</th></tr>
+  <tr><td>1 — Station</td><td><code>icy2-station-*</code></td><td>id · name · logo · genre · url · language</td></tr>
+  <tr><td>2 — Show</td><td><code>icy2-show-*</code></td><td>title · host · start · end · next · description</td></tr>
+  <tr><td>3 — Track</td><td><code>icy2-track-*</code></td><td>title · artist · album · year · genre · artwork · bpm · key · isrc · mbid · label</td></tr>
+  <tr><td>4 — DJ</td><td><code>icy2-dj-*</code></td><td>handle · name · bio · avatar · website · email</td></tr>
+  <tr><td>5 — Social</td><td><code>icy2-social-*</code></td><td>twitter · instagram · tiktok · youtube · facebook · twitch · linktree · hashtags</td></tr>
+  <tr><td>6 — Podcast</td><td><code>icy2-podcast-*</code></td><td>title · episode · season · feed · guid · duration · chapter</td></tr>
+  <tr><td>7 — Broadcast</td><td><code>icy2-broadcast-*</code></td><td>mode · relay · cdn · lufs · codec · samplerate · channels</td></tr>
+  <tr><td>8 — Content</td><td><code>icy2-content-*</code></td><td>explicit · live · type (radio|tv|podcast|socialcast) · rating</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>SDK / Plugin System</h2>
+<div class="box p">
+  Third-party modules are DLLs exporting a C ABI. The SDK interface library at
+  <code>SDK/include/</code> provides all headers needed to build external plugins.
+</div>
+<table>
+  <tr><th>Export</th><th>Purpose</th></tr>
+  <tr><td><code>mcaster1_plugin_info()</code></td><td>Returns <code>Mcaster1PluginInfo*</code> — API version, ID, name, type</td></tr>
+  <tr><td><code>mcaster1_create_module(IModuleHost*)</code></td><td>Factory — creates and returns a new <code>IModule*</code></td></tr>
+  <tr><td><code>mcaster1_destroy_module(IModule*)</code></td><td>Cleanup</td></tr>
+  <tr><td><code>mcaster1_create_effect(void*)</code></td><td>DSP unit factory (optional)</td></tr>
+  <tr><td><code>mcaster1_destroy_effect(IEffectUnit*)</code></td><td>DSP cleanup (optional)</td></tr>
+</table>
+<p style="color:var(--muted);font-size:.85rem;margin-top:6px">
+  See <code>SDK/examples/SampleModule/</code> for a working minimal module DLL.
+  Module DLLs placed in <code>plugins/modules/</code> are discovered at startup.
+</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Known Refinements Pending (Phase C)</h2>
+<div class="box a">
+  <ul style="margin-top:6px">
+    <li>AppRibbon box sizing and spacing visual polish</li>
+    <li>WeatherWidget live-data end-to-end test with real location</li>
+    <li>Compact VU rendering verification against real audio levels</li>
+    <li>Drag-drop indicator position fine-tuning in AppRibbon</li>
+    <li>Prevent duplicate singleton modules via tab right-click Add Module</li>
+    <li>Ribbon box persistence — save/restore which boxes are open across sessions</li>
+    <li>ON AIR button wiring to encoder slot active state</li>
+    <li>ModuleDock collapse button (title-bar ▼/▶ to shrink content area)</li>
+    <li>Surface splitter size persistence across sessions</li>
+    <li>Status bar now-playing track + encoder count live updates</li>
+    <li>EffectsRack pre-populate 3 default units on first load</li>
+  </ul>
+</div>
+
+<footer>
+  Mcaster1Studio v0.2.0-alpha &middot;
+  Phases 1&ndash;11 + A&ndash;I + CH + PD + HL complete &middot;
+  Last updated: 2026-03-10 &middot;
+  <a href="https://mcaster1.com">mcaster1.com</a>
+</footer>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c7d2fe"/>
+      <stop offset="55%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/></filter>
+    <filter id="ico"><feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#312e81" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Small mic icon on the left, text lines on the right -->
+  <g filter="url(#ico)">
+    <!-- Small microphone -->
+    <rect x="7.5" y="12" width="3" height="5" rx="1.5" fill="#fff"/>
+    <path d="M6.5 16 Q6.5 19 9 19 Q11.5 19 11.5 16" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+    <line x1="9" y1="19" x2="9" y2="21" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+    <line x1="7" y1="21" x2="11" y2="21" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+    <!-- Text lines -->
+    <line x1="14" y1="13" x2="25" y2="13" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="14" y1="16.5" x2="25" y2="16.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="14" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+</svg>

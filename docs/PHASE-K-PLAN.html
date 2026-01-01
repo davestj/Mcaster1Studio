@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase K — Surface Isolation, Multi-Monitor &amp; Display Management</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#0c1a2e; --raised:#1e3a5f;
+    --blue:#0ea5e9; --cyan:#38bdf8; --green:#22c55e;
+    --red:#ef4444; --amber:#f59e0b; --purple:#a78bfa;
+    --text:#e2e8f0; --muted:#64748b; --border:#1e3a5f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Inter,Arial,sans-serif;
+       font-size:14px;line-height:1.6;padding:24px 32px;max-width:1300px;margin:0 auto}
+  h1{color:var(--cyan);font-size:1.8rem;margin-bottom:4px}
+  h2{color:var(--cyan);font-size:1.2rem;margin:32px 0 10px;
+     border-bottom:1px solid var(--border);padding-bottom:6px;
+     text-transform:uppercase;letter-spacing:.5px}
+  h3{color:var(--blue);font-size:1rem;margin:20px 0 8px}
+  h4{color:var(--amber);font-size:.92rem;margin:14px 0 6px}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:24px}
+  a{color:var(--blue);text-decoration:none} a:hover{color:var(--cyan)}
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:12px 0}
+  th{background:var(--raised);color:var(--cyan);padding:7px 12px;text-align:left;
+     font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--blue)}
+  td{padding:7px 12px;border-bottom:1px solid #0d1a2e;color:var(--text);vertical-align:top}
+  tr:hover td{background:#0a1422}
+  code{background:#060d18;border:1px solid #1e293b;border-radius:3px;
+       padding:1px 5px;font-family:"Consolas","Courier New",monospace;font-size:.85em;color:var(--cyan)}
+  pre{background:#040810;border:1px solid #1e293b;border-radius:4px;
+      padding:12px;overflow-x:auto;font-size:.82rem;color:#94a3b8;line-height:1.5}
+  .box{background:var(--panel);border:1px solid var(--border);
+       border-left:3px solid var(--blue);border-radius:4px;
+       padding:12px 16px;margin:12px 0;font-size:.88rem;color:#94a3b8}
+  .box.g{border-left-color:var(--green)} .box.a{border-left-color:var(--amber)}
+  .box.r{border-left-color:var(--red)}   .box.p{border-left-color:var(--purple)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:12px 0}
+  @media(max-width:800px){.cols{grid-template-columns:1fr}}
+  ul{margin-left:20px;color:#94a3b8;font-size:.88rem;line-height:1.7}
+  ul li strong{color:var(--text)}
+  .badge{display:inline-block;border-radius:12px;padding:2px 10px;
+         font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+  .bnew{background:#4a1d96;color:#c4b5fd;border:1px solid #7c3aed}
+  .bd{background:#14532d;color:#4ade80;border:1px solid #16a34a}
+  footer{margin-top:48px;color:var(--muted);font-size:.8rem;
+         border-top:1px solid var(--border);padding-top:12px}
+</style>
+</head>
+<body>
+
+<h1>Phase K &mdash; Surface Isolation, Multi-Monitor &amp; Display Management</h1>
+<p class="sub">Architectural Plan &mdash; Mcaster1Studio v0.2.0 &mdash; Created 2026-03-10</p>
+
+<div class="box p">
+  <strong>Goal:</strong> Transform Mcaster1Studio from a single-database, single-window application
+  into a true multi-surface broadcast suite where each surface operates as an independent broadcast
+  entity with its own database, settings, media library, and display output &mdash; while sharing
+  system hardware resources (audio devices, capture cards, monitors).
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>1. Architecture Overview</h2>
+
+<div class="cols">
+<div>
+<h3>Current Architecture (Pre-K)</h3>
+<ul>
+  <li>Single global database (SQLite or MySQL)</li>
+  <li>All surfaces share one <code>QSettings</code> instance</li>
+  <li>All surfaces embedded in one <code>QTabWidget</code></li>
+  <li><code>MediaLibraryModule::createDatabase()</code> reads global settings</li>
+  <li>No monitor awareness or multi-window support</li>
+  <li>No video capture device enumeration</li>
+</ul>
+</div>
+<div>
+<h3>Target Architecture (Post-K)</h3>
+<ul>
+  <li><strong>Database Server Registry</strong> &mdash; N servers defined in System Preferences</li>
+  <li><strong>Per-surface database isolation</strong> &mdash; each surface gets its own DB/schema</li>
+  <li><strong>Pop-out surface windows</strong> &mdash; any surface can detach to its own <code>QMainWindow</code></li>
+  <li><strong>Monitor management</strong> &mdash; detect all displays, resolution, GPU; "Send to Monitor"</li>
+  <li><strong>Video capture device registry</strong> &mdash; enumerate webcams, capture cards, virtual cameras</li>
+  <li><strong>YAML failover</strong> &mdash; all surface config mirrored to local YAML for DB-down redundancy</li>
+  <li><strong>Shared system resources</strong> &mdash; audio devices, hardware remain global</li>
+</ul>
+</div>
+</div>
+
+<h3>Conceptual Diagram</h3>
+<pre>
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  SYSTEM LAYER (shared)                                                          │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────┐  ┌───────────────────────────┐   │
+│  │PortAudio │  │ Monitor  │  │ Capture      │  │ DB Server Registry        │   │
+│  │ Devices  │  │ Manager  │  │ Device Mgr   │  │  [Server A] [Server B]... │   │
+│  └──────────┘  └──────────┘  └──────────────┘  └───────────────────────────┘   │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│  SURFACE LAYER (isolated per surface)                                           │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐                      │
+│  │  Surface Alpha          │  │  Surface "GRR FM"       │        ...Nth        │
+│  │  ┌─────────────────┐   │  │  ┌─────────────────┐   │                      │
+│  │  │ DB: Server A     │   │  │  │ DB: Server B     │   │                      │
+│  │  │ Schema: alpha_db │   │  │  │ Schema: grrfm_db │   │                      │
+│  │  ├─────────────────┤   │  │  ├─────────────────┤   │                      │
+│  │  │ Media Library    │   │  │  │ Media Library    │   │                      │
+│  │  │ Playlists        │   │  │  │ Playlists        │   │                      │
+│  │  │ Encoder Configs  │   │  │  │ Encoder Configs  │   │                      │
+│  │  │ Metadata Presets │   │  │  │ Metadata Presets │   │                      │
+│  │  │ Surface Settings │   │  │  │ Surface Settings │   │                      │
+│  │  └─────────────────┘   │  │  └─────────────────┘   │                      │
+│  │  Window: Embedded Tab   │  │  Window: Monitor 2     │                      │
+│  └─────────────────────────┘  └─────────────────────────┘                      │
+└─────────────────────────────────────────────────────────────────────────────────┘
+</pre>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>2. Deliverable K.1 &mdash; Database Server Registry</h2>
+
+<div class="box g">
+  <strong>Concept:</strong> System Preferences gains a "Database Servers" management panel where
+  users can define multiple named database connections. Each server entry has a unique name (e.g.
+  "Local SQLite", "Production MySQL", "Backup MariaDB") and connection parameters. Surfaces
+  reference servers by name, not by raw connection strings.
+</div>
+
+<h3>K.1a &mdash; DbServerEntry struct</h3>
+<h4>File: <code>Core/include/DbServerEntry.h</code> (NEW)</h4>
+<pre>
+#pragma once
+#include &lt;QString&gt;
+#include &lt;QList&gt;
+#include &lt;QSettings&gt;
+#include &lt;QUuid&gt;
+
+namespace M1 {
+
+struct DbServerEntry {
+    QString   id;            ///&lt; Unique ID (UUID, generated on creation)
+    QString   displayName;   ///&lt; "Local SQLite", "Production MySQL", etc.
+
+    enum class Backend { SQLite, MySQL };
+    Backend   backend = Backend::SQLite;
+
+    // SQLite-specific
+    QString   sqlitePath;    ///&lt; Empty = AppData default location
+
+    // MySQL-specific
+    QString   host     = "127.0.0.1";
+    int       port     = 3306;
+    QString   username = "root";
+    QString   password;
+
+    bool isSQLite() const { return backend == Backend::SQLite; }
+    bool isMySQL()  const { return backend == Backend::MySQL;  }
+
+    /// Generate a unique ID for a new server entry
+    static QString newId() { return QUuid::createUuid().toString(QUuid::WithoutBraces); }
+};
+
+/// DbServerRegistry — singleton managing all configured database servers.
+/// Persisted in QSettings under "dbservers/" prefix.
+class DbServerRegistry {
+public:
+    static DbServerRegistry&amp; instance();
+
+    QList&lt;DbServerEntry&gt;     servers() const;
+    const DbServerEntry*      findById(const QString&amp; id) const;
+    const DbServerEntry*      findByName(const QString&amp; name) const;
+    const DbServerEntry*      defaultServer() const;   ///&lt; First entry, or built-in SQLite
+
+    void addServer(const DbServerEntry&amp; entry);
+    void updateServer(const DbServerEntry&amp; entry);
+    void removeServer(const QString&amp; id);
+    void setDefaultServerId(const QString&amp; id);
+
+    void loadFromSettings();
+    void saveToSettings() const;
+
+    /// Test connection to a server. Returns empty string on success, error message on failure.
+    QString testConnection(const DbServerEntry&amp; entry) const;
+
+private:
+    DbServerRegistry();
+    QList&lt;DbServerEntry&gt; m_servers;
+    QString               m_defaultServerId;
+};
+
+} // namespace M1
+</pre>
+
+<h3>K.1b &mdash; QSettings Key Layout</h3>
+<table>
+  <tr><th>Key</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>dbservers/count</code></td><td>int</td><td>Number of configured servers</td></tr>
+  <tr><td><code>dbservers/default</code></td><td>string</td><td>UUID of default server</td></tr>
+  <tr><td><code>dbservers/{i}/id</code></td><td>string</td><td>Server UUID</td></tr>
+  <tr><td><code>dbservers/{i}/name</code></td><td>string</td><td>Display name</td></tr>
+  <tr><td><code>dbservers/{i}/backend</code></td><td>string</td><td>"sqlite" or "mysql"</td></tr>
+  <tr><td><code>dbservers/{i}/sqlite/path</code></td><td>string</td><td>SQLite file path (empty=default)</td></tr>
+  <tr><td><code>dbservers/{i}/mysql/host</code></td><td>string</td><td>MySQL hostname</td></tr>
+  <tr><td><code>dbservers/{i}/mysql/port</code></td><td>int</td><td>MySQL port</td></tr>
+  <tr><td><code>dbservers/{i}/mysql/user</code></td><td>string</td><td>MySQL username</td></tr>
+  <tr><td><code>dbservers/{i}/mysql/pass</code></td><td>string</td><td>MySQL password (encrypted v2)</td></tr>
+</table>
+
+<h3>K.1c &mdash; First-Run Default</h3>
+<div class="box">
+  On first launch (no <code>dbservers/count</code> key), the registry auto-creates one entry:<br>
+  <code>{ id: auto-uuid, name: "Local SQLite (Default)", backend: SQLite, sqlitePath: "" }</code><br>
+  This preserves backward compatibility &mdash; existing single-DB users see no change.
+</div>
+
+<h3>K.1d &mdash; Migration from Old Settings</h3>
+<div class="box a">
+  <strong>Upgrade path:</strong> If <code>database/backend</code> exists (old format) and <code>dbservers/count</code>
+  does not, migrate the old settings into a single <code>DbServerEntry</code> and remove the legacy keys.
+  This runs once at startup in <code>DbServerRegistry::loadFromSettings()</code>.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>3. Deliverable K.2 &mdash; Per-Surface Database Isolation</h2>
+
+<div class="box g">
+  <strong>Concept:</strong> Each surface stores a <code>dbServerId</code> + <code>dbSchemaName</code> in its
+  session config. When <code>MediaLibraryModule</code> (or any DB-aware module) is created for a surface,
+  it receives the surface&rsquo;s DB config &mdash; NOT the global default. Surfaces sharing the same
+  server but different schemas are fully isolated. Surfaces on different servers are even more isolated.
+</div>
+
+<h3>K.2a &mdash; Surface Database Config</h3>
+<h4>New fields in session v2 QSettings:</h4>
+<table>
+  <tr><th>Key</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>session/v2/{si}/dbServerId</code></td><td>string</td><td>UUID of assigned DB server</td></tr>
+  <tr><td><code>session/v2/{si}/dbSchemaName</code></td><td>string</td><td>Unique schema/DB name (e.g. "mcaster1_alpha")</td></tr>
+  <tr><td><code>session/v2/{si}/dbTablePrefix</code></td><td>string</td><td>Table prefix for shared-server isolation (e.g. "alpha_")</td></tr>
+</table>
+
+<h3>K.2b &mdash; SurfaceDbContext</h3>
+<h4>File: <code>Core/include/SurfaceDbContext.h</code> (NEW)</h4>
+<pre>
+namespace M1 {
+
+/// Encapsulates the database identity for a single surface.
+/// Passed to modules at creation time so they connect to the right DB/schema.
+struct SurfaceDbContext {
+    QString   serverId;      ///&lt; DbServerEntry UUID
+    QString   schemaName;    ///&lt; Database name (MySQL) or file stem (SQLite)
+    QString   tablePrefix;   ///&lt; Optional prefix for table names in shared DBs
+
+    /// Create an IDatabase* connected to this surface's database.
+    /// Caller owns the returned pointer.
+    IDatabase* createConnection() const;
+
+    /// Generate default schema name from surface name.
+    /// "GRR FM Broadcast" → "mcaster1_grr_fm_broadcast"
+    static QString nameToSchema(const QString&amp; surfaceName);
+
+    bool isValid() const { return !serverId.isEmpty() &amp;&amp; !schemaName.isEmpty(); }
+};
+
+} // namespace M1
+</pre>
+
+<h3>K.2c &mdash; Schema Naming Convention</h3>
+<table>
+  <tr><th>Backend</th><th>Schema Name Maps To</th><th>Example</th></tr>
+  <tr><td>SQLite</td><td>Separate <code>.db</code> file in AppData dir</td><td><code>AppData/Mcaster1Studio/mcaster1_alpha.db</code></td></tr>
+  <tr><td>MySQL</td><td><code>CREATE DATABASE IF NOT EXISTS `{schemaName}`</code></td><td><code>mcaster1_grr_fm_broadcast</code></td></tr>
+</table>
+
+<h3>K.2d &mdash; Extended Schema (Beyond media_items)</h3>
+<div class="box">
+  Each surface database gets its own set of tables:
+  <ul style="margin-top:8px">
+    <li><strong><code>media_items</code></strong> &mdash; The media library (existing schema)</li>
+    <li><strong><code>playlists</code></strong> &mdash; Saved playlists (id, name, created, modified)</li>
+    <li><strong><code>playlist_items</code></strong> &mdash; Playlist entries (playlist_id, media_id, position)</li>
+    <li><strong><code>encoder_configs</code></strong> &mdash; Per-surface encoder slot configurations</li>
+    <li><strong><code>metadata_presets</code></strong> &mdash; ICY metadata templates / presets</li>
+    <li><strong><code>broadcast_log</code></strong> &mdash; What was played, when, by whom</li>
+    <li><strong><code>surface_settings</code></strong> &mdash; Key/value store for surface-specific prefs</li>
+    <li><strong><code>surface_meta</code></strong> &mdash; Surface identity (name, type, created, last_modified)</li>
+  </ul>
+</div>
+
+<h3>K.2e &mdash; Module Database Injection</h3>
+<pre>
+// In MainWindow::createModule(), before module->initialize():
+if (auto* dbAware = qobject_cast&lt;IDbAwareModule*&gt;(mod)) {
+    dbAware->setSurfaceDbContext(surface->dbContext());
+}
+</pre>
+<div class="box">
+  <strong>New interface:</strong> <code>IDbAwareModule</code> (optional mixin) &mdash; modules that need
+  database access implement this. <code>MediaLibraryModule</code>, <code>PlaylistModule</code>,
+  <code>EncoderModule</code>, <code>MetadataModule</code>, and <code>PodcastModule</code> variants
+  all become <code>IDbAwareModule</code> implementors.
+</div>
+
+<h3>K.2f &mdash; YAML Failover Mirror</h3>
+<div class="box a">
+  <strong>Redundancy pattern:</strong> Every surface writes a shadow YAML file alongside its DB:
+  <code>AppData/Mcaster1Studio/surfaces/{surfaceName}.yaml</code><br>
+  Contains: surface identity, module list, encoder configs, last-known metadata presets.<br>
+  On startup: if DB connection fails &rarr; read from YAML fallback &rarr; operate in read-only mode
+  with a banner warning &ldquo;Database offline &mdash; running from local cache&rdquo;.<br>
+  YAML sync: written after every <code>saveAllSessionState()</code> call (debounced with the 1.5s timer).
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>4. Deliverable K.3 &mdash; Surface Creation Wizard</h2>
+
+<div class="box g">
+  <strong>Concept:</strong> When creating a new custom surface, a multi-step wizard dialog guides
+  the user through: naming, database server selection, schema creation, and module selection.
+  Replaces the current simple <code>CustomSurfaceDialog</code>.
+</div>
+
+<h3>Wizard Steps</h3>
+<table>
+  <tr><th>Step</th><th>Title</th><th>Contents</th></tr>
+  <tr><td>1</td><td>Surface Identity</td><td>Surface name (used for tab label + schema name), surface type dropdown (or "Custom"), icon color picker</td></tr>
+  <tr><td>2</td><td>Database Server</td><td>
+    Dropdown of all servers from <code>DbServerRegistry</code> + "Add New Server..." button.<br>
+    Schema name auto-generated from surface name (editable).<br>
+    "Test Connection" button.<br>
+    Checkbox: "Create database and tables now" (default: checked).
+  </td></tr>
+  <tr><td>3</td><td>Module Selection</td><td>
+    Dual-list or checkbox grid of available modules.<br>
+    Pre-populated from surface type template (if not Custom).<br>
+    "Select All" / "Clear" buttons.
+  </td></tr>
+  <tr><td>4</td><td>Confirmation</td><td>
+    Summary: surface name, DB server, schema, selected modules.<br>
+    "Create Surface" button &rarr; creates DB schema + tables, creates surface, adds modules.
+  </td></tr>
+</table>
+
+<h3>File: <code>UI/SurfaceCreationWizard.h/.cpp</code> (NEW)</h3>
+<pre>
+class SurfaceCreationWizard : public QWizard {
+    Q_OBJECT
+public:
+    struct Result {
+        QString         surfaceName;
+        M1::SurfaceType surfaceType;
+        QString         dbServerId;
+        QString         dbSchemaName;
+        QStringList     moduleIds;
+        QColor          tabColor;
+    };
+
+    explicit SurfaceCreationWizard(QWidget* parent = nullptr);
+    Result result() const;
+
+private:
+    QWizardPage* buildIdentityPage();
+    QWizardPage* buildDatabasePage();
+    QWizardPage* buildModulesPage();
+    QWizardPage* buildConfirmPage();
+};
+</pre>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>5. Deliverable K.4 &mdash; Pop-Out Surface Windows &amp; Multi-Monitor</h2>
+
+<div class="box g">
+  <strong>Concept:</strong> Right-clicking a surface tab shows "Pop Out Window" which detaches the
+  surface into its own <code>QMainWindow</code> that can be resized, maximized, minimized, moved
+  to any monitor, and made fullscreen (F11). The surface tab in the main window becomes a
+  placeholder with a "Bring Back" button. When the popped-out window is closed, the surface
+  returns to its tab.
+</div>
+
+<h3>K.4a &mdash; SurfaceWindow class</h3>
+<h4>File: <code>UI/SurfaceWindow.h/.cpp</code> (NEW)</h4>
+<pre>
+/// A standalone QMainWindow hosting a single popped-out SurfaceWidget.
+/// Fully resizable, movable to any monitor, supports maximize/minimize/fullscreen.
+class SurfaceWindow : public QMainWindow {
+    Q_OBJECT
+public:
+    explicit SurfaceWindow(SurfaceWidget* surface, QWidget* parent = nullptr);
+    ~SurfaceWindow() override;
+
+    SurfaceWidget* surface() const { return m_surface; }
+
+    /// Move this window to a specific monitor by QScreen index.
+    void moveToScreen(int screenIndex);
+
+    /// Snap to a monitor's full geometry (maximized on that monitor).
+    void maximizeOnScreen(int screenIndex);
+
+signals:
+    void dockBackRequested(SurfaceWidget* surface);  ///&lt; User wants to re-embed in main tab
+
+protected:
+    void closeEvent(QCloseEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;   ///&lt; F11 = fullscreen toggle
+
+private:
+    SurfaceWidget* m_surface;
+    QAction*       m_fullscreenAction = nullptr;
+    bool           m_isFullscreen     = false;
+};
+</pre>
+
+<h3>K.4b &mdash; Pop-out / dock-back flow</h3>
+<pre>
+// In SurfaceTabBar right-click menu:
+auto* popOutAct = menu.addAction("Pop Out Window");
+auto* sendToMonAct = menu.addMenu("Send to Monitor");
+
+// Pop out:
+1. SurfaceWidget* sw = surfaceAt(tabIndex);
+2. m_surfaceBar->removeTab(tabIndex);        // Remove from tab widget
+3. Insert placeholder tab: "⬒ {name} (popped out)" with "Bring Back" button
+4. auto* win = new SurfaceWindow(sw);
+5. win->show();
+6. m_poppedOutWindows[sw] = win;
+
+// Dock back (close window or right-click "Dock Back"):
+1. SurfaceWindow emits dockBackRequested(sw)
+2. Remove placeholder tab
+3. Re-insert sw into m_surfaceBar at original index
+4. Delete SurfaceWindow
+5. m_poppedOutWindows.remove(sw)
+</pre>
+
+<h3>K.4c &mdash; "Send to Monitor" submenu</h3>
+<div class="box">
+  Dynamically populated from <code>QGuiApplication::screens()</code>:
+  <ul style="margin-top:8px">
+    <li><strong>Monitor 1:</strong> DELL U2722D &mdash; 2560&times;1440 @ 60Hz (Primary)</li>
+    <li><strong>Monitor 2:</strong> Samsung LU28E570 &mdash; 3840&times;2160 @ 60Hz</li>
+    <li><strong>Monitor 3:</strong> AVerMedia Live Gamer &mdash; 1920&times;1080 @ 60Hz</li>
+  </ul>
+  Clicking a monitor: pops out the surface AND moves the window to that monitor, maximized.
+</div>
+
+<h3>K.4d &mdash; Window Flags &amp; Behavior</h3>
+<table>
+  <tr><th>Feature</th><th>Implementation</th></tr>
+  <tr><td>Resizable</td><td>Default <code>QMainWindow</code> flags (all edges + corners)</td></tr>
+  <tr><td>Maximize/Minimize</td><td>Standard title bar buttons</td></tr>
+  <tr><td>Fullscreen (F11)</td><td><code>showFullScreen()</code> / <code>showNormal()</code> toggle</td></tr>
+  <tr><td>Multi-monitor drag</td><td>Native OS window management (no custom handling needed)</td></tr>
+  <tr><td>Title bar</td><td>"Mcaster1Studio &mdash; {Surface Name}"</td></tr>
+  <tr><td>Close behavior</td><td>Emits <code>dockBackRequested</code> &mdash; does NOT destroy the surface</td></tr>
+  <tr><td>Session save</td><td>Popped-out state + monitor index + geometry saved to QSettings</td></tr>
+  <tr><td>Session restore</td><td>On app startup, restore popped-out surfaces to their saved monitors</td></tr>
+</table>
+
+<h3>K.4e &mdash; Session Persistence for Pop-Out Windows</h3>
+<table>
+  <tr><th>QSettings Key</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>session/v2/{si}/poppedOut</code></td><td>bool</td><td>Whether this surface is in a pop-out window</td></tr>
+  <tr><td><code>session/v2/{si}/window/screenIndex</code></td><td>int</td><td>Which monitor the window is on</td></tr>
+  <tr><td><code>session/v2/{si}/window/x</code></td><td>int</td><td>Window X position</td></tr>
+  <tr><td><code>session/v2/{si}/window/y</code></td><td>int</td><td>Window Y position</td></tr>
+  <tr><td><code>session/v2/{si}/window/width</code></td><td>int</td><td>Window width</td></tr>
+  <tr><td><code>session/v2/{si}/window/height</code></td><td>int</td><td>Window height</td></tr>
+  <tr><td><code>session/v2/{si}/window/maximized</code></td><td>bool</td><td>Whether window was maximized</td></tr>
+  <tr><td><code>session/v2/{si}/window/fullscreen</code></td><td>bool</td><td>Whether window was fullscreen</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>6. Deliverable K.5 &mdash; Monitor &amp; Display Management</h2>
+
+<div class="box g">
+  <strong>Concept:</strong> System Preferences gains a "Displays &amp; Capture" page that shows all
+  attached monitors, their properties, and video capture devices. This enables intelligent surface
+  placement, video input selection for church/entertainment surfaces, and virtual camera output.
+</div>
+
+<h3>K.5a &mdash; MonitorManager class</h3>
+<h4>File: <code>Core/include/MonitorManager.h</code> (NEW)</h4>
+<pre>
+namespace M1 {
+
+struct MonitorInfo {
+    int       index;           ///&lt; QScreen index (0-based)
+    QString   name;            ///&lt; "DELL U2722D", "\\.\DISPLAY1"
+    QString   manufacturer;    ///&lt; "Dell Inc."
+    QSize     resolution;      ///&lt; Native resolution (e.g. 2560x1440)
+    QSize     physicalSizeMm;  ///&lt; Physical size in millimeters
+    double    refreshRate;     ///&lt; Hz (e.g. 60.0, 144.0)
+    double    dpi;             ///&lt; Effective DPI
+    double    scaleFactor;     ///&lt; Qt device pixel ratio
+    QRect     geometry;        ///&lt; Virtual desktop position + size
+    QRect     availableGeometry; ///&lt; Geometry minus taskbar
+    bool      isPrimary;       ///&lt; Primary display?
+    QString   gpuName;         ///&lt; GPU driving this display (e.g. "NVIDIA RTX 4070")
+    qint64    gpuVramBytes;    ///&lt; GPU VRAM in bytes
+};
+
+struct CaptureDeviceInfo {
+    QString   deviceId;        ///&lt; System device path / ID
+    QString   displayName;     ///&lt; "Logitech C920", "AVerMedia Live Gamer"
+    QSize     maxResolution;   ///&lt; Maximum capture resolution
+    double    maxFps;          ///&lt; Maximum framerate
+    bool      isVirtualCamera; ///&lt; OBS Virtual Camera, etc.
+    enum class Type { Webcam, CaptureCard, ScreenCapture, VirtualCamera };
+    Type      type;
+};
+
+class MonitorManager : public QObject {
+    Q_OBJECT
+public:
+    static MonitorManager&amp; instance();
+
+    QList&lt;MonitorInfo&gt;       monitors() const;
+    QList&lt;CaptureDeviceInfo&gt; captureDevices() const;
+
+    const MonitorInfo* monitorAt(int index) const;
+    const MonitorInfo* primaryMonitor() const;
+
+    /// Refresh monitor list (call after display configuration changes)
+    void refresh();
+
+    /// Refresh capture device list (Windows: DirectShow/MediaFoundation enumeration)
+    void refreshCaptureDevices();
+
+signals:
+    void monitorsChanged();        ///&lt; Display added/removed/resolution changed
+    void captureDevicesChanged();   ///&lt; USB device plugged/unplugged
+
+private:
+    MonitorManager(QObject* parent = nullptr);
+    void enumerateMonitors();
+    void enumerateCaptureDevices();
+    void enumerateGpuInfo();       ///&lt; DXGI adapter enumeration (Windows)
+
+    QList&lt;MonitorInfo&gt;       m_monitors;
+    QList&lt;CaptureDeviceInfo&gt; m_captureDevices;
+};
+
+} // namespace M1
+</pre>
+
+<h3>K.5b &mdash; GPU Enumeration (Windows)</h3>
+<pre>
+// DXGI adapter enumeration for GPU info
+#include &lt;dxgi1_4.h&gt;
+#pragma comment(lib, "dxgi.lib")
+
+IDXGIFactory1* factory = nullptr;
+CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&amp;factory);
+
+IDXGIAdapter1* adapter = nullptr;
+for (UINT i = 0; factory->EnumAdapters1(i, &amp;adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
+    DXGI_ADAPTER_DESC1 desc;
+    adapter->GetDesc1(&amp;desc);
+    // desc.Description  → GPU name (wchar_t[128])
+    // desc.DedicatedVideoMemory → VRAM in bytes
+    // desc.VendorId → 0x10DE (NVIDIA), 0x1002 (AMD), 0x8086 (Intel)
+    adapter->Release();
+}
+factory->Release();
+</pre>
+
+<h3>K.5c &mdash; Capture Device Enumeration (Windows)</h3>
+<div class="box">
+  <strong>Primary: MediaFoundation</strong> (<code>MFEnumDeviceSources</code> with
+  <code>MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID</code>).<br>
+  <strong>Fallback: DirectShow</strong> (<code>ICreateDevEnum</code> +
+  <code>CLSID_VideoInputDeviceCategory</code>).<br>
+  For each device: read friendly name, max output resolution, max FPS.<br>
+  Virtual cameras detected by name heuristic ("OBS Virtual Camera", "ManyCam", etc.)
+  or by checking for <code>KSCATEGORY_VIDEO_CAMERA</code> vs custom categories.
+</div>
+
+<h3>K.5d &mdash; PreferencesDialog "Displays &amp; Capture" Tab</h3>
+<pre>
+┌────────────────────────────────────────────────────────────────────────┐
+│  DISPLAYS &amp; CAPTURE                                                    │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  Monitors                                                [↻ Refresh]  │
+│  ┌──────────────────────────────────────────────────────────────────┐ │
+│  │ # │ Name              │ Resolution  │ Hz   │ DPI │ GPU          │ │
+│  │ 1 │ DELL U2722D ★     │ 2560×1440   │ 60   │ 109 │ RTX 4070    │ │
+│  │ 2 │ Samsung LU28E570  │ 3840×2160   │ 60   │ 157 │ RTX 4070    │ │
+│  │ 3 │ AVerMedia C1      │ 1920×1080   │ 60   │ 96  │ Intel UHD   │ │
+│  └──────────────────────────────────────────────────────────────────┘ │
+│                                                                        │
+│  Video Capture Devices                                   [↻ Refresh]  │
+│  ┌──────────────────────────────────────────────────────────────────┐ │
+│  │ Device              │ Type         │ Max Res    │ Max FPS │ Virt │ │
+│  │ Logitech C920       │ Webcam       │ 1920×1080  │ 30      │      │ │
+│  │ AVerMedia Live G.   │ Capture Card │ 1920×1080  │ 60      │      │ │
+│  │ OBS Virtual Camera  │ Virtual Cam  │ 1920×1080  │ 30      │  ✓   │ │
+│  └──────────────────────────────────────────────────────────────────┘ │
+│                                                                        │
+│  GPU Information                                                       │
+│  ┌──────────────────────────────────────────────────────────────────┐ │
+│  │ NVIDIA GeForce RTX 4070 — 12,288 MB VRAM                        │ │
+│  │ Intel UHD Graphics 770   — 512 MB shared                        │ │
+│  └──────────────────────────────────────────────────────────────────┘ │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+</pre>
+
+<h3>K.5e &mdash; QScreen Change Detection</h3>
+<div class="box">
+  <code>MonitorManager</code> connects to <code>QGuiApplication::screenAdded</code>,
+  <code>screenRemoved</code>, and per-screen <code>geometryChanged</code> signals to auto-refresh
+  the monitor list. If a popped-out surface&rsquo;s monitor is disconnected, the window is
+  automatically moved back to the primary monitor with a notification toast.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>7. Deliverable K.6 &mdash; PreferencesDialog Redesign</h2>
+
+<h3>Updated Tab Structure</h3>
+<table>
+  <tr><th>Tab</th><th>Contents</th><th>Status</th></tr>
+  <tr><td>1. General</td><td>Theme, language, startup behavior</td><td>Existing</td></tr>
+  <tr><td>2. Audio Devices</td><td>PortAudio device selection, sample rate, buffer size</td><td>Existing</td></tr>
+  <tr><td>3. Database Servers</td><td><strong>NEW:</strong> Server registry list + Add/Edit/Remove/Test/Set Default</td><td><span class="badge bnew">New</span></td></tr>
+  <tr><td>4. Displays &amp; Capture</td><td><strong>NEW:</strong> Monitor list, capture devices, GPU info</td><td><span class="badge bnew">New</span></td></tr>
+  <tr><td>5. Metrics / Grafana</td><td>Prometheus endpoint config, Grafana Cloud push</td><td>Existing</td></tr>
+</table>
+
+<h3>Database Servers Tab Layout</h3>
+<pre>
+┌────────────────────────────────────────────────────────────────────────┐
+│  DATABASE SERVERS                                                      │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  [+ Add Server]  [✎ Edit]  [✕ Remove]  [★ Set Default]  [⚡ Test]    │
+│                                                                        │
+│  ┌──────────────────────────────────────────────────────────────────┐ │
+│  │ ★ │ Name                     │ Backend │ Host       │ Status    │ │
+│  │ ★ │ Local SQLite (Default)   │ SQLite  │ (embedded) │ ● OK     │ │
+│  │   │ Production MySQL         │ MySQL   │ db.grr.fm  │ ● OK     │ │
+│  │   │ Backup MariaDB           │ MySQL   │ backup.lan │ ● Offline│ │
+│  └──────────────────────────────────────────────────────────────────┘ │
+│                                                                        │
+│  [Add Server] dialog:                                                  │
+│  ┌──────────────────────────────────────────────┐                     │
+│  │  Name: [________________________]            │                     │
+│  │  Backend: ( ) SQLite  (•) MySQL/MariaDB      │                     │
+│  │                                              │                     │
+│  │  ── MySQL Settings ──────────────────────    │                     │
+│  │  Host: [db.grr.fm_____________]              │                     │
+│  │  Port: [3306___]                             │                     │
+│  │  User: [mcaster1_______________]             │                     │
+│  │  Pass: [••••••••_______________]             │                     │
+│  │                                              │                     │
+│  │  [Test Connection]        [Cancel] [Save]    │                     │
+│  └──────────────────────────────────────────────┘                     │
+│                                                                        │
+│  Surface Assignments:                                                  │
+│  ┌──────────────────────────────────────────────────────────────────┐ │
+│  │ Surface Alpha        → Local SQLite   │ mcaster1_alpha          │ │
+│  │ GRR FM Broadcast     → Production MySQL │ mcaster1_grr_fm       │ │
+│  │ Church AV            → Local SQLite   │ mcaster1_church_av      │ │
+│  └──────────────────────────────────────────────────────────────────┘ │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+</pre>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>8. Deliverable K.7 &mdash; Surface Tab Context Menu Enhancement</h2>
+
+<h3>Updated Right-Click Menu Structure</h3>
+<pre>
+┌─────────────────────────────────────┐
+│  Add Module                      ▸  │
+│  Create new Sub Surface          ▸  │
+│  ──────────────────────────────────  │
+│  Pop Out Window                     │   ◄── NEW: detach to QMainWindow
+│  Send to Monitor                 ▸  │   ◄── NEW: submenu of detected monitors
+│  ──────────────────────────────────  │
+│  Database...                        │   ◄── NEW: view/change surface DB assignment
+│  Surface Settings...                │   ◄── NEW: per-surface preferences
+│  ──────────────────────────────────  │
+│  Save Session                       │
+│  Rename...                          │
+│  Close Surface                      │
+└─────────────────────────────────────┘
+</pre>
+
+<h3>"Send to Monitor" Submenu</h3>
+<div class="box">
+  Dynamically built from <code>MonitorManager::monitors()</code>:
+  <pre>
+  ┌──────────────────────────────────────────────────────┐
+  │  ● Monitor 1: DELL U2722D — 2560×1440 (Primary)     │
+  │  ● Monitor 2: Samsung LU28E570 — 3840×2160           │
+  │  ● Monitor 3: AVerMedia C1 — 1920×1080               │
+  └──────────────────────────────────────────────────────┘
+  </pre>
+  Clicking a monitor: <code>popOutSurface(sw)</code> + <code>win->maximizeOnScreen(idx)</code>.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>9. Shared vs Isolated Resources</h2>
+
+<table>
+  <tr><th>Resource</th><th>Scope</th><th>Notes</th></tr>
+  <tr><td>Audio Devices (PortAudio)</td><td><strong>System</strong> (shared)</td><td>All surfaces share the same audio I/O device</td></tr>
+  <tr><td>Audio Engine (AudioMixer)</td><td><strong>System</strong> (shared)</td><td>Single RT callback dispatches to all surface modules</td></tr>
+  <tr><td>Monitors / Displays</td><td><strong>System</strong> (shared)</td><td>Any surface can be sent to any monitor</td></tr>
+  <tr><td>Capture Devices</td><td><strong>System</strong> (shared)</td><td>Available to any surface; exclusive access per device</td></tr>
+  <tr><td>Theme / QSS</td><td><strong>System</strong> (shared)</td><td>One active theme across all surfaces</td></tr>
+  <tr><td>Plugin Registry</td><td><strong>System</strong> (shared)</td><td>DLLs loaded once, available to all surfaces</td></tr>
+  <tr><td colspan="3" style="background:var(--raised);color:var(--cyan);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Isolated per surface</td></tr>
+  <tr><td>Database Connection</td><td><strong>Surface</strong></td><td>Each surface has its own IDatabase* instance</td></tr>
+  <tr><td>Media Library</td><td><strong>Surface</strong></td><td>Own media_items table in own schema</td></tr>
+  <tr><td>Playlists</td><td><strong>Surface</strong></td><td>Own playlists + playlist_items tables</td></tr>
+  <tr><td>Encoder Configurations</td><td><strong>Surface</strong></td><td>Own encoder_configs table</td></tr>
+  <tr><td>Metadata Presets</td><td><strong>Surface</strong></td><td>Own metadata_presets table</td></tr>
+  <tr><td>Broadcast Log</td><td><strong>Surface</strong></td><td>Own broadcast_log table</td></tr>
+  <tr><td>Surface Settings</td><td><strong>Surface</strong></td><td>Own surface_settings key/value table</td></tr>
+  <tr><td>YAML Failover Cache</td><td><strong>Surface</strong></td><td>Own YAML file in AppData/surfaces/</td></tr>
+  <tr><td>Window State</td><td><strong>Surface</strong></td><td>Own pop-out geometry, monitor, fullscreen state</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>10. File Manifest</h2>
+
+<table>
+  <tr><th>File</th><th>Action</th><th>Description</th></tr>
+  <tr><td colspan="3" style="background:var(--raised);color:var(--cyan);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px">New Files</td></tr>
+  <tr><td><code>Core/include/DbServerEntry.h</code></td><td>NEW</td><td>DbServerEntry struct + DbServerRegistry singleton</td></tr>
+  <tr><td><code>Core/src/DbServerRegistry.cpp</code></td><td>NEW</td><td>Registry implementation: CRUD, QSettings I/O, test, migration</td></tr>
+  <tr><td><code>Core/include/SurfaceDbContext.h</code></td><td>NEW</td><td>Per-surface DB identity (serverId + schemaName + prefix)</td></tr>
+  <tr><td><code>Core/src/SurfaceDbContext.cpp</code></td><td>NEW</td><td>createConnection() factory, nameToSchema() helper</td></tr>
+  <tr><td><code>Core/include/IDbAwareModule.h</code></td><td>NEW</td><td>Optional mixin interface for DB-aware modules</td></tr>
+  <tr><td><code>UI/SurfaceCreationWizard.h/.cpp</code></td><td>NEW</td><td>Multi-step QWizard for new surface creation</td></tr>
+  <tr><td><code>UI/SurfaceWindow.h/.cpp</code></td><td>NEW</td><td>Pop-out QMainWindow hosting a SurfaceWidget</td></tr>
+  <tr><td><code>UI/DbServerDialog.h/.cpp</code></td><td>NEW</td><td>Add/Edit dialog for a single DB server entry</td></tr>
+  <tr><td><code>Core/include/MonitorManager.h</code></td><td>NEW</td><td>Monitor + capture device + GPU enumeration</td></tr>
+  <tr><td><code>Core/src/MonitorManager.cpp</code></td><td>NEW</td><td>DXGI + MF enumeration, QScreen tracking</td></tr>
+  <tr><td colspan="3" style="background:var(--raised);color:var(--cyan);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Modified Files</td></tr>
+  <tr><td><code>Core/include/SurfaceConfig.h</code></td><td>MODIFY</td><td>Update DbConfig to reference DbServerEntry by ID</td></tr>
+  <tr><td><code>Core/CMakeLists.txt</code></td><td>MODIFY</td><td>Add new source files, link dxgi.lib</td></tr>
+  <tr><td><code>UI/PreferencesDialog.h/.cpp</code></td><td>MODIFY</td><td>Replace Database tab with DB Servers; add Displays &amp; Capture tab</td></tr>
+  <tr><td><code>UI/SurfaceTabBar.cpp</code></td><td>MODIFY</td><td>Add Pop Out / Send to Monitor / Database context menu items</td></tr>
+  <tr><td><code>UI/SurfaceWidget.h/.cpp</code></td><td>MODIFY</td><td>Add dbContext() accessor, YAML failover write</td></tr>
+  <tr><td><code>UI/MainWindow.h/.cpp</code></td><td>MODIFY</td><td>SurfaceWindow management, DB injection into modules, wizard wiring</td></tr>
+  <tr><td><code>Modules/MediaLibraryModule/MediaLibraryModule.cpp</code></td><td>MODIFY</td><td>Implement IDbAwareModule, use SurfaceDbContext</td></tr>
+  <tr><td><code>UI/MainWindow.cpp</code> (session save/load)</td><td>MODIFY</td><td>Save/restore pop-out window state + DB context per surface</td></tr>
+  <tr><td><code>Core/include/IDatabase.h</code></td><td>MODIFY</td><td>Add extended schema methods (playlists, encoder_configs, etc.)</td></tr>
+  <tr><td><code>Modules/MediaLibraryModule/SqliteManager.h/.cpp</code></td><td>MODIFY</td><td>Extended schema creation, table prefix support</td></tr>
+  <tr><td><code>Modules/MediaLibraryModule/DatabaseManager.h/.cpp</code></td><td>MODIFY</td><td>Extended schema creation, table prefix support</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>11. Implementation Order</h2>
+
+<table>
+  <tr><th>Step</th><th>Deliverable</th><th>Dependencies</th><th>Est. Files</th></tr>
+  <tr><td>K.1</td><td>DbServerEntry + DbServerRegistry</td><td>None</td><td>2 new + 1 mod</td></tr>
+  <tr><td>K.2</td><td>MonitorManager + GPU/capture enum</td><td>None</td><td>2 new</td></tr>
+  <tr><td>K.3</td><td>PreferencesDialog DB Servers tab + Displays tab</td><td>K.1, K.2</td><td>3 mod + 1 new</td></tr>
+  <tr><td>K.4</td><td>SurfaceDbContext + IDbAwareModule</td><td>K.1</td><td>3 new</td></tr>
+  <tr><td>K.5</td><td>Per-surface DB injection into modules</td><td>K.4</td><td>4 mod</td></tr>
+  <tr><td>K.6</td><td>SurfaceCreationWizard</td><td>K.1, K.4</td><td>1 new + 1 mod</td></tr>
+  <tr><td>K.7</td><td>SurfaceWindow (pop-out)</td><td>K.2</td><td>1 new + 2 mod</td></tr>
+  <tr><td>K.8</td><td>Tab context menu (Pop Out + Send to Monitor + Database)</td><td>K.7, K.2</td><td>1 mod</td></tr>
+  <tr><td>K.9</td><td>YAML failover mirror</td><td>K.5</td><td>2 mod</td></tr>
+  <tr><td>K.10</td><td>Session save/restore for pop-out + DB context</td><td>K.7, K.5</td><td>1 mod</td></tr>
+  <tr><td>K.11</td><td>Extended DB schema (playlists, encoder_configs, etc.)</td><td>K.5</td><td>3 mod</td></tr>
+  <tr><td>K.12</td><td>Old settings migration + first-run defaults</td><td>K.1</td><td>1 mod</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>12. Verification Checklist</h2>
+
+<div class="box g">
+<ul>
+  <li><strong>DB Server Registry:</strong> Add 3 servers (1 SQLite, 2 MySQL) in Preferences &rarr; all persist across restart</li>
+  <li><strong>Test Connection:</strong> Green checkmark on valid connection, red error on bad credentials/host</li>
+  <li><strong>Surface Creation:</strong> Wizard creates schema + all 8 tables on selected server</li>
+  <li><strong>DB Isolation:</strong> Surface Alpha media library has 100 tracks; Surface Beta has 0 &mdash; completely separate</li>
+  <li><strong>Pop Out:</strong> Right-click &rarr; Pop Out Window &rarr; resizable window with full surface functionality</li>
+  <li><strong>Send to Monitor:</strong> Right-click &rarr; Send to Monitor 2 &rarr; window appears maximized on monitor 2</li>
+  <li><strong>Multi-Monitor Drag:</strong> Drag popped-out window from monitor 1 to monitor 3 &rarr; works natively</li>
+  <li><strong>F11 Fullscreen:</strong> Press F11 in popped-out window &rarr; goes fullscreen; F11 again &rarr; back to windowed</li>
+  <li><strong>Dock Back:</strong> Close popped-out window &rarr; surface returns to main tab bar at same position</li>
+  <li><strong>Session Persist:</strong> Pop out Surface Beta to monitor 2 &rarr; close app &rarr; reopen &rarr; Beta auto-pops to monitor 2</li>
+  <li><strong>Monitor Hot-Plug:</strong> Disconnect monitor 2 while surface is there &rarr; window moves to primary with toast</li>
+  <li><strong>YAML Failover:</strong> Kill MySQL server &rarr; reopen app &rarr; surface loads from YAML cache with banner warning</li>
+  <li><strong>Upgrade Path:</strong> Delete dbservers/ settings &rarr; old database/ keys auto-migrate on startup</li>
+  <li><strong>Display Prefs:</strong> All monitors + capture devices show with correct name/resolution/GPU</li>
+  <li><strong>Capture Devices:</strong> Webcam and capture card enumerated; virtual cameras flagged with ✓</li>
+</ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>13. Risk Mitigation</h2>
+
+<table>
+  <tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr>
+  <tr><td>MySQL server down at startup</td><td>Surface can&rsquo;t load media library</td><td>YAML failover cache provides read-only operation with warning banner</td></tr>
+  <tr><td>Monitor disconnected while surface popped</td><td>Window becomes invisible</td><td><code>QScreen::destroyed</code> signal &rarr; auto-move to primary</td></tr>
+  <tr><td>Multiple surfaces on same MySQL server</td><td>Schema name collision</td><td>UUID-suffixed schema names + uniqueness check in wizard</td></tr>
+  <tr><td>Old settings migration</td><td>Existing users lose DB config</td><td>Auto-migrate <code>database/*</code> keys to <code>dbservers/0/*</code> on first run</td></tr>
+  <tr><td>Pop-out window audio routing</td><td>Audio might not work in popped window</td><td>Audio callback chain is surface-independent &mdash; modules are still in the RT chain regardless of window state</td></tr>
+  <tr><td>DXGI enumeration on non-Windows</td><td>Compile error on Linux/macOS</td><td><code>#ifdef Q_OS_WIN</code> guard; stub returns empty list on other platforms</td></tr>
+</table>
+
+<footer>
+  Phase K Plan &mdash; Mcaster1Studio v0.2.0-alpha &mdash; Created 2026-03-10 &mdash;
+  <a href="PLANNING.html">Back to Project Plan</a> &middot;
+  <a href="index.html">Documentation Home</a>
+</footer>
+</body>
+</html>

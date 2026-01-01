@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#1e4480"/>
+      <stop offset="100%" stop-color="#060e20"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <clipPath id="clip"><rect x="0" y="0" width="32" height="32" rx="7" ry="7"/></clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="32" height="32" rx="7" fill="url(#bg)"/>
+  <!-- Border -->
+  <rect x="0.5" y="0.5" width="31" height="31" rx="6.5" fill="none"
+        stroke="rgba(100,160,255,0.22)" stroke-width="1"/>
+  <!-- Top gloss strip -->
+  <rect x="0" y="0" width="32" height="14" rx="7" fill="rgba(255,255,255,0.10)" clip-path="url(#clip)"/>
+
+  <!-- Single bright broadcast arc -->
+  <path d="M11,16 A8,8 0 0,1 21,16"
+        fill="none" stroke="#7dd3fc" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+  <path d="M8,18 A11,11 0 0,1 24,18"
+        fill="none" stroke="#7dd3fc" stroke-width="1.2" stroke-linecap="round" opacity="0.45"/>
+
+  <!-- Antenna mast -->
+  <line x1="16" y1="5"  x2="16" y2="16"
+        stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- On-air dot -->
+  <circle cx="16" cy="4" r="2.5" fill="#22c55e"/>
+  <circle cx="16" cy="4" r="1.2" fill="#bbf7d0"/>
+
+  <!-- M glyph (simplified) -->
+  <rect x="4"  y="19" width="2" height="10" rx="0.8" fill="white"/>
+  <rect x="17" y="19" width="2" height="10" rx="0.8" fill="white"/>
+  <polygon points="4,19 6,19 12,26 10,26" fill="white"/>
+  <polygon points="19,19 17,19 12,26 14,26" fill="white"/>
+
+  <!-- 1 glyph -->
+  <rect x="22" y="19" width="2" height="10" rx="0.8" fill="url(#gold)"/>
+  <polygon points="22,19 24,19 23,23 21,23" fill="url(#gold)"/>
+  <rect x="20" y="27" width="6" height="2" rx="0.8" fill="url(#gold)"/>
+</svg>

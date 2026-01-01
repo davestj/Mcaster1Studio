@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#1e4480"/>
+      <stop offset="100%" stop-color="#060e20"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="16" height="16" rx="3.5" fill="url(#bg)"/>
+  <!-- Subtle border -->
+  <rect x="0.5" y="0.5" width="15" height="15" rx="3" fill="none"
+        stroke="rgba(100,160,255,0.25)" stroke-width="0.5"/>
+
+  <!-- Signal arc (single, bold) -->
+  <path d="M5,9 A4,4 0 0,1 11,9"
+        fill="none" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- Antenna tip -->
+  <line x1="8" y1="3" x2="8" y2="9"
+        stroke="#7dd3fc" stroke-width="1.2" stroke-linecap="round"/>
+  <circle cx="8" cy="2.5" r="1.5" fill="#22c55e"/>
+
+  <!-- M lettermark (minimal) -->
+  <rect x="2"  y="10" width="1.5" height="5" rx="0.6" fill="white"/>
+  <rect x="9"  y="10" width="1.5" height="5" rx="0.6" fill="white"/>
+  <polygon points="2,10 3.5,10 6.5,13.5 5,13.5" fill="white"/>
+  <polygon points="10.5,10 9,10 6.5,13.5 8,13.5" fill="white"/>
+
+  <!-- 1 lettermark -->
+  <rect x="12" y="10" width="1.5" height="5" rx="0.6" fill="url(#gold)"/>
+  <polygon points="12,10 13.5,10 12.8,12.5 11.3,12.5" fill="url(#gold)"/>
+</svg>

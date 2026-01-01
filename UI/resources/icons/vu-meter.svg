@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <filter id="sh"><feDropShadow dx="0" dy="1" stdDeviation="0.5" flood-opacity="0.12"/></filter>
+    <linearGradient id="bar" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%"   stop-color="#22c55e"/>
+      <stop offset="70%"  stop-color="#22c55e"/>
+      <stop offset="85%"  stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="22" height="22" rx="4" fill="#e8f0fc" stroke="#b8cce8" stroke-width="0.5" filter="url(#sh)"/>
+  <!-- VU meter bars: L and R channels -->
+  <!-- L channel track -->
+  <rect x="5" y="6" width="4.5" height="11" rx="1" fill="#d8e4f5"/>
+  <rect x="5" y="9"  width="4.5" height="8"  rx="1" fill="url(#bar)"/>
+  <!-- R channel track -->
+  <rect x="14.5" y="6" width="4.5" height="11" rx="1" fill="#d8e4f5"/>
+  <rect x="14.5" y="8" width="4.5" height="9"  rx="1" fill="url(#bar)"/>
+  <!-- Peak hold -->
+  <rect x="5" y="7" width="4.5" height="1" rx="0.5" fill="#f59e0b" opacity="0.8"/>
+  <rect x="14.5" y="6.5" width="4.5" height="1" rx="0.5" fill="#ef4444" opacity="0.8"/>
+  <!-- Channel labels -->
+  <rect x="5" y="18.5" width="4.5" height="1.2" rx="0.5" fill="#1c5caa" opacity="0.5"/>
+  <rect x="14.5" y="18.5" width="4.5" height="1.2" rx="0.5" fill="#1c5caa" opacity="0.5"/>
+</svg>

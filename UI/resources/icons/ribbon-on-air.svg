@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- On Air: radio wave circle with ON DOT -->
+  <path d="M4 12 A9 9 0 0 0 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <path d="M20 12 A9 9 0 0 1 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <path d="M7 8 A7 7 0 0 0 12 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M17 8 A7 7 0 0 1 12 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <circle cx="12" cy="9" r="3" fill="currentColor"/>
+  <line x1="12" y1="3" x2="12" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

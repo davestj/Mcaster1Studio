@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.28)
+add_library(PodTranscribeModule STATIC PodTranscribeModule.cpp PodTranscribeModule.h)
+target_include_directories(PodTranscribeModule PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(PodTranscribeModule PUBLIC Mcaster1Core Qt6::Core Qt6::Gui Qt6::Widgets)
+target_compile_definitions(PodTranscribeModule PRIVATE MCASTER1PLUGIN_EXPORTS)

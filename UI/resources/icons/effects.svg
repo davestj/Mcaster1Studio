@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <!-- EQ wave lines -->
+  <path d="M1 5 Q4 2 7 5 Q10 8 13 5 Q15 3 15 5" stroke="#1c5caa" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M1 11 Q4 8 7 11 Q10 14 13 11 Q15 9 15 11" stroke="#1e3a5f" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- EQ knob -->
+  <circle cx="5" cy="8" r="2.5" fill="none" stroke="#6b6560" stroke-width="1"/>
+  <circle cx="5" cy="8" r="1" fill="#1c5caa"/>
+  <line x1="5" y1="1"   x2="5" y2="5.5" stroke="#96897c" stroke-width="1"/>
+  <line x1="5" y1="10.5" x2="5" y2="15" stroke="#96897c" stroke-width="1"/>
+</svg>

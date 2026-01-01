@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.28)
+add_library(PodRemoteModule STATIC PodRemoteModule.cpp PodRemoteModule.h)
+target_include_directories(PodRemoteModule PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(PodRemoteModule PUBLIC Mcaster1Core Qt6::Core Qt6::Gui Qt6::Widgets)
+target_compile_definitions(PodRemoteModule PRIVATE MCASTER1PLUGIN_EXPORTS)

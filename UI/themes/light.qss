@@ -1,0 +1,916 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Mcaster1Studio — Enterprise Pro Theme (Flat Modern)
+   Palette: off-white / white / tan / light-sand / baby-blue / light-navy
+   Designed for broadcast engineering, production suites, and on-air studios.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Global ───────────────────────────────────────────────────────────────── */
+QWidget {
+    background: #f5f3f0;
+    color: #1a1814;
+    font-family: "Segoe UI", "Arial", sans-serif;
+    font-size: 10pt;
+}
+
+QMainWindow, QDialog {
+    background: #f0ebe3;
+}
+
+/* ── Flat buttons ─────────────────────────────────────────────────────────── */
+QPushButton {
+    background: #e8e4de;
+    color: #1a1814;
+    border: 1px solid #c0b8ae;
+    border-radius: 3px;
+    padding: 4px 14px;
+    min-height: 22px;
+    min-width: 60px;
+}
+
+QPushButton:hover {
+    background: #ddd8d0;
+    border-color: #1c5caa;
+    color: #1e3a5f;
+}
+
+QPushButton:pressed {
+    background: #ccc6bc;
+    border-color: #1c5caa;
+}
+
+QPushButton:checked {
+    background: #1c5caa;
+    color: #ffffff;
+    border-color: #1e3a5f;
+    font-weight: 600;
+}
+
+QPushButton:disabled {
+    background: #ede8e0;
+    color: #a8a098;
+    border-color: #d0c8c0;
+}
+
+QPushButton[flat="true"] {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 2px 4px;
+    min-width: 0;
+    min-height: 0;
+}
+
+QPushButton[flat="true"]:hover {
+    background: #e0dbd4;
+    border-color: #c0b8ae;
+}
+
+QPushButton[flat="true"]:pressed {
+    background: #ccc6bc;
+    border-color: #c0b8ae;
+}
+
+/* ── QToolButton ──────────────────────────────────────────────────────────── */
+QToolButton {
+    background: #e8e4de;
+    color: #1a1814;
+    border: 1px solid #c0b8ae;
+    border-radius: 3px;
+    padding: 3px 8px;
+}
+
+QToolButton:hover {
+    background: #ddd8d0;
+    border-color: #1c5caa;
+    color: #1e3a5f;
+}
+
+QToolButton:pressed, QToolButton:checked {
+    background: #1c5caa;
+    color: white;
+    border-color: #1e3a5f;
+}
+
+/* ── GroupBox flat border ─────────────────────────────────────────────────── */
+QGroupBox {
+    background: #ffffff;
+    border: 1px solid #d8d4ce;
+    border-radius: 4px;
+    margin-top: 18px;
+    padding: 10px 6px 6px 6px;
+    font-weight: 600;
+    color: #1e3a5f;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 1px 8px;
+    color: #1e3a5f;
+    background: #f0ebe3;
+    border: 1px solid #d8d4ce;
+    border-radius: 2px;
+}
+
+/* ── Tab widget ───────────────────────────────────────────────────────────── */
+QTabWidget::pane {
+    background: #ffffff;
+    border: 1px solid #d8d4ce;
+    border-top: none;
+}
+
+QTabBar::tab {
+    background: #ede8e0;
+    color: #6b6560;
+    border: 1px solid #d8d4ce;
+    border-bottom: none;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding: 5px 16px;
+    margin-right: 2px;
+    min-width: 80px;
+}
+
+QTabBar::tab:selected {
+    background: #ffffff;
+    color: #1e3a5f;
+    border-bottom-color: #ffffff;
+    font-weight: 700;
+    border-top: 2px solid #1c5caa;
+}
+
+QTabBar::tab:hover:!selected {
+    background: #e4dfd8;
+    color: #1a1814;
+}
+
+QTabBar::tab:!selected {
+    margin-top: 2px;
+}
+
+/* ── Splitter handle (flat) ──────────────────────────────────────────────── */
+QSplitter::handle {
+    background: #d8d4ce;
+    width: 4px;
+}
+QSplitter::handle:vertical { height: 4px; }
+
+QSplitter::handle:hover {
+    background: #1c5caa;
+}
+
+/* ── ComboBox ────────────────────────────────────────────────────────────── */
+QComboBox {
+    background: #ffffff;
+    color: #1a1814;
+    border: 1px solid #c0b8ae;
+    border-radius: 3px;
+    padding: 3px 8px;
+    min-height: 22px;
+}
+
+QComboBox:hover {
+    border-color: #1c5caa;
+}
+
+QComboBox:focus {
+    border-color: #1c5caa;
+    background: #ffffff;
+}
+
+QComboBox::drop-down {
+    border-left: 1px solid #d8d4ce;
+    width: 20px;
+    background: #f0ebe3;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+QComboBox QAbstractItemView {
+    background: #ffffff;
+    color: #1a1814;
+    border: 1px solid #c0b8ae;
+    selection-background-color: #1c5caa;
+    selection-color: #ffffff;
+    outline: none;
+}
+
+/* ── Input fields ────────────────────────────────────────────────────────── */
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background: #ffffff;
+    color: #1a1814;
+    border: 1px solid #c0b8ae;
+    border-radius: 2px;
+    padding: 3px 5px;
+    selection-background-color: #1c5caa;
+    selection-color: #ffffff;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+    border-color: #1c5caa;
+    background: #fafcff;
+}
+
+QLineEdit:disabled {
+    background: #ede8e0;
+    color: #a8a098;
+}
+
+/* ── Scroll bars (thin, flat) ────────────────────────────────────────────── */
+QScrollBar:vertical {
+    background: #ede8e0;
+    width: 8px;
+    border: none;
+    border-radius: 4px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #b8b0a8;
+    border-radius: 4px;
+    min-height: 24px;
+    margin: 1px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #1c5caa;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+    background: none;
+}
+
+QScrollBar:horizontal {
+    background: #ede8e0;
+    height: 8px;
+    border: none;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #b8b0a8;
+    border-radius: 4px;
+    min-width: 24px;
+    margin: 1px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #1c5caa;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0;
+    background: none;
+}
+
+/* ── Sliders (flat) ──────────────────────────────────────────────────────── */
+QSlider::groove:horizontal {
+    background: #d8d4ce;
+    height: 4px;
+    border-radius: 2px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #1c5caa;
+    height: 4px;
+    border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+    background: #ffffff;
+    border: 2px solid #1c5caa;
+    width: 14px;
+    height: 14px;
+    margin: -5px 0;
+    border-radius: 7px;
+}
+
+QSlider::handle:horizontal:hover {
+    background: #dbeafe;
+    border-color: #1e3a5f;
+}
+
+QSlider::groove:vertical {
+    background: #d8d4ce;
+    width: 4px;
+    border-radius: 2px;
+}
+
+QSlider::add-page:vertical {
+    background: #1c5caa;
+    width: 4px;
+    border-radius: 2px;
+}
+
+QSlider::handle:vertical {
+    background: #ffffff;
+    border: 2px solid #1c5caa;
+    width: 14px;
+    height: 14px;
+    margin: 0 -5px;
+    border-radius: 7px;
+}
+
+/* ── Progress bar (flat) ─────────────────────────────────────────────────── */
+QProgressBar {
+    background: #e0dbd4;
+    border: 1px solid #c0b8ae;
+    border-radius: 3px;
+    text-align: center;
+    color: #1a1814;
+    font-weight: 600;
+    height: 14px;
+}
+
+QProgressBar::chunk {
+    background: #1c5caa;
+    border-radius: 2px;
+}
+
+/* ── Menu bar (flat) ─────────────────────────────────────────────────────── */
+QMenuBar {
+    background: #f0ebe3;
+    color: #1a1814;
+    border-bottom: 1px solid #d8d4ce;
+    spacing: 2px;
+}
+
+QMenuBar::item {
+    padding: 4px 10px;
+    background: transparent;
+    border-radius: 2px;
+}
+
+QMenuBar::item:selected {
+    background: #1c5caa;
+    color: #ffffff;
+}
+
+QMenuBar::item:pressed {
+    background: #1e3a5f;
+    color: #ffffff;
+}
+
+/* ── Context / drop-down menus ───────────────────────────────────────────── */
+QMenu {
+    background: #ffffff;
+    color: #1a1814;
+    border: 1px solid #d8d4ce;
+    padding: 2px;
+}
+
+QMenu::item {
+    padding: 4px 24px 4px 20px;
+    border-radius: 2px;
+}
+
+QMenu::item:selected {
+    background: #dbeafe;
+    color: #1e3a5f;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #d8d4ce;
+    margin: 4px 8px;
+}
+
+/* ── Status bar ──────────────────────────────────────────────────────────── */
+QStatusBar {
+    background: #ede8e0;
+    color: #6b6560;
+    border-top: 1px solid #d8d4ce;
+    font-size: 9pt;
+}
+
+QStatusBar::item {
+    border: none;
+}
+
+/* ── List / Tree / Table widgets ─────────────────────────────────────────── */
+QListWidget, QTreeWidget, QTableWidget, QListView, QTreeView, QTableView {
+    background: #ffffff;
+    alternate-background-color: #f7f4f0;
+    color: #1a1814;
+    border: 1px solid #d8d4ce;
+    gridline-color: #e8e4de;
+    selection-background-color: #1c5caa;
+    selection-color: #ffffff;
+    outline: none;
+}
+
+QListWidget::item, QTreeWidget::item, QTableWidget::item {
+    padding: 2px 4px;
+    border: none;
+}
+
+QListWidget::item:selected, QTreeWidget::item:selected, QTableWidget::item:selected {
+    background: #1c5caa;
+    color: #ffffff;
+}
+
+QListWidget::item:hover, QTreeWidget::item:hover {
+    background: #dbeafe;
+    color: #1e3a5f;
+}
+
+QHeaderView::section {
+    background: #f0ebe3;
+    color: #1a1814;
+    padding: 4px 6px;
+    border: none;
+    border-right: 1px solid #d8d4ce;
+    border-bottom: 1px solid #c0b8ae;
+    font-weight: 700;
+    font-size: 9pt;
+    letter-spacing: 0.5px;
+}
+
+/* ── Checkboxes ─────────────────────────────────────────────────────────── */
+QCheckBox {
+    color: #1a1814;
+    spacing: 6px;
+}
+
+QCheckBox::indicator {
+    width: 14px;
+    height: 14px;
+    border: 1px solid #c0b8ae;
+    border-radius: 2px;
+    background: #ffffff;
+}
+
+QCheckBox::indicator:checked {
+    background: #1c5caa;
+    border-color: #1e3a5f;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #1c5caa;
+}
+
+/* ── Tooltip (high contrast) ─────────────────────────────────────────────── */
+QToolTip {
+    background: #1e3a5f;
+    color: #ffffff;
+    border: none;
+    padding: 4px 8px;
+    font-size: 9pt;
+    border-radius: 3px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Module Dock — flat panel wrapping each module
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#ModuleDock {
+    background: #f5f3f0;
+    border: 1px solid #d8d4ce;
+    border-radius: 3px;
+}
+
+#ModuleDockTitle {
+    background: #ede8e0;
+    border-bottom: 1px solid #d8d4ce;
+    border-radius: 2px;
+}
+
+#ModuleDockTitleLabel {
+    color: #1e3a5f;
+    font-weight: 700;
+    font-size: 9pt;
+    letter-spacing: 0.3px;
+}
+
+#ModuleDockStatus {
+    color: #6b6560;
+    font-size: 9pt;
+}
+
+#ModuleDockBtn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: #6b6560;
+    min-width: 0;
+    min-height: 0;
+    padding: 1px;
+}
+
+#ModuleDockBtn:hover {
+    background: #ddd8d0;
+    border-color: #c0b8ae;
+    color: #1a1814;
+}
+
+#ModuleDockBtn:pressed {
+    background: #ccc6bc;
+    border-color: #c0b8ae;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Surface canvas and tab bar
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#SurfaceWidget {
+    background: #ede8e0;
+}
+
+#SurfaceInner {
+    background: #e8e2da;
+}
+
+#SurfaceSplitter {
+    background: #e8e2da;
+}
+
+#SurfaceAddBtn {
+    background: #e8e4de;
+    color: #1c5caa;
+    border: 1px solid #c0b8ae;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 900;
+    padding: 0 8px;
+    min-width: 28px;
+    min-height: 26px;
+}
+
+#SurfaceAddBtn:hover {
+    background: #dbeafe;
+    border-color: #1c5caa;
+    color: #1e3a5f;
+}
+
+/* ── Special role labels ──────────────────────────────────────────────────── */
+QLabel[role="status"] {
+    color: #6b6560;
+    font-size: 9pt;
+    font-style: italic;
+}
+
+QLabel[role="error"] {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+QLabel[role="success"] {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Surface Ribbon — top strip for each surface (sandy highlight)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#SurfaceRibbon {
+    background: #f0ebe3;
+    border-bottom: 1px solid #c0b8ae;
+    min-height: 32px;
+    max-height: 32px;
+}
+
+#RibbonSurfaceName {
+    color: #1e3a5f;
+    font-weight: 700;
+    font-size: 10pt;
+    letter-spacing: 0.4px;
+}
+
+#RibbonSurfaceIcon { background: transparent; }
+
+#RibbonOnAirBtn {
+    background: #e8e4de;
+    color: #6b6560;
+    border: 1px solid #c0b8ae;
+    border-radius: 3px;
+    font-size: 9pt;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    min-width: 64px;
+}
+
+#RibbonOnAirBtn:checked {
+    background: #dc2626;
+    color: #ffffff;
+    border-color: #991b1b;
+    font-weight: 900;
+}
+
+#RibbonOnAirBtn:hover:!checked {
+    background: #ddd8d0;
+    color: #1a1814;
+    border-color: #a0988e;
+}
+
+#RibbonActionBtn {
+    background: transparent;
+    color: #6b6560;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    font-size: 9pt;
+    padding: 2px 6px;
+}
+
+#RibbonActionBtn:hover {
+    background: #ddd8d0;
+    border-color: #c0b8ae;
+    color: #1a1814;
+}
+
+#RibbonSeparator {
+    background: #d8d4ce;
+    max-width: 1px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Surface Tray — bottom strip (sandy finish)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#SurfaceTray {
+    background: #ede8e0;
+    border-top: 1px solid #c0b8ae;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+#TrayLabel {
+    color: #a09080;
+    font-size: 9pt;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+#TrayPinnedArea, #TrayMinimizedArea, #TrayModuleArea { background: transparent; }
+
+#TrayModuleBtn {
+    background: #e8e4de;
+    color: #1a1814;
+    border: 1px solid #c0b8ae;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+    text-align: left;
+}
+
+#TrayModuleBtn:hover {
+    background: #ddd8d0;
+    border-color: #1c5caa;
+    color: #1e3a5f;
+}
+
+#TrayModuleBtn:pressed { background: #1c5caa; color: #ffffff; }
+
+#TrayModuleBtn[inTray="true"] {
+    background: #ddd8d0;
+    color: #a09080;
+    border-color: #c8c0b4;
+    font-style: italic;
+}
+
+#TrayModuleBtn[inTray="true"]:hover {
+    background: #d4cec6;
+    color: #6b6560;
+}
+
+#TrayChipBtn {
+    background: #e8e4de;
+    color: #1a1814;
+    border: 1px solid #c0b8ae;
+    border-radius: 3px;
+    font-size: 9pt;
+    padding: 2px 8px;
+}
+
+#TrayChipBtn:hover {
+    background: #dbeafe;
+    border-color: #1c5caa;
+    color: #1e3a5f;
+}
+
+#TraySeparator {
+    background: #d8d4ce;
+    max-width: 1px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Clock Module
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#ClockWidgetFull, #ClockWidgetCompact { background: transparent; }
+
+#ClockTime {
+    color: #1c5caa;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 13pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+#ClockTZ {
+    color: #6b6560;
+    font-size: 9pt;
+    font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Deck modules — objectName rules (Enterprise Pro)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#DeckBadgeA {
+    color: #1c5caa;
+    font-weight: 900;
+    font-size: 12px;
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    border-radius: 3px;
+    padding: 1px 6px;
+}
+
+#DeckBadgeB {
+    color: #7c3aed;
+    font-weight: 900;
+    font-size: 12px;
+    background: #ede9fe;
+    border: 1px solid #c4b5fd;
+    border-radius: 3px;
+    padding: 1px 6px;
+}
+
+#DeckTrackLabel { color: #1a1814; font-size: 12px; font-weight: 700; }
+#DeckStateLabel { color: #16a34a; font-size: 12px; font-weight: 700; }
+#DeckRemLabel   { color: #d97706; font-family:"Consolas","Courier New",monospace; font-size:14px; font-weight:700; }
+#DeckBpmLabel   { color: #d97706; font-family:"Consolas","Courier New",monospace; font-size:12px; font-weight:700; }
+#DeckPitchLabel { color: #6b6560; font-family:"Consolas","Courier New",monospace; font-size:12px; font-weight:600; }
+
+/* ── Crossfader ── */
+#CrossfaderLabelA { color: #1c5caa; font-weight: 700; font-size: 12px; }
+#CrossfaderLabelB { color: #7c3aed; font-weight: 700; font-size: 12px; }
+#CrossfaderCaption { color: #6b6560; font-size: 12px; letter-spacing: 0.5px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Video Module — Enterprise Pro objectName rules
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#VideoWidget { background: #f5f3f0; }
+#VideoContainer {
+    background: #e8e4de;
+    border: 1px solid #d8d4ce;
+    border-radius: 4px;
+}
+#VideoInfoBar {
+    background: #f0ebe3;
+    border-top: 1px solid #d8d4ce;
+}
+#VideoInfoOverlay { color: #6b6560; font-size: 12px; }
+#VideoControls {
+    background: #ede8e0;
+    border-top: 1px solid #d8d4ce;
+}
+#TransportBtn {
+    background: #e8e4de;
+    color: #1a1814;
+    border: 1px solid #c0b8ae;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+#TransportBtn:hover {
+    background: #dbeafe;
+    border-color: #1c5caa;
+    color: #1e3a5f;
+}
+#TransportBtnAccent {
+    background: #1c5caa;
+    color: #ffffff;
+    border: 1px solid #1e3a5f;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+#ControlLabel { color: #6b6560; font-size: 12px; font-weight: 600; }
+
+/* ─── AppRibbon (Enterprise Pro flat) ──────────────────────────────────── */
+#AppRibbon {
+    background: #f0ebe3;
+    border-bottom: 2px solid #1c5caa;
+    min-height: 48px;
+    max-height: 48px;
+}
+
+#AppRibbonLogo {
+    color: #1e3a5f;
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+#AppRibbonAddBtn {
+    background: #e8e4de;
+    border: 1px solid #c0b8ae;
+    color: #1a1814;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 12px;
+}
+#AppRibbonAddBtn:hover {
+    border-color: #1c5caa;
+    background: #dbeafe;
+    color: #1e3a5f;
+}
+
+#AppRibbonOnAirBtn {
+    background: #e8e4de;
+    border: 1px solid #c0b8ae;
+    color: #6b6560;
+    border-radius: 3px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+#AppRibbonOnAirBtn:checked {
+    background: #dc2626;
+    border-color: #991b1b;
+    color: #ffffff;
+}
+#AppRibbonOnAirBtn:hover {
+    border-color: #dc2626;
+    color: #dc2626;
+}
+
+/* ─── RibbonBox (Enterprise Pro) ───────────────────────────────────────── */
+#RibbonBox {
+    background: #ffffff;
+    border: 1px solid #d8d4ce;
+    border-radius: 4px;
+    margin: 3px 2px;
+}
+#RibbonBox:hover {
+    border-color: #1c5caa;
+}
+
+#RibbonBoxGrip {
+    color: #c0b8ae;
+    font-size: 10px;
+}
+
+#RibbonBoxClose {
+    background: transparent;
+    border: none;
+    color: #c0b8ae;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 0;
+    min-width: 16px; max-width: 16px;
+    min-height: 16px; max-height: 16px;
+}
+#RibbonBoxClose:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.10);
+    border-radius: 3px;
+}
+
+/* ─── WeatherWidget (Enterprise Pro) ───────────────────────────────────── */
+#WeatherCity  { color: #6b6560; font-size: 12px; font-weight: 600; }
+#WeatherTemp  { color: #1c5caa; font-size: 14px; font-weight: 700; }
+#WeatherCond  { color: #a09888; font-size: 12px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Encoder Module — Enterprise Pro
+   Table + status labels inherit global QTableWidget + QPushButton rules.
+   Only specialized overrides needed here.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#EncoderLiveLabel {
+    color: #16a34a;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PTT Widget — Enterprise Pro
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#PTTSectionLabel {
+    color: #1e3a5f;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+#PTTHintLabel {
+    color: #6b6560;
+    font-size: 12px;
+    font-style: italic;
+}
+
+#PTTKnobLabel {
+    color: #1e3a5f;
+    font-size: 12px;
+    font-weight: 600;
+}

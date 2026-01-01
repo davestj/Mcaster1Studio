@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#bbf7d0"/>
+      <stop offset="55%"  stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/>
+    </filter>
+    <filter id="ico">
+      <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <!-- Raised button body -->
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#166534" stroke-width="1.2" filter="url(#sh)"/>
+  <!-- Top-half gloss highlight -->
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Play triangle -->
+  <polygon points="11,9.5 11,22.5 22.5,16" fill="#ffffff" filter="url(#ico)"/>
+</svg>

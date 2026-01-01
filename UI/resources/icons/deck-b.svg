@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Deck B: vinyl + letter B -->
+  <circle cx="12" cy="13" r="8" stroke="#22c55e" stroke-width="1.8"/>
+  <circle cx="12" cy="13" r="3" stroke="#22c55e" stroke-width="1.2" opacity="0.6"/>
+  <circle cx="12" cy="13" r="1.2" fill="#22c55e"/>
+  <!-- Letter B -->
+  <path d="M9 2 L9 8 M9 2 C11 2 13 2.5 13 4 C13 5.5 11 6 9 6 M9 6 C11.5 6 14 6.5 14 8 C14 9.5 11.5 10 9 10 L9 10" stroke="#22c55e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

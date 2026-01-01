@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mcaster1Studio — Project Plan</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#0c1a2e; --raised:#1e3a5f;
+    --blue:#0ea5e9; --cyan:#38bdf8; --green:#22c55e;
+    --red:#ef4444; --amber:#f59e0b; --purple:#a78bfa;
+    --text:#e2e8f0; --muted:#64748b; --border:#1e3a5f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Inter,Arial,sans-serif;
+       font-size:14px;line-height:1.6;padding:24px 32px;max-width:1300px;margin:0 auto}
+  h1{color:var(--cyan);font-size:1.8rem;margin-bottom:4px}
+  h2{color:var(--cyan);font-size:1.2rem;margin:32px 0 10px;
+     border-bottom:1px solid var(--border);padding-bottom:6px;
+     text-transform:uppercase;letter-spacing:.5px}
+  h3{color:var(--blue);font-size:1rem;margin:20px 0 8px}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:24px}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{color:var(--cyan)}
+
+  .pg{display:grid;grid-template-columns:3.5ch 1fr auto auto;gap:0;
+      border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:20px}
+  .pg .hdr{background:var(--raised);color:var(--cyan);font-size:.75rem;font-weight:800;
+           text-transform:uppercase;letter-spacing:.8px;padding:8px 12px;
+           border-bottom:1px solid var(--border)}
+  .pg .c{padding:8px 12px;border-bottom:1px solid #131f35;font-size:.88rem;vertical-align:top}
+  .pg .c:nth-child(4n+1){color:var(--muted);font-weight:700;font-size:.82rem}
+  .pg .c:nth-child(4n+2){color:var(--text)}
+  .pg .c:nth-child(4n+3){color:var(--muted);font-size:.8rem}
+  .pg .c:nth-child(4n)  {font-weight:700;text-align:center}
+
+  .badge{display:inline-block;border-radius:12px;padding:2px 10px;
+         font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+  .bd  {background:#14532d;color:#4ade80;border:1px solid #16a34a}
+  .bwip{background:#1e3a5f;color:#38bdf8;border:1px solid #0ea5e9}
+  .bp  {background:#0a1422;color:#475569;border:1px solid #1e293b}
+  .bnew{background:#4a1d96;color:#c4b5fd;border:1px solid #7c3aed}
+
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:12px 0}
+  th{background:var(--raised);color:var(--cyan);padding:7px 12px;text-align:left;
+     font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;
+     border-bottom:1px solid var(--blue)}
+  td{padding:7px 12px;border-bottom:1px solid #0d1a2e;color:var(--text);vertical-align:top}
+  tr:hover td{background:#0a1422}
+
+  code{background:#060d18;border:1px solid #1e293b;border-radius:3px;
+       padding:1px 5px;font-family:"Consolas","Courier New",monospace;
+       font-size:.85em;color:var(--cyan)}
+  pre{background:#040810;border:1px solid #1e293b;border-radius:4px;
+      padding:12px;overflow-x:auto;font-size:.82rem;color:#94a3b8;line-height:1.5}
+
+  .box{background:var(--panel);border:1px solid var(--border);
+       border-left:3px solid var(--blue);border-radius:4px;
+       padding:12px 16px;margin:12px 0;font-size:.88rem;color:#94a3b8}
+  .box.g{border-left-color:var(--green)}
+  .box.a{border-left-color:var(--amber)}
+  .box.r{border-left-color:var(--red)}
+  .box.p{border-left-color:var(--purple)}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:12px 0}
+  @media(max-width:800px){.cols{grid-template-columns:1fr}}
+
+  ul{margin-left:20px;color:#94a3b8;font-size:.88rem;line-height:1.7}
+  ul li strong{color:var(--text)}
+  footer{margin-top:48px;color:var(--muted);font-size:.8rem;
+         border-top:1px solid var(--border);padding-top:12px}
+</style>
+</head>
+<body>
+
+<h1>Mcaster1Studio</h1>
+<p class="sub">Broadcast Automation Software Suite &mdash; Project Plan &amp; Status &mdash; Last updated: 2026-03-10 (v0.2.0)</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase Status</h2>
+<div class="pg">
+  <div class="hdr">#</div><div class="hdr">Description</div>
+  <div class="hdr">Key Deliverables</div><div class="hdr">Status</div>
+
+  <div class="c">1</div>
+  <div class="c">Foundation &mdash; Shell + AudioEngine + VU Meters</div>
+  <div class="c">Core.lib &middot; Audio.lib &middot; VUMeterModule &middot; dark.qss &middot; MainWindow &middot; Surface paradigm</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">2</div>
+  <div class="c">Deck Module &mdash; Dual player, waveform, crossfader, BPM</div>
+  <div class="c">DeckModule &middot; DeckAModule &middot; DeckBModule &middot; WaveformView &middot; CrossfaderWidget &middot; DeckPlayer</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">3</div>
+  <div class="c">Media Library &mdash; MySQL/MariaDB, TagLib scanner, drag-to-deck</div>
+  <div class="c">MediaLibraryModule &middot; DatabaseManager &middot; ScanWorker &middot; LibraryModel &middot; MusicBrainzLookup</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">4</div>
+  <div class="c">Encoder Module &mdash; 7 codecs, 7-state, DSP chain, list-view, reconnect watchdog</div>
+  <div class="c">EncoderModule &middot; EncoderSlot &middot; AudioRingBuffer &middot; IcyPusher &middot; EncoderSlotWidget &middot; QSplitter modules</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">5</div>
+  <div class="c">Effects Rack &mdash; 19&quot; virtual rack DSP, IEffectUnit ABI, 6 DSP units</div>
+  <div class="c">EffectsRackModule &middot; RackSlotWidget &middot; IEffectUnit C ABI &middot; EQ31 &middot; Sonic &middot; Comp &middot; AGC &middot; MicPre &middot; Stereo</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">6</div>
+  <div class="c">Metadata Module &mdash; ICY 2.2 full editor, 70+ fields, 8 groups</div>
+  <div class="c">MetadataModule &middot; Icy22EditorWidget &middot; MetadataPusher (HTTP PUT)</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">7</div>
+  <div class="c">Playlist / AutoDJ &mdash; Clock templates, rotation engine, broadcast log</div>
+  <div class="c">PlaylistModule &middot; ClockTemplateEditor &middot; AutoDJEngine &middot; PlaylistWidget</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">8</div>
+  <div class="c">Podcast Surface &mdash; Multi-track recorder, WAV export, PTT module</div>
+  <div class="c">PodcastModule &middot; PTTModule &middot; SPSC ring buffers &middot; 20ms drain timer &middot; WAV export</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">9</div>
+  <div class="c">Video / TV Surface &mdash; Video playlist, QMediaPlayer, RTMP stub</div>
+  <div class="c">VideoModule &middot; VideoWidget &middot; VideoPlaylist &middot; RTMP output stub</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">10</div>
+  <div class="c">Monitor Module &mdash; Icecast2/Shoutcast/DNAS polling, listener chart</div>
+  <div class="c">MonitorModule &middot; StatsPoller &middot; ChartWidget (custom QPainter) &middot; 60-sample ring</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">A</div>
+  <div class="c">UI Refinement &mdash; 3 themes, icons, tray, surface ribbon, event log, scheduler, clock, custom surface, drag-drop</div>
+  <div class="c">ThemeManager &middot; dark/classic/light QSS &middot; SVG icons &middot; SurfaceTray &middot; SurfaceRibbon &middot; SurfaceEventLog &middot; SurfaceScheduler &middot; ClockModule &middot; CustomSurfaceDialog &middot; ModuleDock float/pin</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">B</div>
+  <div class="c">AppRibbon &mdash; Drag-drop ribbon boxes, weather widget, compact VU meter, tab Add Module</div>
+  <div class="c">AppRibbon &middot; RibbonBox (drag MIME) &middot; WeatherWidget (wttr.in) &middot; VUMeterWidget compact mode &middot; SurfaceTabBar right-click Add Module</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">C</div>
+  <div class="c">Refinement Pass &mdash; Visual polish, persistence, wiring, edge cases</div>
+  <div class="c">Ribbon box persistence &middot; ON AIR wiring &middot; dock collapse &middot; splitter size save &middot; duplicate module guard &middot; status bar live updates &middot; Effects Rack default units</div>
+  <div class="c"><span class="badge bwip">&#9679; In Progress</span></div>
+
+  <div class="c">D</div>
+  <div class="c">UI Enhancements &mdash; 3D Clock, Weather redesign, Deck history, Smart ▶, Sub-tab module add fix, Save Session, Ribbon polish</div>
+  <div class="c">ClockWidget QPainter &middot; WeatherWidget 3D + forecast dialog &middot; DeckPanel track history list &middot; Smart play button &middot; Sub-tab &ldquo;Add Module&rdquo; wired &middot; Save Session per surface &middot; Ribbon 100px &middot; NowPlaying removed</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">E</div>
+  <div class="c">Session Persistence v2 &mdash; Auto-save, rename-proof restore, sub-tab UX polish</div>
+  <div class="c">saveAllSessionState() v2 keys &middot; 1.5s debounce auto-save &middot; stable index-based QSettings (rename-proof) &middot; targetPanel&rarr;addModule() restore &middot; double-click sub-tab renames &middot; Save/Load removed from sub-tab menus &middot; moduleLayoutChanged() signal &middot; connectSurfaceAutoSave()</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">F</div>
+  <div class="c">Encoder Module Redesign &mdash; 7 codecs, 7-state machine, per-slot DSP, list-view UI, DNAS stats poller</div>
+  <div class="c">EncoderConfig &middot; EncoderDsp (10-band EQ + AGC) &middot; EncoderListWidget &middot; EncoderConfigDialog (5 tabs) &middot; DnasPoller &middot; EncoderSlot rewrite &middot; EncoderModule rewrite</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">G</div>
+  <div class="c">UI Polish &amp; Accessibility &mdash; Theme audit, DeckWidget polish, 3D SVG icons, SurfaceTray nav fix</div>
+  <div class="c">Theme QSS audit &middot; PTT mic fix &middot; EncoderModule dark bleed strip &middot; DeckWidget 12px fonts &middot; SVG 3D icons (play/pause/stop/cue/loop/eject) &middot; SurfaceTray tab nav &middot; tooltips everywhere</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">H</div>
+  <div class="c">Audio Engine + SQLite DB &mdash; IDatabase, HTTP streaming, ICY 1.x/2.2, CartWall, Deck Browser Tabs</div>
+  <div class="c">IDatabase &middot; SqliteManager &middot; StreamReader (FFmpeg+ICY) &middot; DeckPlayer HTTP &middot; CartWallModule &middot; CartPlayer &middot; Deck browser tabs (History/Library/Playlist/Queue)</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">I</div>
+  <div class="c">Metadata Flow + VU Meters &mdash; Rich ICY from both decks, encoder VU panel, deck VU redesign</div>
+  <div class="c">Dual-deck metadata wiring &middot; IcyMetadata enrichment (genre/year/BPM) &middot; EncoderVuPanel (hi-res) &middot; DeckInlineMeter smooth gradient redesign &middot; Post-gain peak metering fix</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">11</div>
+  <div class="c">SDK &mdash; Public plugin API, DLL discovery, developer docs</div>
+  <div class="c">ModuleRegistry public API &middot; IModuleHost interface &middot; Dynamic Add Module menus &middot; SampleModule DLL &middot; SampleEffect DLL &middot; Plugin auto-deploy &middot; Developer Guide</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">CH</div>
+  <div class="c">Church Surface &mdash; 12 domain-specific modules for live church services</div>
+  <div class="c">TimerClockModule &middot; GraphicsEngineModule &middot; LyricsCasterModule &middot; ScriptureCasterModule &middot; AnnounceCasterModule &middot; TelePromptModule &middot; MediaCasterModule &middot; StageMonModule &middot; AudioMixModule &middot; TranscribeRecModule &middot; SwitchCasterModule &middot; ServiceRunnerModule &middot; wireChurchModules() cross-wiring</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">PD</div>
+  <div class="c">Podcast Surface &mdash; 13 professional podcast production modules</div>
+  <div class="c">PodMixerModule &middot; PodPTTModule &middot; PodRecorderModule &middot; PodSoundboardModule &middot; PodFXModule &middot; PodEditorModule &middot; PodEncodeModule &middot; PodTranscribeModule &middot; PodShowNotesModule &middot; PodRSSModule &middot; PodPublisherModule &middot; PodAnalyticsModule &middot; PodRemoteModule &middot; 13 SVG icons</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">HL</div>
+  <div class="c">System Health Module &mdash; CPU/memory/encoder monitoring + Prometheus metrics</div>
+  <div class="c">HealthModule &middot; HealthWidget &middot; MetricsServer &middot; health.svg icon</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">BF</div>
+  <div class="c">Bug Fix &mdash; Module containment (floating docks escape canvas bounds)</div>
+  <div class="c">ModuleDock qBound clamp &middot; SubSurfacePanel float-transition clamp &middot; ResizableWidget edge-resize clamp &middot; Session restore clamp &middot; 6 fix locations</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
+  <div class="c">K</div>
+  <div class="c">Surface Isolation, Multi-Monitor &amp; Display Management</div>
+  <div class="c">DbServerRegistry &middot; SurfaceDbContext &middot; Per-surface DB isolation &middot; SurfaceCreationWizard &middot; SurfaceWindow pop-out &middot; MonitorManager &middot; GPU/capture enum &middot; "Send to Monitor" &middot; YAML failover &middot; Extended schema</div>
+  <div class="c"><span class="badge bnew">Planned</span></div>
+
+  <div class="c">12</div>
+  <div class="c">Installer + Polish &mdash; WiX, first-run wizard, auto-update</div>
+  <div class="c">WiX installer &middot; FirstRunWizard &middot; SurfacePresets &middot; AutoUpdate stub</div>
+  <div class="c"><span class="badge bp">Pending</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Bug Fix &mdash; Module Containment (2026-03-10)</h2>
+<div class="box g">
+  <strong>Fixed: Floating module docks escaping sub-surface canvas bounds</strong>
+  <ul style="margin-top:8px">
+    <li><strong>Root cause:</strong> All <code>move()</code> and <code>setGeometry()</code> calls for floating docks had zero bounds checking, allowing docks to be positioned with negative Y coordinates (above the canvas viewport) where the title bar becomes inaccessible.</li>
+    <li><strong>Fix 1 &mdash; ModuleDock.cpp:308-312:</strong> Direct canvas drag now clamps via <code>qBound(0, pos, canvas-&gt;size() - dock-&gt;size())</code></li>
+    <li><strong>Fix 2 &mdash; SubSurfacePanel.cpp:127:</strong> Initial stagger position for <code>startFloating=true</code> bounded to canvas dimensions</li>
+    <li><strong>Fix 3 &mdash; SubSurfacePanel.cpp:212:</strong> Float-transition (<code>onModuleFloatRequested</code>) position clamped after <code>mapFromGlobal()</code></li>
+    <li><strong>Fix 4 &mdash; SubSurfacePanel.cpp:534-535:</strong> <code>applyLayoutSnapshot()</code> restored floating positions bounded</li>
+    <li><strong>Fix 5 &mdash; SubSurfacePanel.cpp:589-590:</strong> <code>restoreLayout()</code> from QSettings positions bounded</li>
+    <li><strong>Fix 6 &mdash; ResizableWidget.cpp:67-75:</strong> Edge resize clamps all 4 sides: <code>moveLeft(0)</code>, <code>moveTop(0)</code>, <code>setRight(pw)</code>, <code>setBottom(ph)</code></li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase K &mdash; Surface Isolation, Multi-Monitor &amp; Display Management (Planned)</h2>
+<div class="box p">
+  <strong>Planned &mdash; <a href="PHASE-K-PLAN.html">Full architectural plan &rarr;</a></strong>
+  <ul style="margin-top:8px">
+    <li><strong>Database Server Registry</strong> &mdash; Multiple named DB servers in System Preferences (SQLite + MySQL); UUID-keyed, first-run migration from legacy single-DB settings</li>
+    <li><strong>Per-Surface Database Isolation</strong> &mdash; Each surface gets its own DB schema/file; SurfaceDbContext injected into DB-aware modules via IDbAwareModule mixin; own media library, playlists, encoder configs, metadata presets, broadcast log</li>
+    <li><strong>Surface Creation Wizard</strong> &mdash; Multi-step QWizard: name &rarr; DB server selection &rarr; schema creation &rarr; module selection &rarr; confirmation</li>
+    <li><strong>Pop-Out Surface Windows</strong> &mdash; Right-click tab &rarr; "Pop Out Window" &rarr; QMainWindow (resize, maximize, minimize, F11 fullscreen, multi-monitor drag); "Dock Back" returns to tab; session-persisted</li>
+    <li><strong>Monitor &amp; Display Management</strong> &mdash; MonitorManager detects all monitors (resolution, DPI, GPU, refresh rate) via DXGI; "Send to Monitor" context menu auto-maximizes on target display; hot-plug handling</li>
+    <li><strong>Video Capture Device Registry</strong> &mdash; MediaFoundation/DirectShow enumeration of webcams, capture cards, virtual cameras; displayed in Preferences</li>
+    <li><strong>YAML Failover</strong> &mdash; Shadow YAML per surface for DB-down redundancy; auto-sync on save; read-only mode with warning banner on DB failure</li>
+    <li><strong>Shared vs Isolated</strong> &mdash; Hardware (audio devices, monitors, capture cards) remains system-shared; data (library, playlists, settings, logs) fully isolated per surface</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase I &mdash; Metadata Flow + VU Meters Completed (2026-03-08)</h2>
+<div class="box g">
+  <strong>Completed in Phase I:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>Dual-deck metadata wiring</strong> &mdash; Both Deck A and Deck B now emit rich <code>IcyMetadata</code> (artist, title, album, genre, year, BPM) via <code>buildMetaFromDeck()</code> lambda in MainWindow. Previously only Deck A was wired and only sent the filename as StreamTitle.</li>
+    <li><strong>MetadataModule &rarr; EncoderModule connection</strong> &mdash; <code>MetadataModule::metadataChanged</code> now properly connected to <code>EncoderModule::onMetadataUpdate()</code>, completing the metadata push pipeline to all active encoder slots.</li>
+    <li><strong>TagLib genre/year enrichment</strong> &mdash; <code>DeckPlayer::loadFile()</code> now extracts genre and year from TagLib tags (<code>tag->genre().to8Bit(true)</code>, <code>tag->year()</code>), exposed via <code>tagGenre()</code> and <code>tagYear()</code> accessors.</li>
+    <li><strong>Encoder VU panel</strong> &mdash; New <code>EncoderVuPanel</code> widget: hi-res vertical L/R bars per encoder slot, measuring real PCM peak levels from <code>EncoderSlot::peakL/R()</code> atomics. 20fps refresh, broadcast-standard ballistics (fast attack, slow release), 3-zone coloring (green/amber/red), peak-hold ticks. Diagnostic header: "VU" (green=signal), "VU --" (gray=receiving but silent), "VU OFF" (red=not in audio chain).</li>
+    <li><strong>Post-gain peak metering fix</strong> &mdash; <code>DeckPlayer::processBlock()</code> and <code>processStreamBlock()</code> now measure <code>std::abs(sL * finalGain)</code> instead of pre-gain <code>std::abs(sL)</code>. VU meters on both decks and encoders now correctly respond to volume fader, crossfader, and mute.</li>
+    <li><strong>Deck VU meter redesign</strong> &mdash; <code>DeckInlineMeter</code> completely rewritten: smooth continuous-fill <code>QLinearGradient</code> bars replacing 30-segment chunky LEDs. 30fps refresh, 3D depth with darker-edge gradients, 1px highlight shine, clip indicator at 0dBFS, tighter 36px layout. Matches modern broadcast software aesthetics.</li>
+    <li><strong>RT-safe fabsf()</strong> &mdash; All RT audio code uses <code>fabsf()</code> instead of <code>std::abs()</code> to avoid MSVC resolving <code>std::abs(float)</code> to the integer overload.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase CH &mdash; Church Surface Completed (2026-03-09)</h2>
+<div class="box g">
+  <strong>Completed in Phase CH:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>12 domain-specific church modules</strong> &mdash; Each is a per-instance static library (not DLL plugin). All follow the anonymous namespace widget + <code>#include "Module.moc"</code> pattern.</li>
+    <li><strong>TimerClockModule</strong> &mdash; Countdown/count-up timers for service segments, configurable presets, visual alerts at time thresholds</li>
+    <li><strong>GraphicsEngineModule</strong> &mdash; Central rendering pipeline for all visual overlays (lyrics, scripture, announcements)</li>
+    <li><strong>LyricsCasterModule</strong> &mdash; Worship lyrics display with verse/chorus navigation, CCLI song database integration</li>
+    <li><strong>ScriptureCasterModule</strong> &mdash; Bible verse display with book/chapter/verse navigation, multiple translations</li>
+    <li><strong>AnnounceCasterModule</strong> &mdash; Announcement/bulletin overlay with rich text, scheduling, rotation</li>
+    <li><strong>TelePromptModule</strong> &mdash; Scrolling teleprompter for sermon notes, adjustable speed/size/mirroring</li>
+    <li><strong>MediaCasterModule</strong> &mdash; Video/image overlay source for backgrounds, loops, media playback</li>
+    <li><strong>StageMonModule</strong> &mdash; Confidence monitor showing current lyrics, next slide, timer, notes to worship team</li>
+    <li><strong>AudioMixModule</strong> &mdash; Multi-channel church audio mixer with per-channel gain/mute/solo/EQ/aux sends</li>
+    <li><strong>TranscribeRecModule</strong> &mdash; Live sermon transcription recorder with PTT integration, SPSC ring buffer</li>
+    <li><strong>SwitchCasterModule</strong> &mdash; Production video switcher with Program/Preview bus, Cut/Dissolve/FTB transitions, lower third</li>
+    <li><strong>ServiceRunnerModule</strong> &mdash; Service rundown manager with timed segments (Welcome/Worship/Prayer/Scripture/Sermon/etc.), auto-advance, TimerClock integration</li>
+    <li><strong>Cross-module wiring</strong> &mdash; <code>wireChurchModules()</code> in MainWindow scans all surfaces via <code>qobject_cast</code> and wires: GraphicsEngine&rarr;visual modules, SwitchCaster&rarr;all source modules, StageMon&rarr;content modules, ServiceRunner&rarr;coordination modules</li>
+    <li><strong>ISurface.h</strong> &mdash; Church surface defaults expanded from 6 to 17 modules (5 core + 12 church-specific)</li>
+    <li><strong>12 SVG icons</strong> &mdash; 3D raised style matching existing transport icons</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase PD &mdash; Podcast Surface Completed (2026-03-10)</h2>
+<div class="box g">
+  <strong>Completed in Phase PD:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>13 professional podcast production modules</strong> &mdash; Per-instance factories (no singletons), all self-contained.</li>
+    <li><strong>PodMixerModule</strong> &mdash; 6-channel mixer (Host, Guest 1-2, Soundboard, Music, Phone) with gain/volume/pan/mute/solo/EQ/aux per channel, VU bars, master bus</li>
+    <li><strong>PodPTTModule</strong> &mdash; Enhanced PTT with Hold/Toggle/AlwaysOn modes, Cough button, Talkback, VAD (voice activity detection), DSP params</li>
+    <li><strong>PodRecorderModule</strong> &mdash; Multi-track WAV recorder with show/episode metadata, markers, takes, time display, transport controls, ring buffer recording</li>
+    <li><strong>PodSoundboardModule</strong> &mdash; Sound pad grid with banks (Intro/Outro, Sound FX, Music Beds), QMediaPlayer per pad, OneShot/Toggle/Loop modes, JSON serialization</li>
+    <li><strong>PodFXModule</strong> &mdash; 7-processor voice effects chain: Noise Gate, Compressor, De-Esser, Parametric EQ, High-Pass Filter, Limiter, LUFS Meter. Bypass per processor, reorderable chain, RT-safe DSP</li>
+    <li><strong>PodEditorModule</strong> &mdash; DAW-style waveform editor: timeline with markers, region selection, cut/trim stubs, playback with position indicator, zoom controls, QMediaPlayer playback</li>
+    <li><strong>PodEncodeModule</strong> &mdash; Multi-format export (MP3/AAC/OGG/FLAC/Opus), configurable bitrate/samplerate/channels, ID3 metadata form, LUFS normalization target, job queue with progress</li>
+    <li><strong>PodTranscribeModule</strong> &mdash; Transcript segment editor (time/speaker/text/confidence), speaker label management, SRT/VTT export, chapter marker generation (Whisper integration v2)</li>
+    <li><strong>PodShowNotesModule</strong> &mdash; WYSIWYG rich text editor with bold/italic/link/timestamp toolbar, templates (Standard/Interview/Solo), chapter markers, resource links, guest bios, HTML/Markdown/text export</li>
+    <li><strong>PodRSSModule</strong> &mdash; RSS 2.0 + iTunes namespace feed generator, show settings form, episode table with add/edit/remove, feed validation, XML preview, file export</li>
+    <li><strong>PodPublisherModule</strong> &mdash; Multi-target publishing: Local Copy (v1), SFTP/FTP/HTTP (v2 stubs), target management, per-target progress bars</li>
+    <li><strong>PodAnalyticsModule</strong> &mdash; Episode stats dashboard: downloads, subscribers, growth trend, bar chart visualization, episode data table, CSV export</li>
+    <li><strong>PodRemoteModule</strong> &mdash; Remote guest management: up to 4 guests, status indicators (Disconnected/Waiting/Connected/Error), audio level bars, mute/admit controls, join URL generation (WebRTC v2)</li>
+    <li><strong>ISurface.h</strong> &mdash; Podcast surface defaults expanded from 4 to 17 modules (4 core + 13 podcast-specific)</li>
+    <li><strong>13 SVG icons</strong> &mdash; Each with unique color theme: blue (mixer), amber (PTT), red (recorder), purple (soundboard), cyan (FX), teal (editor), green (encode), indigo (transcribe), yellow (shownotes), orange (RSS), emerald (publisher), violet (analytics), sky (remote)</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase E — Session Persistence v2 Completed (2026-03-05)</h2>
+<div class="box g">
+  <strong>Completed in Phase E:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>v2 stable QSettings format</strong> — All session data now uses integer-indexed keys (<code>session/v2/&lt;si&gt;/sub/&lt;pi&gt;/...</code>) that remain valid after master surface tab renames. Replaces the old name-based <code>Surface/&lt;name&gt;/</code> keys that broke on rename.</li>
+    <li><strong>Auto-save on every action</strong> — A 1.5s debounced <code>QTimer</code> fires <code>saveAllSessionState()</code> after any dock created/destroyed, sub-tab added/removed/renamed/recolored, or master tab renamed. No user action required.</li>
+    <li><strong>Correct multi-sub-panel restore</strong> — During restore, modules are added via <code>targetPanel-&gt;addModule(mod)</code> directly rather than <code>sw-&gt;addModule()</code>, avoiding the <code>m_stack-&gt;currentIndex()</code> race condition where the stack index is set before the new panel is inserted.</li>
+    <li><strong>Custom name survives rename</strong> — Both <code>customName</code> and <code>tabLabel</code> are stored; on restore the tab label is applied so renamed surfaces ("GRR Broadcast" etc.) reload correctly.</li>
+    <li><strong>Double-click sub-tab chip to rename</strong> — <code>SubSurfaceTabChip::mouseDoubleClickEvent</code> now emits <code>renameRequested</code>, triggering the same <code>QInputDialog</code> as the right-click "Rename..." action.</li>
+    <li><strong>Removed Save/Load Session from sub-tab menus</strong> — Both the chip right-click context menu and the ▼ sessions dropdown no longer show Save/Load Session. Save Session lives only on the master surface tab right-click, saving ALL sub-tabs and modules in one operation.</li>
+    <li><strong><code>SurfaceWidget::moduleLayoutChanged()</code></strong> — New signal emitted from <code>connectPanel()</code> on <code>dockCreated</code> / <code>dockDestroyed</code>; wired to <code>scheduleAutoSave()</code> by <code>connectSurfaceAutoSave()</code>.</li>
+    <li><strong>AppRibbon final sizing</strong> — Height 100px (RibbonBox 92px), NowPlayingWidget removed from default ribbon. Clock compact widget 88px (3-row: time/date/TZ).</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase F &mdash; Encoder Module Redesign Completed (2026-03-06)</h2>
+<div class="box g">
+  <strong>Completed in Phase F:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>7 codecs</strong> &mdash; MP3 (LAME), Opus (libopusenc), Vorbis (libvorbis), FLAC (libFLAC), AAC-LC, HE-AAC-v1, HE-AAC-v2 (fdk-aac). Codec headers isolated to .cpp files (no header pollution).</li>
+    <li><strong>7-state machine</strong> &mdash; Idle &rarr; Starting &rarr; Connecting &rarr; Streaming &rarr; Reconnecting &rarr; Sleep &rarr; Error. Auto-reconnect watchdog with configurable retries; <code>wake()</code> transitions Sleep &rarr; Connecting.</li>
+    <li><strong>3 input sources</strong> &mdash; LiveDeckMix (ring buffer from RT onAudioBlock), PortAudio device (Pa_OpenStream in encoder thread), WASAPI loopback (IAudioClient capture).</li>
+    <li><strong>Per-slot DSP chain</strong> &mdash; <code>EncoderDsp</code> runs in encoder thread: 10-band biquad EQ (RBJ IIR, 6 presets: flat/broadcast/spoken_word/classic_rock/country/modern_rock), feedforward AGC with hard limiter, PTT duck (50ms linear ramp).</li>
+    <li><strong>List-view UI</strong> &mdash; <code>EncoderListWidget</code>: QTableWidget showing all slots with 2s auto-refresh. Status color-coded: green=LIVE, amber=CONNECTING/RECONNECTING, blue=STARTING, red=ERROR, gray=SLEEP/IDLE. Double-click &rarr; config dialog.</li>
+    <li><strong>5-tab config dialog</strong> &mdash; <code>EncoderConfigDialog</code>: Basic (server/codec/source), DSP (EQ/AGC), ICY 2.2 (DNAS only, 6 groups), Archive (WAV/MP3), Stats (live read-only).</li>
+    <li><strong>DnasPoller</strong> &mdash; Background QThread polling <code>/admin/stats</code> XML (Icecast2) or <code>/admin/mcaster1stats</code> (DNAS) every 15s. Deduplication: one TCP fetch per unique host:port, distributed to all mounts. Emits <code>statsUpdated</code>.</li>
+    <li><strong>Mcaster1DNAS priority</strong> &mdash; Default server type is DNAS (not Icecast2). ICY 2.2 tab enabled only for DNAS targets.</li>
+    <li><strong>PTT propagation</strong> &mdash; <code>EncoderModule::setPttActive(bool)</code> forwards to all slots with <code>pttDuckEnabled=true</code>. Wired from PTTModule::stateChanged in MainWindow.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase 11 &mdash; SDK &amp; Public Plugin System Completed (2026-03-06)</h2>
+<div class="box g">
+  <strong>Completed in Phase 11:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>ModuleRegistry public API</strong> &mdash; <code>ModuleRegistry.h</code> exposes <code>availableModules()</code>, <code>availableEffects()</code>, <code>createPluginModule()</code>, <code>createPluginEffect()</code>. Centralized canonical module list replaces 3 hardcoded <code>kModules</code> arrays in SurfaceTabBar, SubSurfaceTabBar, and CustomSurfaceDialog.</li>
+    <li><strong>IModuleHost interface</strong> &mdash; <code>IModuleHost.h</code> defines the host services contract: logging, version queries, audio engine params, plugins directory. Passed to <code>mcaster1_create_module()</code>.</li>
+    <li><strong>Plugin discovery at startup</strong> &mdash; <code>M1::initModuleRegistry()</code> called in MainWindow constructor before module factory init. Scans <code>plugins/modules/</code> and <code>plugins/effects/</code> for DLLs, validates API version, logs results.</li>
+    <li><strong>Dynamic Add Module menus</strong> &mdash; All 3 &ldquo;Add Module&rdquo; menus (master tab right-click, sub-tab chip right-click, Custom Surface dialog) now call <code>M1::availableModules()</code> which returns built-in modules + discovered plugin modules.</li>
+    <li><strong>Plugin factory fallback</strong> &mdash; <code>MainWindow::createModule()</code> first checks built-in factory map, then falls back to <code>M1::createPluginModule()</code> for third-party DLL modules.</li>
+    <li><strong>SampleModule DLL</strong> &mdash; Minimal module plugin example. Auto-deployed to <code>plugins/modules/</code> via CMake post-build.</li>
+    <li><strong>SampleEffect DLL</strong> &mdash; Minimal effect plugin example (gain control). Auto-deployed to <code>plugins/effects/</code> via CMake post-build.</li>
+    <li><strong>Developer Guide</strong> &mdash; <code>SDK/docs/DeveloperGuide.md</code> covers plugin types, C ABI exports, IModule/IEffectUnit interfaces, AudioBuffer, IModuleHost, CMake template, RT safety rules, and EventBus communication.</li>
+    <li><strong>Cart Wall in module catalog</strong> &mdash; <code>com.mcaster1.cartwall</code> added to built-in module list and PLANNING.html module catalog.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase H &mdash; Audio Engine + SQLite DB Completed (2026-03-06)</h2>
+<div class="box g">
+  <strong>Completed in Phase H (H.1&ndash;H.7):</strong>
+  <ul style="margin-top:8px">
+    <li><strong>IDatabase abstraction</strong> &mdash; Pure virtual interface with SQLite (default, zero-config) and MySQL/MariaDB backends. Factory reads QSettings; falls back to SQLite on MySQL failure.</li>
+    <li><strong>HTTP stream playback</strong> &mdash; <code>DeckPlayer::loadUrl()</code> via <code>StreamReader</code> (FFmpeg <code>avformat_open_input()</code> with <code>icy=1</code> + <code>Icy-Version: 2.2</code> headers, SPSC ring buffer).</li>
+    <li><strong>CartWallModule</strong> &mdash; Instant-play audio grid (4&times;4 default, up to 8&times;8). CartPlayer (QAudioDecoder &rarr; float32 PCM), CartButton (colored grid buttons with play indicator), F1&ndash;F12 shortcuts. Integrated into RT audio callback chain after PTT.</li>
+    <li><strong>Deck browser tabs</strong> &mdash; QTabWidget replacing standalone history list. 4 tabs: History, Library (QTableWidget), Playlist, Queue. Right-click context menu: Load to Deck A/B, Add to Queue, Edit Tags. Populated from MediaLibraryModule and QueueModule via MainWindow wiring.</li>
+    <li><strong>14px font sizes</strong> &mdash; All DeckWidget text bumped to 14px minimum for Enterprise Pro readability.</li>
+    <li><strong>QT_MEDIA_BACKEND=ffmpeg</strong> &mdash; Set before QApplication to force FFmpeg backend (WMF can&rsquo;t decode OGG/Vorbis).</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase G &mdash; UI Polish &amp; Accessibility Completed (2026-03-06)</h2>
+<div class="box g">
+  <strong>Completed in Phase G:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>Theme system audit</strong> &mdash; Removed ALL hardcoded dark <code>setStyleSheet()</code> calls from <code>EncoderListWidget.cpp</code>, <code>EncoderConfigDialog.cpp</code>, <code>PTTWidget.cpp</code>. Replaced with <code>setObjectName()</code> + QSS selectors in all three theme files.</li>
+    <li><strong>Enterprise Pro font rules</strong> &mdash; Enforced minimum 12px (body), 14px (medium), 16px (large) across all widget stylesheets. Fixed ~18 violations in <code>light.qss</code> and every inline style in <code>DeckWidget.cpp</code>.</li>
+    <li><strong>PTT mic always-on fix</strong> &mdash; <code>MouseButtonRelease</code> now sets <code>State::Off</code> (was incorrectly setting <code>State::Armed</code>, making the mic indicator appear permanently on after creating a DJ or Broadcast surface).</li>
+    <li><strong>SurfaceTray tab navigation fix</strong> &mdash; Clicking a module button in the surface tray now switches to the correct sub-surface tab (<code>m_subTabBar + m_stack setCurrentIndex</code>) before calling <code>panel-&gt;focusDock()</code>. Previously only focused the dock without switching pages.</li>
+    <li><strong>3D SVG icons</strong> &mdash; All 6 transport SVGs redesigned to 32&times;32 viewBox with 3D raised button style: 3-stop linearGradient background (light&rarr;saturated&rarr;dark), semi-transparent shine overlay on top half, <code>feDropShadow</code> for depth, white icon glyphs with shadow. New <code>eject.svg</code> added for the unload/eject button.</li>
+    <li><strong>DeckWidget transport buttons</strong> &mdash; Replaced Unicode glyphs with SVG icons. Buttons enlarged to 40&times;34px for better click targets.</li>
+    <li><strong>DeckWidget controls sizing</strong> &mdash; Hot cue pads: 36&times;28px. Artwork: 64&times;64px with rounded corners. BPM nudge: 22&times;22px. Mute/AIR/CUE routing: 26-34&times;24px. Header row height: 28px.</li>
+    <li><strong>Tooltips</strong> &mdash; Added descriptive tooltips to every interactive element in DeckWidget that was missing one (artwork, deck badge, state label, VOL caption, fader, all routing buttons).</li>
+    <li><strong>PTT + Encoder QSS sections</strong> &mdash; Added <code>#PTTSectionLabel</code>, <code>#PTTHintLabel</code>, <code>#PTTKnobLabel</code>, <code>#EncoderLiveLabel</code> rules to all three theme files with theme-appropriate colors.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase D — UI Enhancements Completed (2026-03-05)</h2>
+<div class="box g">
+  <strong>Completed in Phase D:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>3D LED Clock widget</strong> — Complete rewrite: custom QPainter panel, amber LED text, 12-hour format, date row, timezone — matches WeatherWidget aesthetic. Compact height 88px for ribbon (3 rows: time/date/TZ).</li>
+    <li><strong>WeatherWidget 3D redesign</strong> — Full dark 3D panel, QPainter-drawn weather icons (7 categories), left-click opens 5-day forecast dialog with per-day icon+hi/lo/condition cards.</li>
+    <li><strong>Deck track history list</strong> — Replaced WaveformView with a QListWidget showing recently-played tracks (newest first, newest in blue). Empty-state placeholder guidance shown until first track loads.</li>
+    <li><strong>Smart play button (empty deck)</strong> — Clicking ▶ on an empty deck shows a context menu: Play Next from Queue, Open Audio File..., Browse Media Library, drag hint. M3U/PLS files routed to Queue module.</li>
+    <li><strong>Sub-surface "Add Module" fix</strong> — <code>SurfaceWidget::addModuleRequested</code> was emitted but never connected to MainWindow. Fixed: now wires the signal → <code>createModule() + addModule(startFloating=true)</code>.</li>
+    <li><strong>Master surface tab "Save Session"</strong> — Right-clicking a master surface tab shows "Save Session" which saves all sub-panels, module lists, layouts. Confirmation in status bar.</li>
+    <li><strong>Queue module in Add Module lists</strong> — <code>com.mcaster1.queue</code> + <code>com.mcaster1.clock</code> added to both sub-surface chip and master tab right-click menus.</li>
+    <li><strong>Removed static clock from sub-tab bar</strong> — The compact clock pinned to the right slot of each sub-surface tab bar has been removed.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase C — Refinement Backlog</h2>
+<div class="box a">
+  <strong>Remaining items for Phase C refinement pass:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>AppRibbon persistence</strong> — save/restore which RibbonBoxes are open (clock, weather, VU) across sessions via QSettings</li>
+    <li><strong>ON AIR button wiring</strong> — <code>AppRibbon::onAirToggled</code> signal needs to connect to <code>EncoderModule</code> active-slot state; also reflect per-surface ON AIR</li>
+    <li><strong>Duplicate module guard</strong> — tab right-click "Add Module" should check if a singleton module (deck, encoder, library, etc.) is already on the surface before creating a second instance</li>
+    <li><strong>ModuleDock collapse button</strong> — ▼/▶ button in title bar to collapse/expand content area; save state in QSettings</li>
+    <li><strong>Status bar live updates</strong> — now-playing track from deck + active encoder slot count</li>
+    <li><strong>EffectsRack default units</strong> — pre-populate Sonic Maximizer + EQ31 + Compressor on first load (if no saved state)</li>
+    <li><strong>Ribbon box visual polish</strong> — sizing, spacing, grip width, hover transitions</li>
+    <li><strong>WeatherWidget live test</strong> — verify wttr.in JSON parsing end-to-end with real city name</li>
+    <li><strong>Compact VU rendering</strong> — verify bar fill vs. actual audio levels and peak-hold behavior</li>
+    <li><strong>Drop indicator fine-tuning</strong> — AppRibbon drop indicator x-position edge cases</li>
+    <li><strong>Shared resource awareness</strong> — modules like MediaLibrary, PTT, Encoder are singletons shared across all sub-tabs; "already loaded" indicator in Add Module menus</li>
+  </ul>
+  <p style="margin-top:10px;color:var(--green);font-size:.85rem">
+    &#10003; <em>Resolved in Phase E:</em> Sub-surface session save/restore (v2 auto-save + stable keys + rename-proof restore)
+  </p>
+  <p style="margin-top:10px;color:var(--green);font-size:.85rem">
+    &#10003; <em>Resolved in Phase G:</em> Theme dark-bleed from Encoder/PTT modules; DeckWidget font sizes; PTT mic always-on; SurfaceTray navigation to correct sub-tab
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Technology Stack</h2>
+<div class="cols">
+<div>
+<table>
+  <tr><th>Component</th><th>Choice</th></tr>
+  <tr><td>Language</td><td>C++20 &middot; MSVC v143 &middot; /MP parallel build</td></tr>
+  <tr><td>UI</td><td>Qt 6.8.3 LTS (Widgets + Network + Multimedia + Svg)</td></tr>
+  <tr><td>Build</td><td>CMake 3.28+ &middot; VS2022 generator &middot; vcpkg x64-windows</td></tr>
+  <tr><td>Audio I/O</td><td>PortAudio 19.7 + ASIO SDK (vcpkg portaudio[asio])</td></tr>
+  <tr><td>Codecs</td><td>libopusenc &middot; libvorbis &middot; libFLAC &middot; fdk-aac &middot; LAME (external)</td></tr>
+  <tr><td>Video</td><td>FFmpeg 8.0.1</td></tr>
+  <tr><td>Database</td><td>MySQL/MariaDB (vcpkg unofficial-libmariadb)</td></tr>
+  <tr><td>Tag Reading</td><td>TagLib 2.1.1 (compiled /EHa)</td></tr>
+  <tr><td>HTTP</td><td>Qt6::Network (weather, ICY) &middot; libcurl 8.18 (monitor, metadata push)</td></tr>
+  <tr><td>Plugin ABI</td><td>DLL C ABI factory functions</td></tr>
+</table>
+</div>
+<div>
+<div class="box g">
+  <strong>Qt lock:</strong> Always use <code>C:/Qt/6.8.3/msvc2022_64</code>.<br>
+  Qt 6.9.1 and 6.10.2 MSVC are missing <code>Qt6Config.cmake</code>.
+</div>
+<div class="box a">
+  <strong>CMake configure:</strong>
+  <pre>cmake -B build -G "Visual Studio 17 2022" -A x64 \
+  -DCMAKE_TOOLCHAIN_FILE=.../vcpkg/scripts/buildsystems/vcpkg.cmake \
+  -DVCPKG_TARGET_TRIPLET=x64-windows \
+  -DCMAKE_PREFIX_PATH="C:/Qt/6.8.3/msvc2022_64"</pre>
+</div>
+<div class="box">
+  <strong>Build:</strong> <code>cmake --build build --config Debug</code><br>
+  <strong>Run:</strong> <code>build\bin\Debug\Mcaster1Studio.exe</code>
+</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Surface Paradigm</h2>
+<table>
+  <tr><th>Surface</th><th>Intent</th><th>Default Modules</th></tr>
+  <tr><td>Alpha</td><td>Primary radio broadcast</td><td>VU Meter &middot; Deck A+B &middot; Media Library &middot; Encoder &middot; Playlist</td></tr>
+  <tr><td>Beta</td><td>Secondary / backup broadcast</td><td>Deck A+B &middot; Encoder &middot; VU Meter</td></tr>
+  <tr><td>Company</td><td>Corporate streaming</td><td>Playlist &middot; Encoder &middot; Metadata &middot; Monitor</td></tr>
+  <tr><td>DJ</td><td>Live DJ performance</td><td>Deck A+B &middot; Crossfader &middot; Effects Rack &middot; VU Meter</td></tr>
+  <tr><td>Entertainment</td><td>TV / Video automation</td><td>Video &middot; Encoder &middot; Playlist</td></tr>
+  <tr><td>Social</td><td>Socialcasting + RTMP</td><td>Encoder &middot; Metadata &middot; Monitor</td></tr>
+  <tr><td>Podcast</td><td>Professional podcast production</td><td>PTT &middot; Podcast &middot; Effects Rack &middot; Media Library + 13 podcast modules (Mixer &middot; PTT &middot; Recorder &middot; Soundboard &middot; FX &middot; Editor &middot; Encode &middot; Transcribe &middot; ShowNotes &middot; RSS &middot; Publisher &middot; Analytics &middot; Remote)</td></tr>
+  <tr><td>Church</td><td>Church AV + stream + podcast</td><td>PTT &middot; Encoder &middot; VU Meter &middot; Video &middot; Media Library + 12 church modules (TimerClock &middot; Graphics &middot; Lyrics &middot; Scripture &middot; Announce &middot; TelePrompt &middot; MediaCaster &middot; StageMon &middot; AudioMix &middot; TranscribeRec &middot; SwitchCaster &middot; ServiceRunner)</td></tr>
+  <tr><td>Custom</td><td>User-defined</td><td>Any modules — chosen via Custom Surface dialog</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Module Catalog</h2>
+<table>
+  <tr><th>Module</th><th>Plugin ID</th><th>Phase</th><th>Status</th></tr>
+  <tr><td>VUMeterModule</td><td><code>com.mcaster1.vumeter</code></td><td>1</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>DeckModule (Combined)</td><td><code>com.mcaster1.deck</code></td><td>2</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>DeckAModule</td><td><code>com.mcaster1.deck.a</code></td><td>2</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>DeckBModule</td><td><code>com.mcaster1.deck.b</code></td><td>2</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>MediaLibraryModule</td><td><code>com.mcaster1.library</code></td><td>3</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>EncoderModule</td><td><code>com.mcaster1.encoder</code></td><td>4</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>EffectsRackModule</td><td><code>com.mcaster1.effects</code></td><td>5</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>MetadataModule</td><td><code>com.mcaster1.metadata</code></td><td>6</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PlaylistModule</td><td><code>com.mcaster1.playlist</code></td><td>7</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodcastModule</td><td><code>com.mcaster1.podcast</code></td><td>8</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PTTModule</td><td><code>com.mcaster1.ptt</code></td><td>8</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>VideoModule</td><td><code>com.mcaster1.video</code></td><td>9</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>MonitorModule</td><td><code>com.mcaster1.monitor</code></td><td>10</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>ClockModule</td><td><code>com.mcaster1.clock</code></td><td>A</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>QueueModule (AutoDJ)</td><td><code>com.mcaster1.queue</code></td><td>B</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>CartWallModule</td><td><code>com.mcaster1.cartwall</code></td><td>H</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td colspan="4" style="background:var(--raised);color:var(--cyan);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Church Surface Modules</td></tr>
+  <tr><td>TimerClockModule</td><td><code>com.mcaster1.church.timerclock</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>GraphicsEngineModule</td><td><code>com.mcaster1.church.graphics</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>LyricsCasterModule</td><td><code>com.mcaster1.church.lyrics</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>ScriptureCasterModule</td><td><code>com.mcaster1.church.scripture</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>AnnounceCasterModule</td><td><code>com.mcaster1.church.announce</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>TelePromptModule</td><td><code>com.mcaster1.church.teleprompt</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>MediaCasterModule</td><td><code>com.mcaster1.church.mediacaster</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>StageMonModule</td><td><code>com.mcaster1.church.stagemon</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>AudioMixModule</td><td><code>com.mcaster1.church.audiomix</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>TranscribeRecModule</td><td><code>com.mcaster1.church.transcriberec</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>SwitchCasterModule</td><td><code>com.mcaster1.church.switchcaster</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>ServiceRunnerModule</td><td><code>com.mcaster1.church.servicerunner</code></td><td>CH</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td colspan="4" style="background:var(--raised);color:var(--cyan);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Podcast Surface Modules</td></tr>
+  <tr><td>PodMixerModule</td><td><code>com.mcaster1.podcast.mixer</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodPTTModule</td><td><code>com.mcaster1.podcast.ptt</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodRecorderModule</td><td><code>com.mcaster1.podcast.recorder</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodSoundboardModule</td><td><code>com.mcaster1.podcast.soundboard</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodFXModule</td><td><code>com.mcaster1.podcast.fx</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodEditorModule</td><td><code>com.mcaster1.podcast.editor</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodEncodeModule</td><td><code>com.mcaster1.podcast.encode</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodTranscribeModule</td><td><code>com.mcaster1.podcast.transcribe</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodShowNotesModule</td><td><code>com.mcaster1.podcast.shownotes</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodRSSModule</td><td><code>com.mcaster1.podcast.rss</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodPublisherModule</td><td><code>com.mcaster1.podcast.publisher</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodAnalyticsModule</td><td><code>com.mcaster1.podcast.analytics</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>PodRemoteModule</td><td><code>com.mcaster1.podcast.remote</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td colspan="4" style="background:var(--raised);color:var(--cyan);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px">System Modules</td></tr>
+  <tr><td>HealthModule</td><td><code>com.mcaster1.health</code></td><td>HL</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>ICY Protocol Compliance</h2>
+<div class="box r">
+  <strong>Non-negotiable rule:</strong> ALL encoder targets MUST send ICY 1.x <code>StreamTitle=</code>
+  even when also sending ICY 2.2. Backward compatibility is mandatory.
+</div>
+<table>
+  <tr><th>Server</th><th>ICY 1.x</th><th>ICY 2.2</th><th>Method</th></tr>
+  <tr><td>Icecast2</td><td>&#10003; Required</td><td>&#10007; N/A</td><td>HTTP GET <code>/admin/metadata?mode=updinfo&amp;song=…</code></td></tr>
+  <tr><td>Shoutcast v1/v2</td><td>&#10003; Required</td><td>&#10007; N/A</td><td>In-stream at icy-metaint boundaries</td></tr>
+  <tr><td>Mcaster1DNAS</td><td>&#10003; Required</td><td>&#10003; Required</td><td>HTTP PUT + <code>Icy-Version: 2.2</code> header</td></tr>
+</table>
+
+<h3>ICY 2.2 Field Groups</h3>
+<div class="cols">
+<table>
+  <tr><th>Group</th><th>Prefix</th><th>Key Fields</th></tr>
+  <tr><td>1 &mdash; Station</td><td><code>icy2-station-*</code></td><td>id &middot; name &middot; logo &middot; genre &middot; url &middot; language</td></tr>
+  <tr><td>2 &mdash; Show</td><td><code>icy2-show-*</code></td><td>title &middot; host &middot; start &middot; end &middot; next &middot; description</td></tr>
+  <tr><td>3 &mdash; Track</td><td><code>icy2-track-*</code></td><td>title &middot; artist &middot; album &middot; year &middot; genre &middot; artwork &middot; bpm &middot; key &middot; isrc &middot; mbid &middot; label</td></tr>
+  <tr><td>4 &mdash; DJ</td><td><code>icy2-dj-*</code></td><td>handle &middot; name &middot; bio &middot; avatar &middot; website &middot; email</td></tr>
+</table>
+<table>
+  <tr><th>Group</th><th>Prefix</th><th>Key Fields</th></tr>
+  <tr><td>5 &mdash; Social</td><td><code>icy2-social-*</code></td><td>twitter &middot; instagram &middot; tiktok &middot; youtube &middot; facebook &middot; twitch &middot; linktree &middot; hashtags</td></tr>
+  <tr><td>6 &mdash; Podcast</td><td><code>icy2-podcast-*</code></td><td>title &middot; episode &middot; season &middot; feed &middot; guid &middot; duration &middot; chapter</td></tr>
+  <tr><td>7 &mdash; Broadcast</td><td><code>icy2-broadcast-*</code></td><td>mode &middot; relay &middot; cdn &middot; lufs &middot; codec &middot; samplerate &middot; channels</td></tr>
+  <tr><td>8 &mdash; Content</td><td><code>icy2-content-*</code></td><td>explicit &middot; live &middot; type (radio|tv|podcast|socialcast) &middot; rating</td></tr>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Encoder Architecture (Phase F)</h2>
+<div class="box">
+  <strong>7 Codecs:</strong> MP3 (LAME, if found), Opus (libopusenc), Vorbis (libvorbis), FLAC (libFLAC), AAC-LC / HE-AAC-v1 / HE-AAC-v2 (fdk-aac, if found)<br><br>
+  <strong>7-State Machine:</strong> Idle &rarr; Starting &rarr; Connecting &rarr; Streaming &rarr; Reconnecting &rarr; Sleep &rarr; Error<br>
+  &nbsp;&nbsp;&bull; <code>wake()</code> transitions Sleep &rarr; Connecting<br>
+  &nbsp;&nbsp;&bull; <code>setPttActive(bool)</code> forwards to EncoderDsp for duck attenuation<br><br>
+  <strong>Input Sources:</strong> LiveDeckMix (ring buffer from onAudioBlock), PortAudio device, WASAPI loopback<br><br>
+  <strong>Per-slot DSP chain</strong> (EncoderDsp, runs in encoder thread):<br>
+  Input Gain &rarr; 10-band biquad EQ (RBJ, 6 presets) &rarr; Feedforward AGC + hard limiter &rarr; PTT duck (50ms ramp)<br><br>
+  <strong>RT thread</strong> &rarr; <code>EncoderModule::onAudioBlock()</code> &rarr; <code>AudioRingBuffer::write()</code> (lock-free)<br>
+  &rarr; <strong>Encoder thread</strong> &rarr; <code>EncoderDsp::process()</code> &rarr; <code>encodePcm()</code> &rarr; <code>IcyPusher::push()</code> &rarr; TCP socket<br><br>
+  <strong>DnasPoller</strong> &mdash; QThread background, polls <code>/admin/stats</code> XML every 15s, emits <code>statsUpdated</code> signal<br>
+  <strong>EncoderListWidget</strong> &mdash; QTableWidget with 2s refresh timer, double-click &rarr; EncoderConfigDialog (5 tabs)
+</div>
+
+<h3>Icecast2 SOURCE Handshake</h3>
+<pre>SOURCE /stream HTTP/1.0
+Authorization: Basic base64(source:password)
+Content-Type: audio/ogg   (or audio/mpeg, audio/flac, audio/aac per codec)
+ice-name: Station Name
+ice-genre: Various
+ice-bitrate: 128
+ice-public: 0
+User-Agent: Mcaster1Studio/1.0.0
+[Icy-Version: 2.2]   ← DNAS targets only
+
+→ HTTP/1.0 200 OK
+→ [raw encoded bytestream…]</pre>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Critical Rules</h2>
+<table>
+  <tr><th>Rule</th><th>Reason</th></tr>
+  <tr><td>Never <code>#include &lt;version&gt;</code> or create file named <code>VERSION</code></td><td>Collides with C++20 header on Windows case-insensitive FS</td></tr>
+  <tr><td>TagLib: <code>.to8Bit(true)</code> + <code>QString::fromStdString()</code></td><td>Never call <code>.toWString()</code> across DLL boundary</td></tr>
+  <tr><td>TagLib: compile with <code>/EHa</code></td><td>SEH exception safety on corrupt files</td></tr>
+  <tr><td><code>onAudioBlock()</code>: no Qt, no alloc, no mutex wait</td><td>Called from PortAudio RT callback — hard latency constraint</td></tr>
+  <tr><td><code>QApplication::setStyle("Fusion")</code></td><td>Windows11 style ignores QSS; Fusion is required for all theming</td></tr>
+  <tr><td>ICY 1.x StreamTitle= always sent even with ICY 2.2</td><td>Backward compat — all clients need ICY 1.x</td></tr>
+  <tr><td><code>qt_add_executable()</code> not <code>add_executable()</code></td><td>Triggers MOC/RCC/UIC auto-generation</td></tr>
+  <tr><td>Never use <code>slots</code> as variable/member name</td><td>Qt macro <code>#define slots</code> — use <code>clockSlots</code>, <code>encoderSlots</code>, etc.</td></tr>
+  <tr><td><code>VUMeterWidget</code> compact mode via <code>setCompact(true)</code></td><td>Same class; switches rendering path + sizeHint; wire EventBus separately for compact instances</td></tr>
+  <tr><td>RibbonBox drag MIME: <code>application/x-m1-ribbon-box</code></td><td>Pointer as hex string; distinct from module dock MIME <code>application/x-m1-module-dock</code></td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Ecosystem Siblings</h2>
+<table>
+  <tr><th>Project</th><th>Path</th><th>Relation to Studio</th></tr>
+  <tr><td>Mcaster1DNAS</td><td><code>../mcaster1dnas/</code></td><td>ICY 2.2 streaming server &mdash; DNAS encoder target</td></tr>
+  <tr><td>Mcaster1DSPEncoder</td><td><code>../Mcaster1DSPEncoder/</code></td><td>Encoder reference (LAME/Opus/AAC/FLAC patterns)</td></tr>
+  <tr><td>Mcaster1TagStack</td><td><code>../Mcaster1TagStack/</code></td><td>MySQL schema reference &middot; ICY 2.2 editor reference</td></tr>
+  <tr><td>Mcaster1Castit</td><td><code>../Mcaster1CastIt/</code></td><td>Stats monitor reference for Phase 10</td></tr>
+</table>
+
+<footer>
+  Mcaster1Studio v0.2.0-alpha &middot;
+  Phases 1&ndash;11 + A&ndash;I + CH + PD + HL + BF complete &middot;
+  Phase K (Surface Isolation + Multi-Monitor) planned &middot;
+  Phase C (refinement) in progress &middot;
+  Phase 12 (Installer) pending &middot;
+  Last updated: 2026-03-10 &middot;
+  <a href="https://mcaster1.com">mcaster1.com</a>
+</footer>
+</body>
+</html>

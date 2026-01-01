@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.28)
+add_library(PodShowNotesModule STATIC PodShowNotesModule.cpp PodShowNotesModule.h)
+target_include_directories(PodShowNotesModule PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(PodShowNotesModule PUBLIC Mcaster1Core Qt6::Core Qt6::Gui Qt6::Widgets)
+target_compile_definitions(PodShowNotesModule PRIVATE MCASTER1PLUGIN_EXPORTS)

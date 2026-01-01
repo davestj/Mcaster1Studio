@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#bfdbfe"/>
+      <stop offset="55%"  stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/>
+    </filter>
+    <filter id="ico">
+      <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#1e40af" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Two pause bars -->
+  <rect x="9"    y="9" width="4.5" height="14" rx="2" fill="#ffffff" filter="url(#ico)"/>
+  <rect x="18.5" y="9" width="4.5" height="14" rx="2" fill="#ffffff" filter="url(#ico)"/>
+</svg>

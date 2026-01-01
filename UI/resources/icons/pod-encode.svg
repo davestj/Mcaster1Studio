@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbf7d0"/>
+      <stop offset="55%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/></filter>
+    <filter id="ico"><feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#166534" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Arrow into box/file (encoding/export) -->
+  <g filter="url(#ico)">
+    <!-- Arrow pointing right -->
+    <line x1="7" y1="17" x2="15" y2="17" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+    <polyline points="12.5,13.5 16,17 12.5,20.5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- File/box shape -->
+    <path d="M18 10 L24 10 L24 24 L18 24 L18 10 M24 10 L21 10 L18 13" fill="none" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+    <line x1="20" y1="15" x2="23" y2="15" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+    <line x1="20" y1="17.5" x2="23" y2="17.5" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+    <line x1="20" y1="20" x2="23" y2="20" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+  </g>
+</svg>

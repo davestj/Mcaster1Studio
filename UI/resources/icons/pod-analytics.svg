@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ddd6fe"/>
+      <stop offset="55%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#5b21b6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/></filter>
+    <filter id="ico"><feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5"
+        fill="url(#bg)" stroke="#4c1d95" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- Bar chart (3 bars of different heights) -->
+  <g filter="url(#ico)">
+    <rect x="9" y="17" width="4" height="7" rx="0.8" fill="#fff"/>
+    <rect x="14" y="12" width="4" height="12" rx="0.8" fill="#fff"/>
+    <rect x="19" y="14.5" width="4" height="9.5" rx="0.8" fill="#fff"/>
+    <!-- Baseline -->
+    <line x1="7" y1="24.5" x2="25" y2="24.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
+</svg>

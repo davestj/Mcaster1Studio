@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.28)
+add_library(PodEditorModule STATIC PodEditorModule.cpp PodEditorModule.h)
+target_include_directories(PodEditorModule PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(PodEditorModule PUBLIC Mcaster1Core Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Multimedia)
+target_compile_definitions(PodEditorModule PRIVATE MCASTER1PLUGIN_EXPORTS)

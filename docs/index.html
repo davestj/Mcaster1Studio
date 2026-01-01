@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mcaster1Studio &mdash; Documentation</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#0c1a2e; --raised:#1e3a5f;
+    --blue:#0ea5e9; --cyan:#38bdf8; --green:#22c55e;
+    --red:#ef4444; --amber:#f59e0b; --purple:#a78bfa;
+    --text:#e2e8f0; --muted:#64748b; --border:#1e3a5f;
+    --church:#a78bfa; --podcast:#f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Inter,Arial,sans-serif;
+       font-size:14px;line-height:1.6;padding:24px 32px;max-width:1300px;margin:0 auto}
+  h1{color:var(--cyan);font-size:2.2rem;margin-bottom:4px;letter-spacing:-0.5px}
+  h2{color:var(--cyan);font-size:1.2rem;margin:40px 0 12px;
+     border-bottom:1px solid var(--border);padding-bottom:6px;
+     text-transform:uppercase;letter-spacing:.5px}
+  h3{color:var(--blue);font-size:1rem;margin:20px 0 8px}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:28px}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{color:var(--cyan)}
+
+  .badge{display:inline-block;border-radius:12px;padding:2px 10px;
+         font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+  .done  {background:#14532d;color:#4ade80;border:1px solid #16a34a}
+  .church-b{background:#2e1065;color:#c4b5fd;border:1px solid #7c3aed}
+  .pod-b   {background:#451a03;color:#fbbf24;border:1px solid #d97706}
+
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0 20px}
+  th{background:var(--raised);color:var(--cyan);padding:7px 12px;text-align:left;
+     font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;
+     border-bottom:1px solid var(--blue)}
+  td{padding:7px 12px;border-bottom:1px solid #0d1a2e;color:var(--text);vertical-align:top}
+  tr:hover td{background:#0a1422}
+
+  code{background:#060d18;border:1px solid #1e293b;border-radius:3px;
+       padding:1px 5px;font-family:"Consolas","Courier New",monospace;
+       font-size:.84em;color:var(--cyan)}
+
+  .box{background:var(--panel);border:1px solid var(--border);
+       border-left:3px solid var(--blue);border-radius:4px;
+       padding:12px 16px;margin:12px 0;font-size:.88rem;color:#94a3b8}
+  .box.g{border-left-color:var(--green)}
+  .box.a{border-left-color:var(--amber)}
+  .box.r{border-left-color:var(--red)}
+  .box.p{border-left-color:var(--purple)}
+
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:12px 0}
+  .cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:12px 0}
+  @media(max-width:900px){.cols2,.cols3{grid-template-columns:1fr}}
+
+  ul{margin:6px 0 10px 20px;color:#94a3b8;font-size:.88rem;line-height:1.7}
+  ul li strong{color:var(--text)}
+
+  .feature-card{background:var(--panel);border:1px solid var(--border);
+    border-radius:6px;padding:14px 16px;margin-bottom:0}
+  .feature-card h3{margin-top:0;color:var(--cyan)}
+  .feature-card ul{margin-top:6px}
+  .feature-card.cc{border-left:3px solid var(--church)}
+  .feature-card.cc h3{color:var(--church)}
+  .feature-card.pc{border-left:3px solid var(--podcast)}
+  .feature-card.pc h3{color:var(--podcast)}
+
+  .hero{background:linear-gradient(135deg, #0c1a2e 0%, #1e3a5f 50%, #0c1a2e 100%);
+        border:1px solid var(--border);border-radius:8px;padding:32px 36px;margin:20px 0 32px;
+        text-align:center}
+  .hero h2{border:none;margin:0 0 8px;font-size:1.6rem;text-transform:none;letter-spacing:-.3px}
+  .hero p{color:#94a3b8;max-width:720px;margin:0 auto;font-size:.95rem;line-height:1.6}
+
+  .nav-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+  .nav-card{display:block;background:var(--panel);border:1px solid var(--border);border-radius:6px;
+            padding:20px 24px;transition:border-color .2s}
+  .nav-card:hover{border-color:var(--blue)}
+  .nav-card h3{margin:0 0 6px;font-size:1.05rem}
+  .nav-card p{color:var(--muted);font-size:.85rem;margin:0}
+
+  .surface-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+                padding:16px 18px}
+  .surface-card h3{margin:0 0 6px;font-size:1rem}
+  .surface-card .mc{color:var(--muted);font-size:.8rem;margin-bottom:8px}
+
+  .stat-row{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+        padding:16px 20px;text-align:center;flex:1;min-width:120px}
+  .stat .num{font-size:2rem;font-weight:800;color:var(--cyan);display:block}
+  .stat .lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:2px}
+
+  .wf{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+  .wf .st{background:var(--panel);border:1px solid var(--border);border-radius:4px;
+          padding:6px 14px;font-size:.82rem;color:var(--text)}
+  .wf .ar{color:var(--muted);font-size:1.2rem}
+
+  footer{margin-top:56px;color:var(--muted);font-size:.8rem;
+         border-top:1px solid var(--border);padding-top:12px}
+</style>
+</head>
+<body>
+
+<h1>Mcaster1Studio</h1>
+<p class="sub">Professional Broadcast Automation Suite &mdash; Documentation Home &mdash; v0.2.0-alpha &mdash; 2026-03-10</p>
+
+<div class="hero">
+  <h2>Broadcast. Podcast. Worship. One Studio.</h2>
+  <p>
+    Mcaster1Studio is a modular broadcast control surface application built with C++20 and Qt&nbsp;6.8.3.
+    Purpose-built workspaces &mdash; called <strong>Surfaces</strong> &mdash; provide tailored module layouts
+    for radio automation, live DJ performance, podcast production, church services, video streaming, and more.
+    Over <strong>40 built-in modules</strong> cover every stage of the broadcast workflow, from audio mixing and
+    metadata management to live graphics switching, sermon transcription, and podcast distribution.
+  </p>
+</div>
+
+<!-- NAV -->
+<div class="nav-grid">
+  <a href="PLANNING.html" class="nav-card">
+    <h3>Project Plan &amp; Status</h3>
+    <p>Phase roadmap, deliverables, completion status, surface paradigm, module catalog, and build architecture.</p>
+  </a>
+  <a href="FEATURES.html" class="nav-card">
+    <h3>Feature Reference</h3>
+    <p>Detailed capabilities of every module, ribbon widget, theme, ICY protocol, SDK, and plugin system.</p>
+  </a>
+</div>
+
+<!-- STATS -->
+<h2>By the Numbers</h2>
+<div class="stat-row">
+  <div class="stat"><span class="num">9</span><span class="lbl">Surface Types</span></div>
+  <div class="stat"><span class="num">40+</span><span class="lbl">Built-in Modules</span></div>
+  <div class="stat"><span class="num">7</span><span class="lbl">Audio Codecs</span></div>
+  <div class="stat"><span class="num">3</span><span class="lbl">Themes</span></div>
+  <div class="stat"><span class="num">70+</span><span class="lbl">ICY 2.2 Fields</span></div>
+  <div class="stat"><span class="num">25</span><span class="lbl">Phases Complete</span></div>
+</div>
+
+<!-- SURFACES -->
+<h2>Surface Paradigm</h2>
+<div class="box">
+  Every workflow starts with a <strong>Surface</strong> &mdash; a preconfigured workspace with the right modules
+  for the job. Surfaces are tabbed, and each surface contains <strong>Sub-Surface Panels</strong> that can be
+  renamed and reorganized. Modules live inside drag-and-drop docks that can be rearranged, floated,
+  pinned, or closed. The entire layout persists automatically across sessions.
+</div>
+
+<div class="cols3">
+  <div class="surface-card">
+    <h3>Alpha &amp; Beta</h3>
+    <div class="mc">5 / 3 modules</div>
+    <ul>
+      <li><strong>Primary &amp; backup</strong> radio broadcast</li>
+      <li>VU meters, dual-deck, playlist, encoder, metadata</li>
+      <li>Beta: lean 3-module fallback layout</li>
+    </ul>
+  </div>
+  <div class="surface-card">
+    <h3>DJ</h3>
+    <div class="mc">4 modules</div>
+    <ul>
+      <li><strong>Live performance</strong> with dual decks</li>
+      <li>VU meters, effects rack, media library</li>
+      <li>Crossfader, BPM matching, waveforms</li>
+    </ul>
+  </div>
+  <div class="surface-card">
+    <h3>Company &amp; Social</h3>
+    <div class="mc">4 / 3 modules</div>
+    <ul>
+      <li><strong>Corporate</strong> &amp; <strong>socialcast</strong> streaming</li>
+      <li>Encoder, metadata, monitor, playlist</li>
+      <li>RTMP, scheduled automation</li>
+    </ul>
+  </div>
+  <div class="surface-card">
+    <h3>Entertainment</h3>
+    <div class="mc">3 modules</div>
+    <ul>
+      <li><strong>TV/Video automation</strong></li>
+      <li>Video module, encoder, playlist</li>
+      <li>QMediaPlayer + QVideoWidget</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">Church</h3>
+    <div class="mc">17 modules (5 core + 12 church)</div>
+    <ul>
+      <li><strong>Complete worship production</strong></li>
+      <li>Lyrics, scripture, graphics, video switcher</li>
+      <li>Service rundown, stage monitor, mixer</li>
+      <li>Sermon recording &amp; transcription</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--podcast)">
+    <h3 style="color:var(--podcast)">Podcast</h3>
+    <div class="mc">17 modules (4 core + 13 podcast)</div>
+    <ul>
+      <li><strong>End-to-end podcast production</strong></li>
+      <li>Recording, editing, encoding, transcription</li>
+      <li>RSS feed, publishing, analytics</li>
+      <li>Soundboard, effects, remote guests</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ CHURCH ══════════════════════════════════════════════════════════════ -->
+<h2>Church Surface &mdash; Live Worship Production</h2>
+<div class="box p">
+  The Church surface provides a complete production environment for live services. The
+  <strong>GraphicsEngine</strong> renders themed visuals that feed into <strong>LyricsCaster</strong>,
+  <strong>ScriptureCaster</strong>, and <strong>AnnounceCaster</strong>. The <strong>SwitchCaster</strong>
+  aggregates all visual sources into a Program/Preview bus with broadcast-grade transitions.
+  <strong>ServiceRunner</strong> orchestrates the entire service rundown, coordinating timers,
+  video switching, transcription recording, and audio mixing automatically.
+</div>
+
+<h3>Church Module Wiring</h3>
+<div class="wf">
+  <div class="st"><strong>GraphicsEngine</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st">LyricsCaster</div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--church)"><strong>SwitchCaster</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st">Program Out</div>
+</div>
+<div class="wf">
+  <div class="st"><strong>GraphicsEngine</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st">ScriptureCaster</div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--church)"><strong>SwitchCaster</strong></div>
+</div>
+<div class="wf">
+  <div class="st"><strong>GraphicsEngine</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st">AnnounceCaster</div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--church)"><strong>SwitchCaster</strong></div>
+</div>
+<div class="wf">
+  <div class="st"><strong>ServiceRunner</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st">TimerClock</div>
+  <div class="ar">+</div>
+  <div class="st">SwitchCaster</div>
+  <div class="ar">+</div>
+  <div class="st">TranscribeRec</div>
+  <div class="ar">+</div>
+  <div class="st">AudioMix</div>
+</div>
+<div class="wf">
+  <div class="st"><strong>StageMon</strong></div>
+  <div class="ar">&larr;</div>
+  <div class="st">LyricsCaster</div>
+  <div class="ar">+</div>
+  <div class="st">ScriptureCaster</div>
+  <div class="ar">+</div>
+  <div class="st">TimerClock</div>
+</div>
+
+<div class="cols2">
+<div class="feature-card cc">
+  <h3>TimerClock</h3>
+  <ul>
+    <li><strong>Master clock</strong> with 3D LCD-style painted digits</li>
+    <li>Multiple named timers: countdown, count-up, or time-of-day target</li>
+    <li>Per-timer <strong>warning</strong> (amber) and <strong>alarm</strong> (red) thresholds</li>
+    <li>Dialog-driven timer creation with name, mode, and duration</li>
+    <li>100ms tick resolution, full state persistence</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>GraphicsEngine</h3>
+  <ul>
+    <li><strong>Theme-based rendering</strong> for all visual content</li>
+    <li>Custom themes: background/text/accent colors, fonts, sizes, images</li>
+    <li>Render types: lyrics, scripture, dual scripture, sermon point, lower third, title card, countdown, blank</li>
+    <li>Live preview widget (960x540, 16:9 aspect)</li>
+    <li>Vignette effect, logo placement, text wrapping</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>LyricsCaster</h3>
+  <ul>
+    <li><strong>Song library</strong> with search, add/edit/remove</li>
+    <li>Song sections: Verse, Chorus, Bridge, Pre-Chorus, Intro, Outro, Tag</li>
+    <li>Arrangement editor with drag-drop reordering</li>
+    <li>Live transport: Previous / BLANK / Next with auto-advance</li>
+    <li>Song metadata: key, BPM, CCLI number</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>ScriptureCaster</h3>
+  <ul>
+    <li><strong>Bible verse lookup</strong> &mdash; 66 books, 6 translations (KJV/NIV/ESV/NASB/NLT/NKJV)</li>
+    <li>Autocomplete book names, verse range parsing</li>
+    <li>Sermon queue: scripture, sermon points, blank slides</li>
+    <li>Dual scripture side-by-side (two translations)</li>
+    <li>~20 seed verses cached; full SQLite Bible DB planned</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>AnnounceCaster</h3>
+  <ul>
+    <li><strong>Slide manager</strong> with title, body, image, and scheduling</li>
+    <li>Date-range filtering: only show active announcements</li>
+    <li>Loop playback with configurable interval</li>
+    <li>Lower third overlay with text fields</li>
+    <li>Priority ordering, full persistence</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>TelePrompter</h3>
+  <ul>
+    <li><strong>Scrolling script display</strong> for pastor/speaker</li>
+    <li>Adjustable speed (10-200 px/sec), font size (16-72pt)</li>
+    <li><strong>Mirror mode</strong> for beam-splitter teleprompter rigs</li>
+    <li>Section markers with jump-to navigation</li>
+    <li>Configurable text and background colors</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>MediaCaster</h3>
+  <ul>
+    <li><strong>Video/image playback</strong> with drag-drop playlist</li>
+    <li>QMediaPlayer + QVideoWidget + QAudioOutput backend</li>
+    <li>Cue points with labels and fire window</li>
+    <li>Loop mode, preview mode (video without audio)</li>
+    <li>9 media formats, volume control, seek slider</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>StageMon</h3>
+  <ul>
+    <li><strong>Confidence monitor</strong> for worship team and speakers</li>
+    <li>Three modes: Worship, Sermon, Combined (side-by-side)</li>
+    <li>Clock bar with current time + active timer countdowns</li>
+    <li>Current section (large) + next section preview</li>
+    <li>Key/BPM display, configurable font/clock/timer toggles</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>AudioMix</h3>
+  <ul>
+    <li><strong>8-channel virtual mixing console</strong></li>
+    <li>Per-channel: volume, pan, mute/solo, gain, 3-band EQ (&plusmn;12dB)</li>
+    <li>Per-channel peak compressor (threshold + ratio)</li>
+    <li>Stereo VU bars per channel + master bus</li>
+    <li>Master mix recording to WAV (ring-buffer architecture)</li>
+    <li>Default: Pastor Mic, Vocals, Band, Media</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>TranscribeRec</h3>
+  <ul>
+    <li><strong>Sermon recording</strong> from audio input via SPSC ring buffer</li>
+    <li>Record/Pause/Resume/Stop with elapsed time display</li>
+    <li>Manual transcript entries with timestamps</li>
+    <li>Export: WAV (audio), TXT (plain text), SRT (subtitles)</li>
+    <li>Speech-to-text planned (v2 &mdash; Whisper)</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>SwitchCaster</h3>
+  <ul>
+    <li><strong>Program/Preview video switcher</strong></li>
+    <li>7 sources: Lyrics, Scripture, Announce, Media, Video, Logo, Black</li>
+    <li>Transitions: CUT, DISSOLVE (200-5000ms), Fade to Black</li>
+    <li>LIVE badge on program monitor, transition progress bar</li>
+    <li>Lower third via AnnounceCaster binding</li>
+    <li>10fps preview, 60fps transitions</li>
+  </ul>
+</div>
+<div class="feature-card cc">
+  <h3>ServiceRunner</h3>
+  <ul>
+    <li><strong>Service order rundown</strong> with 11 segment types</li>
+    <li>Welcome, Worship, Prayer, Scripture, Sermon, Offering, Announcement, Communion, MediaPlayback, Closing, Custom</li>
+    <li>Per-segment: title, notes, duration, auto-advance</li>
+    <li>Segment editor dialog for add/edit</li>
+    <li>Color-coded progress bar (green/amber/red)</li>
+    <li>TimerClock integration, JSON template save/load</li>
+  </ul>
+</div>
+</div>
+
+<!-- ═══ PODCAST ═════════════════════════════════════════════════════════════ -->
+<h2>Podcast Surface &mdash; End-to-End Production</h2>
+<div class="box a">
+  The Podcast surface covers the <strong>entire production pipeline</strong> from recording through distribution.
+  Each module is self-contained &mdash; no cross-module wiring needed. Per-instance factories ensure
+  multiple Podcast surfaces can run independently.
+</div>
+
+<h3>Podcast Production Workflow</h3>
+<div class="wf">
+  <div class="st" style="border-color:var(--podcast)"><strong>PodMixer</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodRecorder</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodEditor</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodEncode</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodTranscribe</strong></div>
+</div>
+<div class="wf">
+  <div class="st" style="border-color:var(--podcast)"><strong>PodShowNotes</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodRSS</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodPublisher</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodAnalytics</strong></div>
+</div>
+
+<div class="cols2">
+<div class="feature-card pc">
+  <h3>PodMixer</h3>
+  <ul>
+    <li><strong>6-channel podcast mixer</strong>: Host, Guest 1-2, Soundboard, Music, Phone</li>
+    <li>Per-channel gain, volume, pan, mute, solo, 3-band EQ, aux sends</li>
+    <li>Stereo VU bars + master bus, headphone volume</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodPTT</h3>
+  <ul>
+    <li><strong>Enhanced Push-to-Talk</strong>: Hold, Toggle, AlwaysOn modes</li>
+    <li>Cough button (momentary mute), talkback channel</li>
+    <li>Voice Activity Detection (VAD) with threshold</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodRecorder</h3>
+  <ul>
+    <li><strong>Multi-track WAV recorder</strong> with SPSC ring buffer</li>
+    <li>Show/episode metadata, named markers</li>
+    <li>Take management: retake without restarting</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodSoundboard</h3>
+  <ul>
+    <li><strong>Sound pad grid</strong> with banks (Intro/Outro, SFX, Beds)</li>
+    <li>Modes: OneShot, Toggle, Loop</li>
+    <li>Custom colors, keyboard shortcuts, JSON persistence</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodFX</h3>
+  <ul>
+    <li><strong>7-processor voice chain</strong></li>
+    <li>Noise Gate, Compressor, De-Esser, Parametric EQ, HPF, Limiter, LUFS Meter</li>
+    <li>Per-processor bypass, reorderable, RT-safe DSP</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodEditor</h3>
+  <ul>
+    <li><strong>DAW-style waveform editor</strong></li>
+    <li>Timeline with regions, markers, cut/trim stubs</li>
+    <li>Zoom in/out/fit, scroll, playback position</li>
+    <li>QMediaPlayer + QAudioOutput backend</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodEncode</h3>
+  <ul>
+    <li><strong>Multi-format export</strong>: MP3, AAC, OGG, FLAC, Opus</li>
+    <li>Bitrate/samplerate/channels config, ID3 metadata form</li>
+    <li>LUFS normalization, job queue with progress</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodTranscribe</h3>
+  <ul>
+    <li><strong>Transcript editor</strong> with speaker labels</li>
+    <li>Per-segment: time, speaker, text, confidence</li>
+    <li>Export: SRT, VTT; chapter marker generation</li>
+    <li>Whisper STT integration (v2)</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodShowNotes</h3>
+  <ul>
+    <li><strong>WYSIWYG show notes</strong> with formatting toolbar</li>
+    <li>Templates: Standard, Interview, Solo</li>
+    <li>Chapter markers, resource links, guest bios</li>
+    <li>Export: HTML, Markdown, plain text</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodRSS</h3>
+  <ul>
+    <li><strong>RSS 2.0 + iTunes namespace</strong> feed generator</li>
+    <li>Show settings + episode table, feed validation</li>
+    <li>XML preview dialog, file export</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodPublisher</h3>
+  <ul>
+    <li><strong>Multi-target distribution</strong></li>
+    <li>Local Copy (v1), SFTP/FTP/HTTP (v2)</li>
+    <li>Per-target progress tracking</li>
+  </ul>
+</div>
+<div class="feature-card pc">
+  <h3>PodAnalytics</h3>
+  <ul>
+    <li><strong>Episode statistics dashboard</strong></li>
+    <li>Downloads, subscribers, growth trend</li>
+    <li>Bar chart, episode table, CSV export</li>
+  </ul>
+</div>
+</div>
+<div class="feature-card pc" style="margin-top:12px">
+  <h3>PodRemote</h3>
+  <ul>
+    <li><strong>Remote guest manager</strong> for up to 4 guests</li>
+    <li>Status indicators, audio level bars, mute/admit controls</li>
+    <li>Join URL generation, WebRTC audio (v2)</li>
+  </ul>
+</div>
+
+<!-- ═══ CORE MODULES ═══════════════════════════════════════════════════════ -->
+<h2>Core Broadcast Modules</h2>
+<div class="box g">
+  These modules form the foundation shared across all broadcast surfaces &mdash; audio playback,
+  encoding, metadata, monitoring, and effects processing.
+</div>
+<table>
+  <tr><th>Module</th><th>ID</th><th>Capabilities</th></tr>
+  <tr><td><strong>VU Meter</strong></td><td><code>com.mcaster1.vumeter</code></td><td>Stereo peak + RMS bars, green/amber/red thresholds, clip indicator</td></tr>
+  <tr><td><strong>Deck A &amp; B</strong></td><td><code>com.mcaster1.deck</code></td><td>Dual-deck player, waveform, crossfader, 3-band EQ, cue, loop, BPM, HTTP streams</td></tr>
+  <tr><td><strong>Media Library</strong></td><td><code>com.mcaster1.library</code></td><td>MySQL/SQLite, TagLib scanning, search, drag-to-deck, album art</td></tr>
+  <tr><td><strong>Encoder</strong></td><td><code>com.mcaster1.encoder</code></td><td>7 codecs, 7-state machine, per-slot DSP chain, ICY push, reconnect watchdog</td></tr>
+  <tr><td><strong>Effects Rack</strong></td><td><code>com.mcaster1.effects</code></td><td>Virtual 19" rack, IEffectUnit C ABI, EQ31, Sonic, Compressor, AGC, MicPre, Stereo</td></tr>
+  <tr><td><strong>Metadata</strong></td><td><code>com.mcaster1.metadata</code></td><td>ICY 2.2 editor (70+ fields, 8 groups), ICY 1.x fallback, HTTP PUT</td></tr>
+  <tr><td><strong>Playlist</strong></td><td><code>com.mcaster1.playlist</code></td><td>Clock scheduling, rotation engine, broadcast log, auto-advance</td></tr>
+  <tr><td><strong>Video</strong></td><td><code>com.mcaster1.video</code></td><td>QMediaPlayer + QVideoWidget, playlist, RTMP stub</td></tr>
+  <tr><td><strong>Monitor</strong></td><td><code>com.mcaster1.monitor</code></td><td>Polls Icecast2/Shoutcast/DNAS stats; listeners chart, bandwidth, uptime</td></tr>
+  <tr><td><strong>PTT</strong></td><td><code>com.mcaster1.ptt</code></td><td>Push-to-Talk, Armed/Live/Off states, encoder duck attenuation</td></tr>
+  <tr><td><strong>CartWall</strong></td><td><code>com.mcaster1.cartwall</code></td><td>Hot-start audio pads, drag-from-library, one-shot/loop</td></tr>
+</table>
+
+<!-- ═══ TECH STACK ═════════════════════════════════════════════════════════ -->
+<h2>Technology Stack</h2>
+<table>
+  <tr><th>Component</th><th>Technology</th><th>Version</th></tr>
+  <tr><td><strong>Language</strong></td><td>C++20 (MSVC v143)</td><td>VS 2022</td></tr>
+  <tr><td><strong>UI Framework</strong></td><td>Qt Widgets + Multimedia + Network + SVG</td><td>6.8.3</td></tr>
+  <tr><td><strong>Build System</strong></td><td>CMake + vcpkg + Visual Studio generator</td><td>3.28+</td></tr>
+  <tr><td><strong>Audio I/O</strong></td><td>PortAudio with ASIO support</td><td>19.7</td></tr>
+  <tr><td><strong>Video</strong></td><td>FFmpeg (avcodec, avformat, avutil, swresample)</td><td>8.0.1</td></tr>
+  <tr><td><strong>Media Tags</strong></td><td>TagLib</td><td>2.1.1</td></tr>
+  <tr><td><strong>Database</strong></td><td>SQLite (default) / MySQL-MariaDB (enterprise)</td><td>3.51 / 8.0</td></tr>
+  <tr><td><strong>Audio Codecs</strong></td><td>LAME, libopusenc, libvorbis, libFLAC, fdk-aac</td><td>various</td></tr>
+  <tr><td><strong>HTTP</strong></td><td>libcurl + Qt Network</td><td>8.18</td></tr>
+</table>
+
+<!-- ═══ ECOSYSTEM ══════════════════════════════════════════════════════════ -->
+<h2>Mcaster1 Ecosystem</h2>
+<div class="cols2">
+<div class="feature-card">
+  <h3>Mcaster1DNAS</h3>
+  <ul>
+    <li><strong>Streaming server</strong> (Icecast-derived)</li>
+    <li>ICY 2.2 protocol, YAML config, admin XML API</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Mcaster1DSPEncoder</h3>
+  <ul>
+    <li><strong>Standalone audio encoder</strong></li>
+    <li>Winamp, foobar2000, RadioDJ DSP plugins</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Mcaster1TagStack</h3>
+  <ul>
+    <li><strong>Metadata composer</strong> + media library</li>
+    <li>ICY 2.2 full editor, MySQL backend</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Mcaster1CastIt</h3>
+  <ul>
+    <li><strong>Server stats monitor</strong></li>
+    <li>MariaDB analytics, libcurl polling</li>
+  </ul>
+</div>
+</div>
+
+<footer>
+  Mcaster1Studio v0.2.0-alpha &middot;
+  Phases 1&ndash;11 + A&ndash;I + CH + PD + HL + BF complete &middot;
+  <a href="PLANNING.html">Project Plan</a> &middot;
+  <a href="PHASE-K-PLAN.html">Phase K Plan</a> &middot;
+  Last updated: 2026-03-10 &middot;
+  <a href="https://mcaster1.com">mcaster1.com</a>
+</footer>
+</body>
+</html>

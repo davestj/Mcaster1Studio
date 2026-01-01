@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <filter id="sh"><feDropShadow dx="0" dy="1" stdDeviation="0.5" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect x="1" y="1" width="22" height="22" rx="4" fill="#fce8e8" stroke="#f5c0c0" stroke-width="0.5" filter="url(#sh)"/>
+  <line x1="7.5" y1="7.5" x2="16.5" y2="16.5" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+  <line x1="16.5" y1="7.5" x2="7.5" y2="16.5" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+</svg>
