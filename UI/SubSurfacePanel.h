@@ -108,4 +108,12 @@ private:
     QFrame*      m_dropIndicator  = nullptr;
     QFrame*      m_hDropIndicator = nullptr;
     int          m_dropIndex      = -1;
+
+    // Deferred layout — applied when widgets first get a real size
+    QList<int>         m_pendingColumnWidths;
+    QList<QList<int>>  m_pendingRowHeights;
+    bool               m_hasPendingSizes    = false;
+    bool               m_hasRestoredFloats  = false;  ///< need to clamp once canvas is sized
+    void               applyPendingSizes();
+    void               clampFloatingDocks();
 };

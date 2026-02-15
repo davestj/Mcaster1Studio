@@ -220,6 +220,8 @@ Audio callback chain (RT thread): deck → PTT → cartwall → effects → podc
 - VU meters must measure post-gain levels (`sL * finalGain`) not pre-gain raw samples
 - Both Deck A AND Deck B must wire `loadingFinished` → MetadataModule for ICY push
 - `fabsf()` not `std::abs()` in RT code — MSVC can resolve `std::abs(float)` to int overload
+- **Floating dock position restore (BF2):** NEVER clamp `move(x, y)` via `qBound(0, x, max(0, parentW - w))` when parent has zero dimensions (before `show()`) — collapses all to (0,0). Set raw position, clamp on first `QEvent::Resize`.
+- **Deferred splitter sizes (BF2):** Use event filter `QEvent::Resize` on splitter, NOT `QTimer::singleShot`. Timers fail for hidden QStackedWidget panels where splitter width stays 0.
 
 ## Encoder Architecture (Phase F)
 

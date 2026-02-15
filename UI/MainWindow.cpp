@@ -1545,8 +1545,10 @@ void MainWindow::loadSavedSurfaces() {
         openSurfaceFromConfig(alphaCfg);
     }
 
-    // Restore floating dock positions (YAML layout file — separate from splitter sizes)
-    restoreAllLayouts();
+    // NOTE: YAML restoreAllLayouts() is NO LONGER called here.
+    // All dock positions, sizes, and column structure are now fully persisted
+    // in QSettings via panel->saveLayout() / restoreLayout(), which runs above
+    // for each sub-panel. The YAML file is kept as a legacy backup only.
 
     // ── Auto-Recovery: if PlaylistModule has autoRecovery enabled, start AutoDJ ──
     // Note: loadState() may have already set m_autoDJ=true from saved state,

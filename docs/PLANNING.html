@@ -202,6 +202,11 @@
   <div class="c">ModuleDock qBound clamp &middot; SubSurfacePanel float-transition clamp &middot; ResizableWidget edge-resize clamp &middot; Session restore clamp &middot; 6 fix locations</div>
   <div class="c"><span class="badge bd">&#10003; Complete</span></div>
 
+  <div class="c">BF2</div>
+  <div class="c">Bug Fix &mdash; Module dock positions/sizes not persisting across sessions</div>
+  <div class="c">Column structure save/restore &middot; Remove conflicting YAML override &middot; 3 root causes fixed</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
   <div class="c">K</div>
   <div class="c">Surface Isolation, Multi-Monitor &amp; Display Management</div>
   <div class="c">DbServerRegistry &middot; SurfaceDbContext &middot; Per-surface DB isolation &middot; SurfaceCreationWizard &middot; SurfaceWindow pop-out &middot; MonitorManager &middot; GPU/capture enum &middot; "Send to Monitor" &middot; YAML failover &middot; Extended schema</div>
@@ -225,6 +230,21 @@
     <li><strong>Fix 4 &mdash; SubSurfacePanel.cpp:534-535:</strong> <code>applyLayoutSnapshot()</code> restored floating positions bounded</li>
     <li><strong>Fix 5 &mdash; SubSurfacePanel.cpp:589-590:</strong> <code>restoreLayout()</code> from QSettings positions bounded</li>
     <li><strong>Fix 6 &mdash; ResizableWidget.cpp:67-75:</strong> Edge resize clamps all 4 sides: <code>moveLeft(0)</code>, <code>moveTop(0)</code>, <code>setRight(pw)</code>, <code>setBottom(ph)</code></li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Bug Fix 2 &mdash; Module Dock Layout Persistence (2026-03-10)</h2>
+<div class="box g">
+  <strong>Fixed: Module dock positions, sizes, and column groupings not saving/restoring across sessions</strong>
+  <ul style="margin-top:8px">
+    <li><strong>Root cause 1 &mdash; Floating dock position clamping:</strong> All interactively-added modules start as floating docks within the canvas. During <code>restoreLayout()</code>, saved x/y positions were clamped via <code>qBound(0, x, max(0, canvasWidth - w))</code>. But <code>m_canvas-&gt;width()</code> is 0 during <code>loadSavedSurfaces()</code> (MainWindow not yet shown), so <code>max(0, 0 - w) = 0</code> collapsed ALL positions to (0,0).</li>
+    <li><strong>Root cause 2 &mdash; Deferred size timers unreliable:</strong> <code>QTimer::singleShot(0/100/500ms)</code> for applying column splitter sizes after first show was timing-dependent and failed for non-visible panels (other tabs in QStackedWidget where splitter width stays 0).</li>
+    <li><strong>Root cause 3 &mdash; Column structure lost:</strong> <code>addModule(mod, false)</code> creates one column per module during session restore. <code>saveLayout()</code> now records per-column <code>moduleIds</code>, and <code>restoreLayout()</code> rebuilds correct groupings.</li>
+    <li><strong>Root cause 4 &mdash; YAML override conflict:</strong> <code>restoreAllLayouts()</code> ran AFTER QSettings restore, overwriting properly-restored layouts with stale YAML data. Removed.</li>
+    <li><strong>Fix 1 &mdash; No-clamp floating restore:</strong> <code>restoreLayout()</code> now calls <code>found-&gt;move(x, y)</code> without clamping when canvas has zero dimensions. New <code>clampFloatingDocks()</code> method runs once when the canvas first receives <code>QEvent::Resize</code> with valid dimensions, properly constraining docks to canvas bounds.</li>
+    <li><strong>Fix 2 &mdash; Event-driven size application:</strong> Replaced fragile <code>QTimer::singleShot</code> with event filter on <code>m_splitter</code> for <code>QEvent::Resize</code> &mdash; calls <code>applyPendingSizes()</code> deterministically when the splitter first gets a non-zero width.</li>
+    <li><strong>Fix 3 &mdash; Column structure rebuild:</strong> <code>saveLayout()</code> saves per-column moduleIds; <code>restoreLayout()</code> tears down one-per-module default columns, recreates saved groupings using QMultiMap for duplicate IDs.</li>
   </ul>
 </div>
 

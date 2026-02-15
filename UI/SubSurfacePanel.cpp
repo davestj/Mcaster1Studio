@@ -16,6 +16,8 @@
 #include <QSettings>
 #include <QApplication>
 #include <QScreen>
+#include <QTimer>
+#include <QSet>
 #include <QDebug>
 
 SubSurfacePanel::SubSurfacePanel(const QString& name, QWidget* parent)
@@ -382,6 +384,15 @@ bool SubSurfacePanel::eventFilter(QObject* watched, QEvent* event) {
         return true;
     }
 
+    case QEvent::Resize:
+        // When the splitter or canvas first gets a real size, apply any
+        // deferred layout (column widths / row heights / floating positions).
+        if (watched == m_splitter && m_hasPendingSizes)
+            QTimer::singleShot(0, this, &SubSurfacePanel::applyPendingSizes);
+        if (watched == m_canvas && m_hasRestoredFloats)
+            QTimer::singleShot(0, this, &SubSurfacePanel::clampFloatingDocks);
+        return false;
+
     default:
         return QWidget::eventFilter(watched, event);
     }
@@ -562,6 +573,7 @@ void SubSurfacePanel::applyLayoutSnapshot(const SurfaceLayoutSnapshot& snap) {
 
 // ─── QSettings layout persistence ────────────────────────────────────────────
 void SubSurfacePanel::saveLayout(QSettings& s, const QString& keyBase) const {
+    // ── Floating docks ──────────────────────────────────────────────────────
     s.setValue(keyBase + "/floatingCount", (int)m_floatingDocks.size());
     for (int i = 0; i < m_floatingDocks.size(); ++i) {
         const QString key = keyBase + QString("/floating%1").arg(i);
@@ -572,24 +584,61 @@ void SubSurfacePanel::saveLayout(QSettings& s, const QString& keyBase) const {
         s.setValue(key + "/width",    dock->width());
         s.setValue(key + "/height",   dock->height());
     }
+
+    // ── Column structure (which modules are in which column) ────────────────
+    s.setValue(keyBase + "/columnCount", m_columns.size());
+    for (int ci = 0; ci < m_columns.size(); ++ci) {
+        const QString colKey = keyBase + QString("/column%1").arg(ci);
+
+        // Save module IDs in this column (in order)
+        QStringList colModuleIds;
+        for (int ri = 0; ri < m_columns[ci]->count(); ++ri) {
+            auto* dock = qobject_cast<ModuleDock*>(m_columns[ci]->widget(ri));
+            if (dock && dock->module())
+                colModuleIds << dock->module()->moduleId();
+        }
+        s.setValue(colKey + "/moduleIds", colModuleIds);
+
+        // Save row heights within this column
+        const QList<int> rows = m_columns[ci]->sizes();
+        QStringList parts;
+        parts.reserve(rows.size());
+        for (int v : rows) parts << QString::number(v);
+        s.setValue(colKey + "/rowHeights", parts.join(','));
+    }
+
+    // ── Column widths ───────────────────────────────────────────────────────
     {
         const QList<int> sizes = m_splitter->sizes();
         QStringList parts;
         parts.reserve(sizes.size());
         for (int v : sizes) parts << QString::number(v);
         s.setValue(keyBase + "/columnWidths", parts.join(','));
+        qInfo() << "[saveLayout]" << keyBase
+                << "columns:" << m_columns.size()
+                << "docks:" << m_docks.size()
+                << "floating:" << m_floatingDocks.size()
+                << "widths:" << parts.join(',');
     }
-    s.setValue(keyBase + "/columnCount", m_columns.size());
     for (int ci = 0; ci < m_columns.size(); ++ci) {
-        const QList<int> rows = m_columns[ci]->sizes();
-        QStringList parts;
-        parts.reserve(rows.size());
-        for (int v : rows) parts << QString::number(v);
-        s.setValue(keyBase + QString("/column%1/rowHeights").arg(ci), parts.join(','));
+        QStringList ids;
+        for (int ri = 0; ri < m_columns[ci]->count(); ++ri) {
+            auto* d = qobject_cast<ModuleDock*>(m_columns[ci]->widget(ri));
+            if (d && d->module()) ids << d->module()->moduleId();
+        }
+        qInfo() << "[saveLayout]   col" << ci << ":" << ids.join(", ")
+                << "heights:" << m_columns[ci]->sizes();
     }
 }
 
 void SubSurfacePanel::restoreLayout(QSettings& s, const QString& keyBase) {
+    qInfo() << "[restoreLayout]" << keyBase
+            << "docks:" << m_docks.size()
+            << "columns:" << m_columns.size()
+            << "splitterCount:" << m_splitter->count()
+            << "splitterWidth:" << m_splitter->width();
+
+    // ── Restore floating docks ──────────────────────────────────────────────
     const int floatingCount = s.value(keyBase + "/floatingCount", 0).toInt();
     for (int i = 0; i < floatingCount; ++i) {
         const QString key      = keyBase + QString("/floating%1").arg(i);
@@ -605,36 +654,164 @@ void SubSurfacePanel::restoreLayout(QSettings& s, const QString& keyBase) {
         if (!found) continue;
         onModuleFloatRequested(found);
         found->resize(w, h);
-        {
-            int rx = qBound(0, x, qMax(0, m_canvas->width()  - w));
-            int ry = qBound(0, y, qMax(0, m_canvas->height() - h));
-            found->move(rx, ry);
-        }
+        // Set the saved position directly — do NOT clamp when canvas has
+        // zero dimensions (before the window is shown), because
+        // qBound(0, x, max(0, 0-w)) collapses everything to (0,0).
+        found->move(x, y);
+        m_hasRestoredFloats = true;
     }
+
+    // ── Rebuild column structure from saved layout ──────────────────────────
+    // During session restore, addModule() creates one column per module.
+    // We need to reorganize docks into the saved column groupings so that
+    // the column count matches the saved widths/heights.
+    const int savedColumnCount = s.value(keyBase + "/columnCount", 0).toInt();
+    if (savedColumnCount > 0 && !m_docks.isEmpty()) {
+        // Build a lookup: moduleId → list of docks (handles duplicate IDs)
+        QMultiMap<QString, ModuleDock*> dockByModule;
+        for (auto* dock : m_docks)
+            dockByModule.insert(dock->module()->moduleId(), dock);
+
+        // Remove all docks from their current columns
+        for (auto* dock : m_docks) {
+            dock->setParent(nullptr);
+            dock->hide();
+        }
+
+        // Destroy all existing columns
+        for (auto* col : m_columns) {
+            col->setParent(nullptr);
+            col->deleteLater();
+        }
+        m_columns.clear();
+
+        // Rebuild columns from saved structure
+        QSet<ModuleDock*> placedDocks;
+        for (int ci = 0; ci < savedColumnCount; ++ci) {
+            const QString colKey = keyBase + QString("/column%1").arg(ci);
+            const QStringList colModuleIds = s.value(colKey + "/moduleIds").toStringList();
+
+            auto* col = makeColumn();
+            bool hasAnyDock = false;
+            for (const QString& modId : colModuleIds) {
+                // Find the first unplaced dock with this moduleId
+                ModuleDock* dock = nullptr;
+                auto range = dockByModule.equal_range(modId);
+                for (auto it = range.first; it != range.second; ++it) {
+                    if (!placedDocks.contains(it.value())) {
+                        dock = it.value();
+                        break;
+                    }
+                }
+                if (!dock) continue;
+                col->addWidget(dock);
+                dock->show();
+                placedDocks.insert(dock);
+                hasAnyDock = true;
+            }
+            if (hasAnyDock) {
+                m_splitter->addWidget(col);
+                m_columns.append(col);
+            } else {
+                col->deleteLater();
+            }
+        }
+
+        // Place any unplaced docks (modules added after last save) into the last column
+        for (auto* dock : m_docks) {
+            if (placedDocks.contains(dock)) continue;
+            if (m_columns.isEmpty()) {
+                auto* col = makeColumn();
+                m_splitter->addWidget(col);
+                m_columns.append(col);
+            }
+            m_columns.last()->addWidget(dock);
+            dock->show();
+        }
+
+        // Re-sync the m_docks list from the rebuilt columns
+        syncDocksFromColumns();
+        qInfo() << "[restoreLayout] Rebuilt:" << m_columns.size() << "columns,"
+                << m_docks.size() << "docks, splitterCount:" << m_splitter->count();
+    } else {
+        qInfo() << "[restoreLayout] NO rebuild: savedColumnCount=" << savedColumnCount
+                << "m_docks.size()=" << m_docks.size();
+    }
+
+    // ── Read saved sizes ────────────────────────────────────────────────────
+    m_pendingColumnWidths.clear();
+    m_pendingRowHeights.clear();
+    m_hasPendingSizes = false;
+
     {
         const QString val = s.value(keyBase + "/columnWidths").toString();
         if (!val.isEmpty()) {
-            QList<int> sizes;
             for (const QString& p : val.split(',')) {
                 bool ok; const int v = p.trimmed().toInt(&ok);
-                if (ok) sizes << v;
+                if (ok) m_pendingColumnWidths << v;
             }
-            if (sizes.size() == m_splitter->count())
-                m_splitter->setSizes(sizes);
         }
     }
     for (int ci = 0; ci < m_columns.size(); ++ci) {
         const QString val = s.value(
             keyBase + QString("/column%1/rowHeights").arg(ci)).toString();
-        if (val.isEmpty()) continue;
         QList<int> rows;
-        for (const QString& p : val.split(',')) {
-            bool ok; const int v = p.trimmed().toInt(&ok);
-            if (ok) rows << v;
+        if (!val.isEmpty()) {
+            for (const QString& p : val.split(',')) {
+                bool ok; const int v = p.trimmed().toInt(&ok);
+                if (ok) rows << v;
+            }
         }
-        if (rows.size() == m_columns[ci]->count())
-            m_columns[ci]->setSizes(rows);
+        m_pendingRowHeights.append(rows);
     }
+
+    if (!m_pendingColumnWidths.isEmpty() || !m_pendingRowHeights.isEmpty())
+        m_hasPendingSizes = true;
+
+    // Apply immediately if the widget already has a real size, otherwise the
+    // eventFilter Resize handler will call applyPendingSizes when the splitter
+    // first gets a non-zero width.
+    applyPendingSizes();
+}
+
+void SubSurfacePanel::applyPendingSizes() {
+    if (!m_hasPendingSizes) return;
+    if (m_splitter->width() <= 0) return;   // wait for real layout
+
+    // Apply column widths
+    if (m_pendingColumnWidths.size() == m_splitter->count()) {
+        m_splitter->setSizes(m_pendingColumnWidths);
+    }
+
+    // Apply per-column row heights
+    bool allRowsApplied = true;
+    for (int ci = 0; ci < qMin(m_pendingRowHeights.size(), (int)m_columns.size()); ++ci) {
+        if (m_pendingRowHeights[ci].size() == m_columns[ci]->count()) {
+            if (m_columns[ci]->height() > 0)
+                m_columns[ci]->setSizes(m_pendingRowHeights[ci]);
+            else
+                allRowsApplied = false;
+        }
+    }
+
+    // Only clear pending state when everything was applied
+    if (allRowsApplied) {
+        m_hasPendingSizes = false;
+        m_pendingColumnWidths.clear();
+        m_pendingRowHeights.clear();
+    }
+}
+
+void SubSurfacePanel::clampFloatingDocks() {
+    if (!m_hasRestoredFloats) return;
+    if (m_canvas->width() <= 0 || m_canvas->height() <= 0) return;
+
+    for (auto* dock : m_floatingDocks) {
+        int x = qBound(0, dock->x(), qMax(0, m_canvas->width()  - dock->width()));
+        int y = qBound(0, dock->y(), qMax(0, m_canvas->height() - dock->height()));
+        dock->move(x, y);
+    }
+    m_hasRestoredFloats = false;
 }
 
 void SubSurfacePanel::initSplitterSizes() {

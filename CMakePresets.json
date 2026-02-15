@@ -1,0 +1,109 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 28,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default (VS2022 x64 Debug)",
+            "description": "Visual Studio 2022 x64 Debug build with vcpkg and Qt 6.8.3",
+            "generator": "Visual Studio 17 2022",
+            "architecture": {
+                "value": "x64",
+                "strategy": "set"
+            },
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
+            },
+            "environment": {
+                "VCPKG_ROOT": "${sourceDir}/../../../vcpkg"
+            },
+            "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        {
+            "name": "qt-creator-debug",
+            "displayName": "Qt Creator — Debug",
+            "description": "For use with Qt Creator IDE (Ninja generator for faster builds)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-qtcreator-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "VCPKG_TARGET_TRIPLET": "x64-windows",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            },
+            "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        {
+            "name": "qt-creator-release",
+            "displayName": "Qt Creator — Release",
+            "description": "For use with Qt Creator IDE (Ninja generator, Release build)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-qtcreator-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "VCPKG_TARGET_TRIPLET": "x64-windows",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            },
+            "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        {
+            "name": "vs2022-debug",
+            "displayName": "Visual Studio 2022 — Debug",
+            "description": "Multi-config VS2022 build for debugging",
+            "generator": "Visual Studio 17 2022",
+            "architecture": {
+                "value": "x64",
+                "strategy": "set"
+            },
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
+            },
+            "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        {
+            "name": "vs2022-release",
+            "displayName": "Visual Studio 2022 — Release",
+            "description": "Multi-config VS2022 build for release",
+            "generator": "Visual Studio 17 2022",
+            "architecture": {
+                "value": "x64",
+                "strategy": "set"
+            },
+            "binaryDir": "${sourceDir}/build-release",
+            "cacheVariables": {
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
+            },
+            "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug Build",
+            "configurePreset": "vs2022-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "release",
+            "displayName": "Release Build",
+            "configurePreset": "vs2022-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "qt-debug",
+            "displayName": "Qt Creator Debug Build",
+            "configurePreset": "qt-creator-debug"
+        },
+        {
+            "name": "qt-release",
+            "displayName": "Qt Creator Release Build",
+            "configurePreset": "qt-creator-release"
+        }
+    ]
+}

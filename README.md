@@ -44,10 +44,11 @@ Mcaster1Studio is a modular broadcast control surface application built with C++
 ## Build
 
 ```powershell
+# Adjust paths to match your local vcpkg and Qt installations
 cmake -B build -G "Visual Studio 17 2022" -A x64 `
-  -DCMAKE_TOOLCHAIN_FILE=C:/Users/dstjohn/dev/vcpkg/scripts/buildsystems/vcpkg.cmake `
+  -DCMAKE_TOOLCHAIN_FILE=<VCPKG_ROOT>/scripts/buildsystems/vcpkg.cmake `
   -DVCPKG_TARGET_TRIPLET=x64-windows `
-  -DCMAKE_PREFIX_PATH="C:/Qt/6.8.3/msvc2022_64"
+  -DCMAKE_PREFIX_PATH="<QT_ROOT>/6.8.3/msvc2022_64"
 
 cmake --build build --config Debug
 ```

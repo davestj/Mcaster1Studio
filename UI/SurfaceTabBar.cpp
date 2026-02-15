@@ -16,7 +16,7 @@ SurfaceTabBar::SurfaceTabBar(QWidget* parent)
 {
     setDocumentMode(true);
     setMovable(true);
-    setTabsClosable(true);
+    setTabsClosable(false);  // close only via right-click context menu
 
     // "+" button in the top-right corner — opens the Surfaces menu
     auto* addBtn = new QToolButton(this);

@@ -36,6 +36,10 @@ void MonitorManager::refresh() {
     enumerateCaptureDevices();
 }
 
+void MonitorManager::refreshCaptureDevices() {
+    enumerateCaptureDevices();
+}
+
 // ─── Lookup ──────────────────────────────────────────────────────────────────
 const MonitorInfo* MonitorManager::monitorAt(int index) const {
     for (const auto& m : m_monitors)

@@ -7,6 +7,9 @@ project(Mcaster1Studio
     LANGUAGES CXX
 )
 
+# Enable solution folders in Visual Studio
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 # C++20 required
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,7 +29,7 @@ foreach(cfg DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 endforeach()
 
 # vcpkg toolchain is passed via -DCMAKE_TOOLCHAIN_FILE on the command line
-# Qt6 is found via -DCMAKE_PREFIX_PATH="C:/Qt/6.8.3/msvc2022_64"
+# Qt6 is found via -DCMAKE_PREFIX_PATH="<QT_ROOT>/6.8.3/msvc2022_64"
 
 # Platform defines
 if(WIN32)
@@ -133,6 +136,71 @@ add_subdirectory(Modules/PodAnalyticsModule)
 add_subdirectory(Modules/PodRemoteModule)
 add_subdirectory(SDK)
 add_subdirectory(UI)
+
+# ─── Visual Studio solution folders ──────────────────────────────────────────
+# Groups projects in Solution Explorer for easy navigation.
+
+# Core libraries
+set_target_properties(Mcaster1Core  PROPERTIES FOLDER "Core")
+set_target_properties(Mcaster1Audio PROPERTIES FOLDER "Core")
+
+# Main application
+set_target_properties(Mcaster1Studio PROPERTIES FOLDER "Application")
+
+# Broadcast modules
+set_target_properties(VUMeterModule      PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(DeckModule         PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(MediaLibraryModule PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(EncoderModule      PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(EffectsRackModule  PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(MetadataModule     PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(PlaylistModule     PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(PTTModule          PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(PodcastModule      PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(VideoModule        PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(MonitorModule      PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(ClockModule        PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(QueueModule        PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(CartWallModule     PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(HealthModule       PROPERTIES FOLDER "Modules/Broadcast")
+
+# Church modules
+set_target_properties(TimerClockModule       PROPERTIES FOLDER "Modules/Church")
+set_target_properties(GraphicsEngineModule   PROPERTIES FOLDER "Modules/Church")
+set_target_properties(LyricsCasterModule     PROPERTIES FOLDER "Modules/Church")
+set_target_properties(ScriptureCasterModule  PROPERTIES FOLDER "Modules/Church")
+set_target_properties(AnnounceCasterModule   PROPERTIES FOLDER "Modules/Church")
+set_target_properties(TelePromptModule       PROPERTIES FOLDER "Modules/Church")
+set_target_properties(MediaCasterModule      PROPERTIES FOLDER "Modules/Church")
+set_target_properties(StageMonModule         PROPERTIES FOLDER "Modules/Church")
+set_target_properties(AudioMixModule         PROPERTIES FOLDER "Modules/Church")
+set_target_properties(TranscribeRecModule    PROPERTIES FOLDER "Modules/Church")
+set_target_properties(SwitchCasterModule     PROPERTIES FOLDER "Modules/Church")
+set_target_properties(ServiceRunnerModule    PROPERTIES FOLDER "Modules/Church")
+
+# Podcast modules
+set_target_properties(PodMixerModule      PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodPTTModule        PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodRecorderModule   PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodSoundboardModule PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodFXModule         PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodEditorModule     PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodEncodeModule     PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodTranscribeModule PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodShowNotesModule  PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodRSSModule        PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodPublisherModule  PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodAnalyticsModule  PROPERTIES FOLDER "Modules/Podcast")
+set_target_properties(PodRemoteModule     PROPERTIES FOLDER "Modules/Podcast")
+
+# Effects plugins
+set_target_properties(FxSonicMaximizer    PROPERTIES FOLDER "Effects")
+set_target_properties(FxEqualizer31Band   PROPERTIES FOLDER "Effects")
+set_target_properties(FxCompressorLimiter PROPERTIES FOLDER "Effects")
+
+# SDK examples
+set_target_properties(SampleModule PROPERTIES FOLDER "SDK/Examples")
+set_target_properties(SampleEffect PROPERTIES FOLDER "SDK/Examples")
 
 # Install targets (Phase 12)
 # install(TARGETS Mcaster1Studio DESTINATION bin)
