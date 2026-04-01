@@ -73,6 +73,7 @@ target_include_directories(Mcaster1Studio PRIVATE
     ${CMAKE_SOURCE_DIR}/Modules/ClockModule
     ${CMAKE_SOURCE_DIR}/Modules/QueueModule
     ${CMAKE_SOURCE_DIR}/Modules/CartWallModule
+    ${CMAKE_SOURCE_DIR}/Modules/DatabaseModule
     ${CMAKE_SOURCE_DIR}/Modules/HealthModule
     ${CMAKE_SOURCE_DIR}/Modules/TimerClockModule
     ${CMAKE_SOURCE_DIR}/Modules/GraphicsEngineModule
@@ -99,6 +100,7 @@ target_include_directories(Mcaster1Studio PRIVATE
     ${CMAKE_SOURCE_DIR}/Modules/PodPublisherModule
     ${CMAKE_SOURCE_DIR}/Modules/PodAnalyticsModule
     ${CMAKE_SOURCE_DIR}/Modules/PodRemoteModule
+    ${CMAKE_SOURCE_DIR}/Modules/AuxDeckModule
 )
 
 target_link_libraries(Mcaster1Studio PRIVATE
@@ -118,6 +120,7 @@ target_link_libraries(Mcaster1Studio PRIVATE
     ClockModule
     QueueModule
     CartWallModule
+    DatabaseModule
     HealthModule
     TimerClockModule
     GraphicsEngineModule
@@ -144,6 +147,7 @@ target_link_libraries(Mcaster1Studio PRIVATE
     PodPublisherModule
     PodAnalyticsModule
     PodRemoteModule
+    AuxDeckModule
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
@@ -208,6 +212,7 @@ qt_add_resources(Mcaster1Studio "icons"
         resources/icons/vinyl-record.svg
         resources/icons/eject.svg
         resources/icons/cartwall.svg
+        resources/icons/database.svg
         resources/icons/live-monitor.svg
         resources/icons/health.svg
         resources/icons/timerclock.svg
@@ -235,6 +240,7 @@ qt_add_resources(Mcaster1Studio "icons"
         resources/icons/pod-publisher.svg
         resources/icons/pod-analytics.svg
         resources/icons/pod-remote.svg
+        resources/icons/auxdeck.svg
 )
 
 qt_add_resources(Mcaster1Studio "appicons"

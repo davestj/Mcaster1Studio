@@ -1,6 +1,7 @@
 #pragma once
 #include "IModule.h"
 #include "IPlugin.h"
+#include "IThreadPoolAware.h"
 #include "MediaItem.h"
 #include <QStringList>
 
@@ -22,7 +23,7 @@ class MusicBrainzLookup;
 ///
 /// The widget (LibraryWidget) is created on first call to createWidget().
 /// Drag-to-deck works by emitting requestLoadMedia(item, deckIndex).
-class MediaLibraryModule : public IModule {
+class MediaLibraryModule : public IModule, public IThreadPoolAware {
     Q_OBJECT
 
 public:
@@ -57,6 +58,10 @@ public:
 public slots:
     void startScan(const QStringList& dirs);
 
+    /// Register SQLite and MySQL drivers with DatabaseFactory.
+    /// Called once at first construction; safe to call multiple times.
+    static void registerDrivers();
+
 private slots:
     void onItemScanned(const M1::MediaItem& item);
     void onMbLookupComplete(const M1::MediaItem& enriched);
@@ -70,6 +75,11 @@ private:
     LibraryWidget*     m_widget  = nullptr;
     MusicBrainzLookup* m_mb      = nullptr;
     QStringList        m_scanDirs;
+
+    // IThreadPoolAware
+    void setSurfaceThreadPool(SurfaceThreadPool* pool) override { m_pool = pool; }
+    SurfaceThreadPool* surfaceThreadPool() const override { return m_pool; }
+    SurfaceThreadPool* m_pool = nullptr;
 };
 
 } // namespace M1

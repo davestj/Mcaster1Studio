@@ -14,11 +14,14 @@
 ///   2026-03-09  Initial implementation — UI, job model, ID3 form, batch queue
 
 #include "IModule.h"
+#include "IThreadPoolAware.h"
 #include <QList>
 #include <QString>
 #include <QMap>
 
 namespace M1 {
+
+class SurfaceThreadPool;
 
 // ─── OutputFormat ────────────────────────────────────────────────────────────
 enum class PodEncodeFormat {
@@ -63,7 +66,7 @@ struct EncodeJob {
 };
 
 // ─── PodEncodeModule ─────────────────────────────────────────────────────────
-class PodEncodeModule : public IModule {
+class PodEncodeModule : public IModule, public IThreadPoolAware {
     Q_OBJECT
 
 public:
@@ -162,6 +165,11 @@ private:
 
     // LUFS normalization target
     double m_lufsTarget = -16.0;
+
+    // ── IThreadPoolAware ─────────────────────────────────────────────────────
+    void setSurfaceThreadPool(SurfaceThreadPool* pool) override { m_pool = pool; }
+    SurfaceThreadPool* surfaceThreadPool() const override { return m_pool; }
+    SurfaceThreadPool* m_pool = nullptr;
 
     // ── Helpers ─────────────────────────────────────────────────────────────
     void applyId3ToJob(EncodeJob& job);

@@ -1,4 +1,5 @@
 #include "EncoderSlot.h"
+#include "ThreadPoolManager.h"
 #include <QTcpSocket>
 #include <QSslSocket>
 #include <QSslCipher>
@@ -159,6 +160,11 @@ void EncoderSlot::setState(State s)
 // ═════════════════════════════════════════════════════════════════════════════
 void EncoderSlot::run()
 {
+    // Pin this encoder thread to a dedicated CPU core (Golden Path)
+    int core = M1::ThreadPoolManager::instance().assignEncoderCore();
+    if (core >= 0)
+        M1::ThreadPoolManager::instance().pinCurrentThreadToCore(core);
+
     const QString tag = QString("[Encoder %1]").arg(m_cfg.slotId + 1);
     setState(State::Starting);
     m_eventLog.logInfo(tag, "Encoder thread started — " + m_cfg.name);

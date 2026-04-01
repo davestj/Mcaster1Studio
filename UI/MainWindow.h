@@ -8,6 +8,7 @@
 #include "AudioEngine.h"
 #include "ISurface.h"
 #include "SurfaceConfig.h"
+#include "SurfaceDbContext.h"
 
 class SurfaceTabBar;
 class SurfaceWidget;
@@ -95,6 +96,18 @@ private:
     void restoreWindowState();
     void addModuleToCurrentSurface(const QString& moduleId);
 
+    /// Push DB context to all IDbAwareModule instances in the given surface.
+    void pushDbContextToSurface(SurfaceWidget* sw);
+    /// Push DB context to all IDbAwareModule instances across all surfaces.
+    void pushDbContextToAllSurfaces();
+
+    /// Push thread pool to all IThreadPoolAware modules in the given surface.
+    void pushThreadPoolToSurface(SurfaceWidget* sw);
+    /// Push thread pool to all IThreadPoolAware modules across all surfaces.
+    void pushThreadPoolToAllSurfaces();
+    /// Build a SurfaceDbContext from QSettings for the given surface name.
+    static M1::SurfaceDbContext dbContextForSurface(const QString& surfaceName);
+
     /// Save ALL open surfaces to QSettings using stable v2 index-based keys.
     /// This is the single source of truth for session persistence.
     void saveAllSessionState();
@@ -107,6 +120,9 @@ private:
 
     /// Save one surface's session (delegates to saveAllSessionState + shows status msg).
     void saveSurface(SurfaceWidget* sw);
+
+    /// Full session save — surfaces, modules, layouts, window geometry, active tab.
+    void saveFullSession();
 
     /// Save all surface layout snapshots to the YAML layout file.
     void saveAllLayouts();

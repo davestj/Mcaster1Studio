@@ -12,6 +12,7 @@
 ///   2026-03-09  Initial implementation
 
 #include "PodEncodeModule.h"
+#include "SurfaceThreadPool.h"
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -610,11 +611,29 @@ void PodEncodeModule::startEncoding() {
     m_encoding = true;
     emit encodingStarted();
 
-    // Stub: simulate encoding each job
+    // Use surface thread pool if available (non-blocking)
+    if (m_pool) {
+        m_pool->submitTask([this]() {
+            // Runs in pool thread — NO Qt widget calls
+            for (auto& job : m_jobs) {
+                if (job.status == EncodeJobStatus::Complete) continue;
+                encodeJobStub(job);
+                if (!m_encoding) break;
+            }
+            // Signal completion back to GUI thread
+            QMetaObject::invokeMethod(this, [this]() {
+                m_encoding = false;
+                emit encodingFinished();
+            }, Qt::QueuedConnection);
+        });
+        return;
+    }
+
+    // Fallback: synchronous encoding (no pool available)
     for (auto& job : m_jobs) {
         if (job.status == EncodeJobStatus::Complete) continue;
         encodeJobStub(job);
-        if (!m_encoding) break; // cancelled
+        if (!m_encoding) break;
     }
 
     m_encoding = false;

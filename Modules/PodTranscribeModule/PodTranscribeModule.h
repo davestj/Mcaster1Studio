@@ -15,6 +15,7 @@
 ///               export (text/SRT/VTT), chapter generation, editable segments
 
 #include "IModule.h"
+#include "IThreadPoolAware.h"
 #include <QList>
 #include <QPair>
 #include <QStringList>
@@ -31,7 +32,7 @@ struct TranscriptSegment {
 };
 
 // ─── PodTranscribeModule ────────────────────────────────────────────────────
-class PodTranscribeModule : public IModule {
+class PodTranscribeModule : public IModule, public IThreadPoolAware {
     Q_OBJECT
 
 public:
@@ -103,6 +104,11 @@ private:
 
     // Chapter markers
     QList<QPair<qint64, QString>> m_chapters;
+
+    // IThreadPoolAware
+    void setSurfaceThreadPool(SurfaceThreadPool* pool) override { m_pool = pool; }
+    SurfaceThreadPool* surfaceThreadPool() const override { return m_pool; }
+    SurfaceThreadPool* m_pool = nullptr;
 };
 
 } // namespace M1

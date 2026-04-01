@@ -1,6 +1,7 @@
 #pragma once
 #include "IModule.h"
 #include "IPlugin.h"
+#include "ThreadPoolManager.h"
 #include <QTimer>
 #include <QList>
 #include <QString>
@@ -13,6 +14,15 @@ class EncoderModule;
 class DeckModule;
 class DeckAModule;
 class DeckBModule;
+
+/// Per-surface thread pool health metrics.
+struct PoolHealth {
+    QString surfaceName;
+    int     activeThreads  = 0;
+    int     maxThreads     = 0;
+    int     pendingTasks   = 0;
+    qint64  tasksCompleted = 0;
+};
 
 /// Snapshot of system health at a single poll instant.
 struct HealthSnapshot {
@@ -28,6 +38,12 @@ struct HealthSnapshot {
     QString deckBTrack;
     double  deckAPosition = 0.0;
     double  deckBPosition = 0.0;
+
+    // Thread pool metrics (Golden Path)
+    QList<PoolHealth> threadPools;
+    int     totalWorkerThreads = 0;
+    int     availableCores     = 0;
+    bool    affinityEnabled    = false;
 };
 
 /// HealthModule — Studio-wide system health monitor.

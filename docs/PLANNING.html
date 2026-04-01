@@ -197,6 +197,11 @@
   <div class="c">HealthModule &middot; HealthWidget &middot; MetricsServer &middot; health.svg icon</div>
   <div class="c"><span class="badge bd">&#10003; Complete</span></div>
 
+  <div class="c">DB</div>
+  <div class="c">Database Architecture &mdash; 5-backend IDatabase, per-surface DB isolation, live wiring</div>
+  <div class="c">DatabaseModule &middot; 5 backends (SQLite/MySQL/PostgreSQL/Firebird/MSSQL) &middot; DatabaseFactory registration &middot; SqlDialect multi-backend DDL &middot; DbServerRegistry (QObject + signals) &middot; SurfaceDbContext live createConnection() &middot; IDbAwareModule live injection &middot; PreferencesDialog live push &middot; MainWindow pushDbContextToSurface() &middot; Integration tests (77 pass) &middot; database.svg icon</div>
+  <div class="c"><span class="badge bd">&#10003; Complete</span></div>
+
   <div class="c">BF</div>
   <div class="c">Bug Fix &mdash; Module containment (floating docks escape canvas bounds)</div>
   <div class="c">ModuleDock qBound clamp &middot; SubSurfacePanel float-transition clamp &middot; ResizableWidget edge-resize clamp &middot; Session restore clamp &middot; 6 fix locations</div>
@@ -213,9 +218,9 @@
   <div class="c"><span class="badge bnew">Planned</span></div>
 
   <div class="c">12</div>
-  <div class="c">Installer + Polish &mdash; WiX, first-run wizard, auto-update</div>
-  <div class="c">WiX installer &middot; FirstRunWizard &middot; SurfacePresets &middot; AutoUpdate stub</div>
-  <div class="c"><span class="badge bp">Pending</span></div>
+  <div class="c">Installer + Polish + AuxDeck &mdash; NSIS installer, test harnesses, AudioPipe integration</div>
+  <div class="c">AuxDeckModule (per-deck audio routing) &middot; NSIS installer (user-dir install) &middot; Mcaster1AudioPipe prefs integration &middot; Auto version bump &middot; 6 test harnesses &middot; Getting Started guide &middot; 43 built-in modules</div>
+  <div class="c"><span class="badge bd">&#10003; Done</span></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -253,8 +258,8 @@
 <div class="box p">
   <strong>Planned &mdash; <a href="PHASE-K-PLAN.html">Full architectural plan &rarr;</a></strong>
   <ul style="margin-top:8px">
-    <li><strong>Database Server Registry</strong> &mdash; Multiple named DB servers in System Preferences (SQLite + MySQL); UUID-keyed, first-run migration from legacy single-DB settings</li>
-    <li><strong>Per-Surface Database Isolation</strong> &mdash; Each surface gets its own DB schema/file; SurfaceDbContext injected into DB-aware modules via IDbAwareModule mixin; own media library, playlists, encoder configs, metadata presets, broadcast log</li>
+    <li><strong>Database Server Registry</strong> &mdash; Multiple named DB servers in System Preferences (SQLite + MySQL + PostgreSQL); UUID-keyed, first-run migration from legacy single-DB settings <span class="badge bd" style="font-size:.65rem">&#10003; Done (Phase DB)</span></li>
+    <li><strong>Per-Surface Database Isolation + Live Wiring</strong> &mdash; Each surface gets its own DB schema/file; SurfaceDbContext injected into DB-aware modules via IDbAwareModule mixin; DbServerRegistry emits change signals; PreferencesDialog pushes live updates; MainWindow injects contexts at module creation + on assignment change; DatabaseWidget refreshes instantly — no restart needed <span class="badge bd" style="font-size:.65rem">&#10003; Done (Phase DB)</span></li>
     <li><strong>Surface Creation Wizard</strong> &mdash; Multi-step QWizard: name &rarr; DB server selection &rarr; schema creation &rarr; module selection &rarr; confirmation</li>
     <li><strong>Pop-Out Surface Windows</strong> &mdash; Right-click tab &rarr; "Pop Out Window" &rarr; QMainWindow (resize, maximize, minimize, F11 fullscreen, multi-monitor drag); "Dock Back" returns to tab; session-persisted</li>
     <li><strong>Monitor &amp; Display Management</strong> &mdash; MonitorManager detects all monitors (resolution, DPI, GPU, refresh rate) via DXGI; "Send to Monitor" context menu auto-maximizes on target display; hot-plug handling</li>
@@ -324,6 +329,74 @@
     <li><strong>PodRemoteModule</strong> &mdash; Remote guest management: up to 4 guests, status indicators (Disconnected/Waiting/Connected/Error), audio level bars, mute/admit controls, join URL generation (WebRTC v2)</li>
     <li><strong>ISurface.h</strong> &mdash; Podcast surface defaults expanded from 4 to 17 modules (4 core + 13 podcast-specific)</li>
     <li><strong>13 SVG icons</strong> &mdash; Each with unique color theme: blue (mixer), amber (PTT), red (recorder), purple (soundboard), cyan (FX), teal (editor), green (encode), indigo (transcribe), yellow (shownotes), orange (RSS), emerald (publisher), violet (analytics), sky (remote)</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase DB &mdash; Database Module Completed (2026-03-10)</h2>
+<div class="box g">
+  <strong>Completed in Phase DB:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>DatabaseModule (<code>com.mcaster1.database</code>)</strong> &mdash; New surface-loadable module providing connection status display, table browser, backup/restore operations, and database initialization. Allows per-surface database management directly from the surface UI.</li>
+    <li><strong>PostgreSQL backend</strong> &mdash; Added <code>PostgreSQL</code> to <code>DbServerEntry::Backend</code> enum alongside SQLite and MySQL. Full support with <code>backendDisplayName()</code>, <code>defaultPort()</code>, and <code>isNetworked()</code> for all three backends.</li>
+    <li><strong>Surface Database Assignments</strong> &mdash; New section in PreferencesDialog &gt; DB Servers page for per-surface server and schema name assignment. Each surface can be independently assigned to a different DB server and schema via <code>surfaceDb/&lt;schema&gt;/serverId</code> and <code>surfaceDb/&lt;schema&gt;/schemaName</code> QSettings keys.</li>
+    <li><strong>IDatabase extended</strong> &mdash; Added <code>executeQuery()</code> and <code>tableNames()</code> pure virtual methods to the IDatabase interface, enabling generic SQL execution and schema introspection from any backend.</li>
+    <li><strong>database.svg icon</strong> &mdash; 3D violet style cylinder icon (32&times;32 viewBox, linearGradient + shine + feDropShadow), consistent with the existing 3D raised icon convention.</li>
+    <li><strong>DbServerDialog + PreferencesDialog updated</strong> &mdash; Both dialogs now support all 5 backends: port defaults, connection fields, validation, surface DB assignment table.</li>
+    <li><strong>Firebird backend (FirebirdManager)</strong> &mdash; Full IDatabase implementation via Firebird C API. XSQLDA/XSQLVAR result binding, DPB for authentication, explicit transaction management, <code>GENERATED BY DEFAULT AS IDENTITY</code> (Firebird 3+), dual-mode connection (embedded .fdb files or network host:port:database). Conditional: <code>#ifdef M1_HAS_FIREBIRD</code> with stubs. Custom <code>cmake/FindFirebird.cmake</code>.</li>
+    <li><strong>SQL Server backend (MssqlManager)</strong> &mdash; Full IDatabase implementation via ODBC API. Auto-detects best ODBC driver via <code>SQLDriversW()</code> (Driver 18 &rarr; 17 &rarr; 13 &rarr; Native Client &rarr; legacy). Works with all editions: Express, Developer, Standard, Enterprise, Azure SQL, LocalDB. <code>NVARCHAR</code> for Unicode, <code>IDENTITY(1,1)</code>, <code>SCOPE_IDENTITY()</code>, <code>INFORMATION_SCHEMA.TABLES</code>. Conditional: <code>#ifdef M1_HAS_MSSQL</code> (always set on WIN32 &mdash; uses <code>odbc32.lib</code> from Windows SDK).</li>
+    <li><strong>SqlDialect expanded</strong> &mdash; 5 concrete dialect implementations (SQLite, MySQL, PostgreSQL, Firebird, MSSQL) for backend-specific DDL generation: quoting, auto-increment, data types, limit clauses, schema creation.</li>
+    <li><strong>Integration tests</strong> &mdash; <code>tests/test_databases.cpp</code>: 77 tests across all 5 backends &mdash; driver registration, SQL dialect verification, full CRUD cycles (insert/loadAll/pathExists/update/delete/executeQuery), DatabaseFactory integration. Uses <code>fprintf(stdout)</code> for Windows console output.</li>
+    <li><strong>Per-surface DB live wiring (2026-03-10)</strong> &mdash; Complete real-time DB assignment flow:
+      <ul>
+        <li><code>DbServerRegistry</code> now inherits <code>QObject</code> &mdash; emits <code>serverListChanged()</code>, <code>serverChanged(id)</code>, <code>surfaceAssignmentChanged(surfaceName)</code> signals on all CRUD operations</li>
+        <li><code>SurfaceDbContext::createConnection()</code> fully implemented via <code>DatabaseFactory::create()</code> &mdash; handles SQLite file paths, networked backends, driver availability checks</li>
+        <li><code>PreferencesDialog</code> emits <code>surfaceDbAssignmentChanged(surfaceName)</code> when server combo or schema name changes &mdash; updates push instantly</li>
+        <li><code>MainWindow::pushDbContextToSurface(sw)</code> scans all modules via <code>dynamic_cast&lt;IDbAwareModule*&gt;</code> and calls <code>setSurfaceDbContext()</code></li>
+        <li>DB context injected at: session restore, surface creation, module add, PreferencesDialog live changes, and dialog accept</li>
+        <li>DatabaseModule widget refreshes instantly when context changes &mdash; no app restart needed</li>
+      </ul>
+    </li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Phase 12 &mdash; Installer + Polish + AuxDeck Completed (2026-03-14)</h2>
+<div class="box g">
+  <strong>Completed in Phase 12:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>AuxDeckModule (<code>com.mcaster1.auxdeck</code>)</strong> &mdash; Custom auxiliary deck with per-deck audio device routing. Each instance gets an independent custom name, AIR OUT device, CUE OUT device, volume, VU meters, and full transport controls (load/play/pause/stop/CUE). Mcaster1AudioPipe virtual devices appear automatically in device lists. Users can add multiple AUX Decks per surface for dedicated playback channels (jingles, interviews, background music).</li>
+    <li><strong>Mcaster1AudioPipe integration</strong> &mdash; New section in Preferences &gt; Audio page shows AudioPipe installation status, path (<code>C:\Users\USERNAME\Mcaster1\Mcaster1AudioPipes\Mcaster1AudioPipe.exe</code>), launch button, and refresh pipe devices button. Virtual audio pipe devices appear in all PortAudio device dropdowns.</li>
+    <li><strong>Auto version bump</strong> &mdash; <code>cmake/AutoBuildNumber.cmake</code> increments a persistent <code>BUILD_NUMBER</code> file on each CMake configure. <code>version.h.in</code> now exposes <code>MCASTER1STUDIO_BUILD_NUMBER</code> and <code>MCASTER1STUDIO_VERSION_FULL</code> (e.g. "0.3.0.42").</li>
+    <li><strong>NSIS installer</strong> &mdash; <code>installer/installer.nsi</code> (406 lines): installs to <code>C:\Users\USERNAME\Mcaster1\Mcaster1Studio</code> (no admin required), copies all runtime files (Qt DLLs, vcpkg DLLs, themes, plugins), creates Desktop + Start Menu shortcuts + Getting Started link + Uninstaller. <code>installer/build-installer.bat</code> automates the full build-and-package workflow.</li>
+    <li><strong>Test harnesses</strong> &mdash; 6 test executables:
+      <ul>
+        <li><code>TestDatabases</code> &mdash; 77 tests across all 5 database backends</li>
+        <li><code>TestCore</code> &mdash; ModuleRegistry, SqlDialect, DbServerEntry, SurfaceConfig</li>
+        <li><code>TestModules</code> &mdash; 18 broadcast module construction + identity + widget tests</li>
+        <li><code>TestChurch</code> &mdash; 12 church module construction + identity verification</li>
+        <li><code>TestPodcast</code> &mdash; 13 podcast module construction + identity verification</li>
+        <li><code>TestAuxDeck</code> &mdash; AuxDeckModule CRUD, device routing, state persistence</li>
+      </ul>
+    </li>
+    <li><strong>Getting Started guide</strong> &mdash; <code>docs/GettingStarted.html</code> (53KB): comprehensive 10-section first-run walkthrough covering surfaces, modules, audio setup, broadcasting, church services, podcasting, and AudioPipe.</li>
+    <li><strong>3D SVG icon</strong> &mdash; <code>auxdeck.svg</code> (indigo gradient, AUX text + speaker waves) matching project icon conventions.</li>
+    <li><strong>Module catalog</strong> &mdash; 43 built-in modules in ModuleRegistry (was 42).</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Golden Path &mdash; Per-Surface Thread Pools + CPU Affinity (2026-03-14)</h2>
+<div class="box g">
+  <strong>Completed in Golden Path:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>ThreadPoolManager</strong> &mdash; Singleton that creates/destroys per-surface <code>QThreadPool</code> instances, computes thread budget based on <code>QThread::idealThreadCount()</code>, and manages CPU core affinity via <code>SetThreadAffinityMask</code> on Windows.</li>
+    <li><strong>SurfaceThreadPool</strong> &mdash; Per-surface pool wrapper with atomic metrics: <code>tasksSubmitted</code>, <code>tasksCompleted</code>, <code>pendingTaskCount</code>, <code>peakQueueDepth</code>. Created in <code>SurfaceWidget</code> constructor, destroyed in destructor.</li>
+    <li><strong>IThreadPoolAware</strong> mixin &mdash; Follows <code>IDbAwareModule</code> injection pattern. MainWindow calls <code>pushThreadPoolToSurface()</code> to inject pools via <code>dynamic_cast&lt;IThreadPoolAware*&gt;</code>.</li>
+    <li><strong>CPU affinity</strong> &mdash; PortAudio RT callback: core 0. EncoderSlots: round-robin cores 1-3. Surface pools: cores 4+ (OS scheduled). Disabled on &lt; 4 cores.</li>
+    <li><strong>5 modules converted</strong> &mdash; PodEncodeModule, PodEditorModule, PodTranscribeModule, TranscribeRecModule, MediaLibraryModule now use <code>m_pool-&gt;submitTask()</code> for heavy work with synchronous fallback.</li>
+    <li><strong>HealthSnapshot extended</strong> &mdash; <code>QList&lt;PoolHealth&gt; threadPools</code>, <code>totalWorkerThreads</code>, <code>availableCores</code>, <code>affinityEnabled</code> for real-time pool monitoring.</li>
+    <li><strong>TestThreadPool</strong> &mdash; 37 integration tests: pool basics, 100-task submission, metrics tracking, pool lifecycle, multi-surface pools, encoder core assignment, thread isolation verification.</li>
   </ul>
 </div>
 
@@ -461,7 +534,7 @@
   <tr><td>Audio I/O</td><td>PortAudio 19.7 + ASIO SDK (vcpkg portaudio[asio])</td></tr>
   <tr><td>Codecs</td><td>libopusenc &middot; libvorbis &middot; libFLAC &middot; fdk-aac &middot; LAME (external)</td></tr>
   <tr><td>Video</td><td>FFmpeg 8.0.1</td></tr>
-  <tr><td>Database</td><td>MySQL/MariaDB (vcpkg unofficial-libmariadb)</td></tr>
+  <tr><td>Database</td><td>SQLite3 &middot; MySQL/MariaDB &middot; PostgreSQL &middot; Firebird &middot; SQL Server (ODBC) &mdash; 5-backend architecture via DatabaseFactory</td></tr>
   <tr><td>Tag Reading</td><td>TagLib 2.1.1 (compiled /EHa)</td></tr>
   <tr><td>HTTP</td><td>Qt6::Network (weather, ICY) &middot; libcurl 8.18 (monitor, metadata push)</td></tr>
   <tr><td>Plugin ABI</td><td>DLL C ABI factory functions</td></tr>
@@ -550,6 +623,7 @@
   <tr><td>PodRemoteModule</td><td><code>com.mcaster1.podcast.remote</code></td><td>PD</td><td><span class="badge bd">&#10003; Done</span></td></tr>
   <tr><td colspan="4" style="background:var(--raised);color:var(--cyan);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px">System Modules</td></tr>
   <tr><td>HealthModule</td><td><code>com.mcaster1.health</code></td><td>HL</td><td><span class="badge bd">&#10003; Done</span></td></tr>
+  <tr><td>DatabaseModule</td><td><code>com.mcaster1.database</code></td><td>DB</td><td><span class="badge bd">&#10003; Done</span></td></tr>
 </table>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -637,15 +711,14 @@ User-Agent: Mcaster1Studio/1.0.0
   <tr><td>Mcaster1DSPEncoder</td><td><code>../Mcaster1DSPEncoder/</code></td><td>Encoder reference (LAME/Opus/AAC/FLAC patterns)</td></tr>
   <tr><td>Mcaster1TagStack</td><td><code>../Mcaster1TagStack/</code></td><td>MySQL schema reference &middot; ICY 2.2 editor reference</td></tr>
   <tr><td>Mcaster1Castit</td><td><code>../Mcaster1CastIt/</code></td><td>Stats monitor reference for Phase 10</td></tr>
+  <tr><td>Mcaster1AudioPipe</td><td><code>../Mcaster1AudioPipe/</code></td><td>Virtual audio routing &mdash; zero-latency pipe devices for AUX Deck + encoder chaining</td></tr>
 </table>
 
 <footer>
-  Mcaster1Studio v0.2.0-alpha &middot;
-  Phases 1&ndash;11 + A&ndash;I + CH + PD + HL + BF complete &middot;
-  Phase K (Surface Isolation + Multi-Monitor) planned &middot;
-  Phase C (refinement) in progress &middot;
-  Phase 12 (Installer) pending &middot;
-  Last updated: 2026-03-10 &middot;
+  Mcaster1Studio v0.3.0-alpha &middot;
+  Phases 1&ndash;12 + A&ndash;I + CH + PD + HL + DB + Golden Path complete &middot;
+  43 built-in modules &middot; 8 test harnesses (284+ tests) &middot; Per-surface thread pools &middot; NSIS installer &middot;
+  Last updated: 2026-03-14 &middot;
   <a href="https://mcaster1.com">mcaster1.com</a>
 </footer>
 </body>

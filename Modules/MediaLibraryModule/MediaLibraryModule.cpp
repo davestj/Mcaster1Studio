@@ -2,6 +2,10 @@
 #include "IDatabase.h"
 #include "SqliteManager.h"
 #include "DatabaseManager.h"
+#include "PostgresManager.h"
+#include "FirebirdManager.h"
+#include "MssqlManager.h"
+#include "DatabaseFactory.h"
 #include "ScanWorker.h"
 #include "LibraryModel.h"
 #include "LibraryWidget.h"
@@ -18,7 +22,124 @@ MediaLibraryModule::MediaLibraryModule(QObject* parent)
     , m_model(new LibraryModel(this))
     , m_mb(new MusicBrainzLookup(this))
 {
+    registerDrivers();
     createDatabase();
+}
+
+// ─── Driver registration ─────────────────────────────────────────────────────
+void MediaLibraryModule::registerDrivers() {
+    static bool registered = false;
+    if (registered) return;
+    registered = true;
+
+    // SQLite driver
+    DatabaseFactory::registerDriver(
+        DbServerEntry::Backend::SQLite,
+        [](const DbServerEntry& entry, const QString& /*dbName*/,
+           const QString& dbPath) -> IDatabase* {
+            auto* mgr = new SqliteManager;
+            const QString path = dbPath.isEmpty() ? entry.sqlitePath : dbPath;
+            if (!mgr->connect(path)) {
+                qWarning() << "[DatabaseFactory] SQLite connect failed:" << mgr->lastError();
+                delete mgr;
+                return nullptr;
+            }
+            return mgr;
+        });
+
+    // MySQL driver
+    DatabaseFactory::registerDriver(
+        DbServerEntry::Backend::MySQL,
+        [](const DbServerEntry& entry, const QString& dbName,
+           const QString& /*dbPath*/) -> IDatabase* {
+            auto* mgr = new DatabaseManager;
+            DatabaseManager::Config cfg;
+            cfg.host     = entry.host;
+            cfg.port     = entry.port;
+            cfg.user     = entry.username;
+            cfg.password = entry.password;
+            cfg.database = dbName.isEmpty() ? "mcaster1studio" : dbName;
+            if (!mgr->connect(cfg)) {
+                qWarning() << "[DatabaseFactory] MySQL connect failed:" << mgr->lastError();
+                delete mgr;
+                return nullptr;
+            }
+            return mgr;
+        });
+
+    // PostgreSQL driver (only if libpq was linked)
+#ifdef M1_HAS_POSTGRESQL
+    DatabaseFactory::registerDriver(
+        DbServerEntry::Backend::PostgreSQL,
+        [](const DbServerEntry& entry, const QString& dbName,
+           const QString& /*dbPath*/) -> IDatabase* {
+            auto* mgr = new PostgresManager;
+            PostgresManager::Config cfg;
+            cfg.host     = entry.host;
+            cfg.port     = entry.port;
+            cfg.user     = entry.username;
+            cfg.password = entry.password;
+            cfg.database = dbName.isEmpty() ? "mcaster1studio" : dbName;
+            if (!mgr->connect(cfg)) {
+                qWarning() << "[DatabaseFactory] PostgreSQL connect failed:" << mgr->lastError();
+                delete mgr;
+                return nullptr;
+            }
+            return mgr;
+        });
+#endif
+
+    // Firebird driver (only if fbclient was linked)
+#ifdef M1_HAS_FIREBIRD
+    DatabaseFactory::registerDriver(
+        DbServerEntry::Backend::Firebird,
+        [](const DbServerEntry& entry, const QString& dbName,
+           const QString& dbPath) -> IDatabase* {
+            auto* mgr = new FirebirdManager;
+            FirebirdManager::Config cfg;
+            cfg.host     = entry.host;
+            cfg.port     = entry.port;
+            cfg.user     = entry.username;
+            cfg.password = entry.password;
+            // Firebird database: prefer firebirdPath, then dbPath, then dbName
+            if (!entry.firebirdPath.isEmpty())
+                cfg.database = entry.firebirdPath;
+            else if (!dbPath.isEmpty())
+                cfg.database = dbPath;
+            else
+                cfg.database = dbName.isEmpty() ? "mcaster1studio.fdb" : dbName;
+            if (!mgr->connect(cfg)) {
+                qWarning() << "[DatabaseFactory] Firebird connect failed:" << mgr->lastError();
+                delete mgr;
+                return nullptr;
+            }
+            return mgr;
+        });
+#endif
+
+    // SQL Server driver (ODBC — always available on Windows)
+#ifdef M1_HAS_MSSQL
+    DatabaseFactory::registerDriver(
+        DbServerEntry::Backend::MSSQL,
+        [](const DbServerEntry& entry, const QString& dbName,
+           const QString& /*dbPath*/) -> IDatabase* {
+            auto* mgr = new MssqlManager;
+            MssqlManager::Config cfg;
+            cfg.host     = entry.host;
+            cfg.port     = entry.port;
+            cfg.user     = entry.username;
+            cfg.password = entry.password;
+            cfg.database = dbName.isEmpty() ? "mcaster1studio" : dbName;
+            // Use Windows auth if no username provided
+            cfg.trustedConnection = entry.username.isEmpty();
+            if (!mgr->connect(cfg)) {
+                qWarning() << "[DatabaseFactory] SQL Server connect failed:" << mgr->lastError();
+                delete mgr;
+                return nullptr;
+            }
+            return mgr;
+        });
+#endif
 }
 
 MediaLibraryModule::~MediaLibraryModule() {

@@ -9,7 +9,7 @@ Update this file whenever architectural decisions change or new patterns are est
 
 - **Name:** Mcaster1Studio
 - **Type:** Broadcast Automation Software Suite (C++20 + Qt6)
-- **Version:** 0.2.0-alpha (Phases 1–11 + A–I + CH + PD complete)
+- **Version:** 0.3.0-alpha (Phases 1–12 + A–I + CH + PD + DB + AuxDeck + Installer + Golden Path Threading complete)
 - **Root:** `C:/Users/dstjohn/dev/00_mcaster1.com/Mcaster1Studio/`
 - **Part of:** Mcaster1 broadcast ecosystem
 
@@ -42,7 +42,7 @@ cmake -B build -G "Visual Studio 17 2022" -A x64 `
 | Build | CMake 3.28+ with VS2022 generator |
 | Audio I/O | PortAudio 19.7+ with ASIO (vcpkg portaudio[asio]) |
 | Plugin System | DLL C ABI (mcaster1_plugin_info, mcaster1_create_module) |
-| Database | MySQL/MariaDB (libmysql via vcpkg) |
+| Database | SQLite + MySQL/MariaDB + PostgreSQL + Firebird + SQL Server (5 backends) |
 | Media Tags | TagLib 2.1.1 |
 | HTTP | libcurl 8.18 |
 | Audio Codecs | LAME (external), libopusenc, libvorbis, libFLAC, fdk-aac |
@@ -145,20 +145,74 @@ Effects use: `com.mcaster1.fx.<name>`
 - Use `QTimer` (Qt thread) to poll atomics and update UI (VUMeterWidget pattern).
 - EventBus signals from AudioEngine are emitted via `QueuedConnection` to Qt thread.
 
+### Golden Path Threading (Per-Surface Thread Pools + CPU Affinity):
+- **`IThreadPoolAware`** mixin (`Core/include/IThreadPoolAware.h`) — opt-in, follows `IDbAwareModule` pattern
+- **`SurfaceThreadPool`** (`Core/include/SurfaceThreadPool.h`) — per-surface `QThreadPool` wrapper with metrics (tasksSubmitted/completed/pending/peakQueueDepth)
+- **`ThreadPoolManager`** (`Core/include/ThreadPoolManager.h`) — singleton, pool lifecycle, CPU affinity, core budget
+- **`PooledRunnable`** (`Core/include/PooledRunnable.h`) — `QRunnable` wrapper with completion counter
+- **CPU affinity:** RT callback pinned to core 0, EncoderSlots round-robin cores 1-3, surface pools on cores 4+ (OS scheduled). Disabled on < 4 cores.
+- **Thread budget:** `max(2, remainingCores / activeSurfaceCount)`, Church/Podcast +1 bonus
+- **Converted modules:** PodEncodeModule, PodEditorModule, PodTranscribeModule, TranscribeRecModule, MediaLibraryModule
+- **MainWindow injection:** `pushThreadPoolToSurface()` mirrors `pushDbContextToSurface()` — `dynamic_cast<IThreadPoolAware*>`
+- **Module pattern:** `if (m_pool) { m_pool->submitTask([this]{ ... }); } else { /* sync fallback */ }`
+- **HealthSnapshot** extended with `QList<PoolHealth> threadPools`, `totalWorkerThreads`, `availableCores`, `affinityEnabled`
+
 ### Plugin DLL Loading:
 - Use `QLibrary` to load plugins.
 - Call `mcaster1_plugin_info()` first to check `api_version == MCASTER1_PLUGIN_API_VERSION`.
 - Plugins go in `plugins/modules/` (modules) and `plugins/effects/` (DSP units).
 
-## Database (Phase H)
+## Database (Phase H + Multi-Backend)
 
-- **IDatabase** abstract interface (`Core/include/IDatabase.h`) — pure virtual base
+- **IDatabase** abstract interface (`Core/include/IDatabase.h`) — pure virtual base with `executeQuery()` + `tableNames()`
 - **SqliteManager** (default) — embedded SQLite3, zero-config, WAL mode, `AppData/Mcaster1Studio/mcaster1studio.db`
 - **DatabaseManager** — MySQL/MariaDB, for enterprise multi-user deployments
-- **Factory:** `MediaLibraryModule::createDatabase()` reads `QSettings("database/backend")` → "sqlite" (default) or "mysql"
+- **Legacy factory:** `MediaLibraryModule::createDatabase()` still reads `QSettings("database/backend")` for backward compat
 - **Fallback:** If MySQL connection fails, auto-falls back to SQLite
-- CMake targets: `unofficial::sqlite3::sqlite3` (SQLite), `unofficial::libmysql::libmysql` (MySQL)
-- PreferencesDialog Database tab: backend selector, SQLite path, MySQL connection settings
+- CMake targets: `unofficial::sqlite3::sqlite3` (SQLite), `unofficial::libmysql::libmysql` (MySQL), `PostgreSQL::PostgreSQL` (libpq), `Firebird::fbclient` (fbclient via `cmake/FindFirebird.cmake`), `odbc32` (SQL Server via Windows ODBC SDK)
+
+### DatabaseFactory (registration pattern)
+- **`DatabaseFactory`** (`Core/include/DatabaseFactory.h`) — central factory with driver registration
+- **`registerDriver(Backend, DriverCreator)`** — each driver module registers a lambda creator
+- **`create(entry, dbName, dbPath)`** → dispatches to registered driver → returns `IDatabase*`
+- **`isDriverRegistered(Backend)`** / **`checkDriverAvailable(Backend)`** — check availability
+- **Registration:** `MediaLibraryModule::registerDrivers()` (static, idempotent) registers SQLite + MySQL + PostgreSQL + Firebird
+- **Called from:** MainWindow constructor (early init) + MediaLibraryModule constructor (fallback)
+- PostgreSQL registration is conditional: `#ifdef M1_HAS_POSTGRESQL` (set when `find_package(PostgreSQL)` succeeds)
+- Firebird registration is conditional: `#ifdef M1_HAS_FIREBIRD` (set when `FindFirebird.cmake` finds 64-bit fbclient)
+- MSSQL registration is conditional: `#ifdef M1_HAS_MSSQL` (always set on WIN32 — uses `odbc32.lib` from Windows SDK)
+- MSSQL auto-detects best ODBC driver: "ODBC Driver 18" → "ODBC Driver 17" → "SQL Server" (legacy)
+
+### SqlDialect (multi-backend DDL abstraction)
+- **`SqlDialect`** (`Core/include/SqlDialect.h`) — abstract base for backend-specific SQL generation
+- Concrete: `SqliteDialect`, `MySqlDialect`, `PostgresDialect`, `FirebirdDialect`, `MssqlDialect`
+- Methods: `quoteId()`, `autoIncrementPK()`, `varcharType()`, `boolType()`, `datetimeType()`, `nowFunction()`, `limitClause()`, `createDatabaseSql()`, `tableOptions()`, `createMediaItemsTableSql()`
+- **`dialectFor(int backendEnumValue)`** → returns static singleton, do NOT delete
+
+### DbServerEntry::Backend enum
+- `{ SQLite, MySQL, PostgreSQL, Firebird, MSSQL }`
+- Helpers: `backendKey()`, `backendFromKey()`, `backendDisplayName()`, `defaultPort()`, `allBackends()`
+- Ports: MySQL=3306, PG=5432, Firebird=3050, MSSQL=1433
+
+### UI Integration
+- **DbServerDialog** — supports all 5 backends, dynamic port switching, dynamic group title
+- **PreferencesDialog** Database tab: backend selector, SQLite path, network connection settings
+- **PreferencesDialog** DB Servers page: server CRUD + Surface Database Assignments (per-surface server + schema)
+- **QSettings keys:** `surfaceDb/<schema>/serverId`, `surfaceDb/<schema>/schemaName`
+- **DatabaseModule** (`com.mcaster1.database`): surface-loadable module for connection status, table browser, backup/restore, initialize
+- **Per-surface DB isolation:** IDbAwareModule mixin + SurfaceDbContext (serverId, schemaName, tablePrefix)
+
+### Per-Surface DB Live Wiring (confirmed 2026-03-10)
+- **DbServerRegistry** inherits `QObject` — emits `serverListChanged()`, `serverChanged(id)`, `surfaceAssignmentChanged(surfaceName)`
+- **SurfaceDbContext::createConnection()** — fully implemented via `DatabaseFactory::create()`, handles SQLite paths + networked backends
+- **IDbAwareModule** mixin — `setSurfaceDbContext(ctx)` called by MainWindow; DatabaseModule implements it, refreshes widget immediately
+- **PreferencesDialog** emits `surfaceDbAssignmentChanged(surfaceName)` on combo/edit change → MainWindow pushes updated context to live modules in real time
+- **MainWindow** DB injection points:
+  - `pushDbContextToSurface(sw)` — scans all modules, `dynamic_cast<IDbAwareModule*>`, calls `setSurfaceDbContext()`
+  - `pushDbContextToAllSurfaces()` — called after `loadSavedSurfaces()` restore + after PreferencesDialog Accept
+  - `dbContextForSurface(name)` — builds SurfaceDbContext from QSettings, falls back to default server if none assigned
+  - Every module creation path (`addModuleToCurrentSurface`, `openSurfaceFromConfig`, `onAddCustomSurface`, `addModuleRequested` signal) pushes DB context to new DB-aware modules
+- **Live update flow:** User changes DB assignment in Preferences → signal emits → MainWindow finds surface → pushes context to all IDbAwareModule instances → DatabaseWidget refreshes immediately (no restart needed)
 
 ## Phase Status
 
@@ -181,7 +235,9 @@ Effects use: `com.mcaster1.fx.<name>`
 | 11 | SDK + public plugin system — ModuleRegistry, IModuleHost, dynamic menus, SampleModule/Effect | ✅ Complete |
 | CH | Church Surface — 12 modules (TimerClock, Graphics, Lyrics, Scripture, Announce, TelePrompt, MediaCaster, StageMon, AudioMix, TranscribeRec, SwitchCaster, ServiceRunner) | ✅ Complete |
 | PD | Podcast Surface — 13 modules (PodMixer, PodPTT, PodRecorder, PodSoundboard, PodFX, PodEditor, PodEncode, PodTranscribe, PodShowNotes, PodRSS, PodPublisher, PodAnalytics, PodRemote) | ✅ Complete |
-| 12 | Installer + polish | Pending |
+| DB | Database Module + 5-backend architecture (SQLite, MySQL, PostgreSQL, Firebird, MSSQL) + per-surface DB isolation + live wiring | ✅ Complete |
+| 12 | Installer + Polish + AuxDeck — NSIS installer, test harnesses, AudioPipe integration, auto version bump | ✅ Complete |
+| GP | Golden Path Threading — Per-surface thread pools, CPU core affinity, IThreadPoolAware mixin, HealthModule metrics | ✅ Complete |
 
 ## Module Wire-up (MainWindow)
 

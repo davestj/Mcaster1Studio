@@ -33,9 +33,12 @@ void DbServerDialog::buildUi() {
     topForm->addRow("Server Name:", m_nameEdit);
 
     m_backendCombo = new QComboBox(this);
-    m_backendCombo->addItem("SQLite (Embedded)", "sqlite");
-    m_backendCombo->addItem("MySQL / MariaDB",   "mysql");
-    m_backendCombo->setToolTip("SQLite requires no setup. MySQL is for enterprise/multi-user.");
+    m_backendCombo->addItem("SQLite (Embedded)",    "sqlite");
+    m_backendCombo->addItem("MySQL / MariaDB",      "mysql");
+    m_backendCombo->addItem("PostgreSQL",           "postgresql");
+    m_backendCombo->addItem("Firebird",             "firebird");
+    m_backendCombo->addItem("SQL Server (MSSQL)",   "mssql");
+    m_backendCombo->setToolTip("Select the database engine. SQLite requires no setup.");
     topForm->addRow("Backend:", m_backendCombo);
     root->addLayout(topForm);
 
@@ -59,8 +62,8 @@ void DbServerDialog::buildUi() {
         if (!path.isEmpty()) m_sqlitePath->setText(path);
     });
 
-    // ── MySQL Group ────────────────────────────────────────────────────────
-    m_mysqlGroup = new QGroupBox("MySQL / MariaDB Settings", this);
+    // ── Network DB Group (MySQL / PostgreSQL) ──────────────────────────────
+    m_mysqlGroup = new QGroupBox("Server Connection Settings", this);
     auto* mysqlForm = new QFormLayout(m_mysqlGroup);
     mysqlForm->setSpacing(8);
 
@@ -113,8 +116,33 @@ void DbServerDialog::buildUi() {
 void DbServerDialog::onBackendChanged(int index) {
     const QString backend = m_backendCombo->itemData(index).toString();
     m_sqliteGroup->setVisible(backend == "sqlite");
-    m_mysqlGroup->setVisible(backend == "mysql");
+    m_mysqlGroup->setVisible(backend != "sqlite");
     m_statusLabel->clear();
+
+    // Update group title and default port based on backend
+    const auto b = M1::DbServerEntry::backendFromKey(backend);
+    const int defPort = M1::DbServerEntry::defaultPort(b);
+
+    // Set friendly group title
+    switch (b) {
+    case M1::DbServerEntry::Backend::MySQL:      m_mysqlGroup->setTitle("MySQL / MariaDB Settings"); break;
+    case M1::DbServerEntry::Backend::PostgreSQL:  m_mysqlGroup->setTitle("PostgreSQL Settings"); break;
+    case M1::DbServerEntry::Backend::Firebird:    m_mysqlGroup->setTitle("Firebird Settings"); break;
+    case M1::DbServerEntry::Backend::MSSQL:       m_mysqlGroup->setTitle("SQL Server Settings"); break;
+    default: break;
+    }
+
+    // Switch port to the new backend's default if the current port
+    // matches another backend's default (user hasn't customized it)
+    if (defPort > 0) {
+        const int curPort = m_mysqlPort->value();
+        for (auto other : M1::DbServerEntry::allBackends()) {
+            if (other != b && curPort == M1::DbServerEntry::defaultPort(other)) {
+                m_mysqlPort->setValue(defPort);
+                break;
+            }
+        }
+    }
 }
 
 void DbServerDialog::onTestConnection() {
@@ -132,7 +160,8 @@ void DbServerDialog::onTestConnection() {
 void DbServerDialog::setEntry(const M1::DbServerEntry& e) {
     m_entryId = e.id;
     m_nameEdit->setText(e.displayName);
-    m_backendCombo->setCurrentIndex(e.isMySQL() ? 1 : 0);
+    int backendIdx = m_backendCombo->findData(e.backendKey());
+    if (backendIdx >= 0) m_backendCombo->setCurrentIndex(backendIdx);
     m_sqlitePath->setText(e.sqlitePath);
     m_mysqlHost->setText(e.host);
     m_mysqlPort->setValue(e.port);
@@ -144,9 +173,8 @@ M1::DbServerEntry DbServerDialog::entry() const {
     M1::DbServerEntry e;
     e.id          = m_entryId.isEmpty() ? M1::DbServerEntry::newId() : m_entryId;
     e.displayName = m_nameEdit->text().trimmed();
-    e.backend     = (m_backendCombo->currentData().toString() == "mysql")
-                        ? M1::DbServerEntry::Backend::MySQL
-                        : M1::DbServerEntry::Backend::SQLite;
+    e.backend = M1::DbServerEntry::backendFromKey(
+        m_backendCombo->currentData().toString());
     e.sqlitePath  = m_sqlitePath->text().trimmed();
     e.host        = m_mysqlHost->text().trimmed();
     e.port        = m_mysqlPort->value();

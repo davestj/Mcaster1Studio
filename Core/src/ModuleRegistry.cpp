@@ -33,6 +33,7 @@ static const QList<QPair<QString, QString>> s_builtinModules = {
     {"com.mcaster1.clock",    "Clock"},
     {"com.mcaster1.cartwall",    "Cart Wall"},
     {"com.mcaster1.crossfader",  "Crossfader"},
+    {"com.mcaster1.database",             "Database"},
     {"com.mcaster1.health",               "System Health"},
     {"com.mcaster1.church.timerclock",     "Timer / Clock (Church)"},
     {"com.mcaster1.church.graphics",       "Graphics Engine (Church)"},
@@ -59,6 +60,7 @@ static const QList<QPair<QString, QString>> s_builtinModules = {
     {"com.mcaster1.podcast.publisher",     "Publisher"},
     {"com.mcaster1.podcast.analytics",     "Podcast Analytics"},
     {"com.mcaster1.podcast.remote",        "Remote Guests"},
+    {"com.mcaster1.auxdeck",                "AUX Deck"},
 };
 
 // ─── DLL scanning ───────────────────────────────────────────────────────────

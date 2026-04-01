@@ -325,4 +325,59 @@ bool SqliteManager::execSql(const char* sql) {
     return true;
 }
 
+// ─── Raw query execution ─────────────────────────────────────────────────────
+QList<QVariantList> SqliteManager::executeQuery(const QString& sql) {
+    QList<QVariantList> results;
+    if (!m_db) { m_lastError = "Not connected"; return results; }
+
+    sqlite3_stmt* stmt = nullptr;
+    QByteArray utf8 = sql.toUtf8();
+    if (sqlite3_prepare_v2(m_db, utf8.constData(), utf8.size(), &stmt, nullptr) != SQLITE_OK) {
+        m_lastError = QString::fromUtf8(sqlite3_errmsg(m_db));
+        return results;
+    }
+
+    const int colCount = sqlite3_column_count(stmt);
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        QVariantList row;
+        row.reserve(colCount);
+        for (int c = 0; c < colCount; ++c) {
+            switch (sqlite3_column_type(stmt, c)) {
+            case SQLITE_INTEGER:
+                row.append(static_cast<qint64>(sqlite3_column_int64(stmt, c)));
+                break;
+            case SQLITE_FLOAT:
+                row.append(sqlite3_column_double(stmt, c));
+                break;
+            case SQLITE_NULL:
+                row.append(QVariant());
+                break;
+            default: // TEXT / BLOB
+                row.append(fromCol(stmt, c));
+                break;
+            }
+        }
+        results.append(row);
+    }
+    sqlite3_finalize(stmt);
+    return results;
+}
+
+QStringList SqliteManager::tableNames() {
+    QStringList names;
+    if (!m_db) return names;
+
+    sqlite3_stmt* stmt = nullptr;
+    const char* sql = "SELECT name FROM sqlite_master WHERE type='table' "
+                      "AND name NOT LIKE 'sqlite_%' ORDER BY name";
+    if (sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+        return names;
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+        names.append(fromCol(stmt, 0));
+
+    sqlite3_finalize(stmt);
+    return names;
+}
+
 } // namespace M1

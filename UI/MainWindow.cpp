@@ -28,6 +28,7 @@
 #include "ClockModule.h"
 #include "QueueModule.h"
 #include "CartWallModule.h"
+#include "DatabaseModule.h"
 #include "HealthModule.h"
 #include "TimerClockModule.h"
 #include "GraphicsEngineModule.h"
@@ -54,6 +55,7 @@
 #include "PodPublisherModule.h"
 #include "PodAnalyticsModule.h"
 #include "PodRemoteModule.h"
+#include "AuxDeckModule.h"
 #include "CrossfaderModule.h"
 #include "ModuleRegistry.h"
 #include "SurfaceRibbon.h"
@@ -63,6 +65,10 @@
 #include "ModuleEvents.h"
 #include "SurfaceWindow.h"
 #include "DbServerEntry.h"
+#include "IDbAwareModule.h"
+#include "IThreadPoolAware.h"
+#include "ThreadPoolManager.h"
+#include "SurfaceDbContext.h"
 #include "MonitorManager.h"
 #include "version.h"
 #include <QMenuBar>
@@ -152,6 +158,9 @@ MainWindow::MainWindow(QWidget* parent)
     // ── Plugin discovery — scan plugins/ dir before factory init ─────────────
     const QString pluginsDir = QCoreApplication::applicationDirPath() + "/plugins";
     M1::initModuleRegistry(pluginsDir);
+
+    // Register database drivers with the central factory (SQLite + MySQL)
+    M1::MediaLibraryModule::registerDrivers();
 
     initModuleFactory();
 
@@ -263,6 +272,9 @@ void MainWindow::applyTheme() {
 void MainWindow::setupMenuBar() {
     // ── File ──────────────────────────────────────────────────────────────
     auto* fileMenu = menuBar()->addMenu("&File");
+    fileMenu->addAction("&Save Session", this, &MainWindow::saveFullSession,
+                        QKeySequence::Save);
+    fileMenu->addSeparator();
     fileMenu->addAction("E&xit", qApp, &QApplication::quit, QKeySequence::Quit);
 
     // ── Settings ──────────────────────────────────────────────────────────
@@ -453,6 +465,9 @@ void MainWindow::initModuleFactory() {
         }
         return m_crossfader;
     };
+    m_moduleFactory["com.mcaster1.database"] = [](QObject* p) -> M1::IModule* {
+        return new M1::DatabaseModule(p);
+    };
     m_moduleFactory["com.mcaster1.health"] = [this](QObject* p) -> M1::IModule* {
         if (!m_health) {
             m_health = new M1::HealthModule(p);
@@ -539,6 +554,10 @@ void MainWindow::initModuleFactory() {
     };
     m_moduleFactory["com.mcaster1.podcast.remote"] = [](QObject* p) -> M1::IModule* {
         return new M1::PodRemoteModule(p);
+    };
+    // AUX Deck — per-instance, each gets custom name + device routing
+    m_moduleFactory["com.mcaster1.auxdeck"] = [](QObject* p) -> M1::IModule* {
+        return new M1::AuxDeckModule(p);
     };
 }
 
@@ -682,6 +701,8 @@ SurfaceWidget* MainWindow::openSurfaceFromConfig(const M1::SurfaceConfig& cfg) {
 
     wireModuleConnections();
     connectSurfaceAutoSave(sw);
+    pushDbContextToSurface(sw);
+    pushThreadPoolToSurface(sw);
     return sw;
 }
 
@@ -1318,6 +1339,72 @@ void MainWindow::wireStatusIndicators() {
     }
 }
 
+// ─── DB context injection — push per-surface DB identity to IDbAwareModule ───
+
+M1::SurfaceDbContext MainWindow::dbContextForSurface(const QString& surfaceName) {
+    QSettings s("Mcaster1", "Mcaster1Studio");
+    const QString settKey = "surfaceDb/" + M1::SurfaceDbContext::nameToSchema(surfaceName);
+    M1::SurfaceDbContext ctx;
+    ctx.serverId   = s.value(settKey + "/serverId", "").toString();
+    ctx.schemaName = s.value(settKey + "/schemaName",
+                             M1::SurfaceDbContext::nameToSchema(surfaceName)).toString();
+
+    // If serverId is empty, use the default server
+    if (ctx.serverId.isEmpty()) {
+        const auto* def = M1::DbServerRegistry::instance().defaultServer();
+        if (def)
+            ctx.serverId = def->id;
+    }
+    return ctx;
+}
+
+void MainWindow::pushDbContextToSurface(SurfaceWidget* sw) {
+    if (!sw) return;
+    const QString surfName = sw->customName().isEmpty() ? sw->surfaceName() : sw->customName();
+    const auto ctx = dbContextForSurface(surfName);
+
+    for (auto* mod : sw->modules()) {
+        auto* dbAware = dynamic_cast<M1::IDbAwareModule*>(mod);
+        if (dbAware) {
+            dbAware->setSurfaceDbContext(ctx);
+            qInfo() << "[MainWindow] Pushed DB context to" << mod->moduleId()
+                    << "on surface" << surfName
+                    << "server:" << ctx.serverId << "schema:" << ctx.schemaName;
+        }
+    }
+}
+
+void MainWindow::pushDbContextToAllSurfaces() {
+    // Tabbed surfaces
+    for (int i = 0; i < m_surfaceBar->count(); ++i) {
+        auto* sw = qobject_cast<SurfaceWidget*>(m_surfaceBar->widget(i));
+        if (sw) pushDbContextToSurface(sw);
+    }
+    // Popped-out surfaces
+    for (auto it = m_poppedOutWindows.constBegin(); it != m_poppedOutWindows.constEnd(); ++it)
+        pushDbContextToSurface(it.key());
+}
+
+// ─── Thread pool injection — push per-surface pools to IThreadPoolAware ──────
+
+void MainWindow::pushThreadPoolToSurface(SurfaceWidget* sw) {
+    if (!sw || !sw->threadPool()) return;
+    for (auto* mod : sw->modules()) {
+        auto* tpAware = dynamic_cast<M1::IThreadPoolAware*>(mod);
+        if (tpAware)
+            tpAware->setSurfaceThreadPool(sw->threadPool());
+    }
+}
+
+void MainWindow::pushThreadPoolToAllSurfaces() {
+    for (int i = 0; i < m_surfaceBar->count(); ++i) {
+        auto* sw = qobject_cast<SurfaceWidget*>(m_surfaceBar->widget(i));
+        if (sw) pushThreadPoolToSurface(sw);
+    }
+    for (auto it = m_poppedOutWindows.constBegin(); it != m_poppedOutWindows.constEnd(); ++it)
+        pushThreadPoolToSurface(it.key());
+}
+
 void MainWindow::addModuleToCurrentSurface(const QString& moduleId) {
     auto* sw = m_surfaceBar->currentSurface();
     if (!sw) return;
@@ -1325,6 +1412,11 @@ void MainWindow::addModuleToCurrentSurface(const QString& moduleId) {
     if (!mod) return;
     sw->addModule(mod, /*startFloating=*/true);
     wireModuleConnections();
+
+    // If the new module is DB-aware, push this surface's DB context immediately
+    auto* dbAware = dynamic_cast<M1::IDbAwareModule*>(mod);
+    if (dbAware)
+        pushDbContextToSurface(sw);
 }
 
 // ─── Session persistence — v2 stable index-based keys ─────────────────────────
@@ -1332,17 +1424,12 @@ void MainWindow::addModuleToCurrentSurface(const QString& moduleId) {
 void MainWindow::saveAllSessionState() {
     QSettings s("Mcaster1", "Mcaster1Studio");
 
-    const int count = m_surfaceBar->count();
-    s.setValue("session/v2/count", count);
-
-    for (int si = 0; si < count; ++si) {
-        auto* sw = qobject_cast<SurfaceWidget*>(m_surfaceBar->widget(si));
-        if (!sw) continue;
-
+    // Helper lambda: save one surface at a given session index
+    auto saveSurfaceAt = [&](int si, SurfaceWidget* sw, const QString& tabLabel) {
         const QString sbase = QString("session/v2/%1").arg(si);
         s.setValue(sbase + "/type",          M1::surfaceTypeString(sw->surfaceType()));
         s.setValue(sbase + "/customName",    sw->customName());
-        s.setValue(sbase + "/tabLabel",      m_surfaceBar->tabText(si));
+        s.setValue(sbase + "/tabLabel",      tabLabel);
         s.setValue(sbase + "/subPanelCount", sw->panelCount());
 
         for (int pi = 0; pi < sw->panelCount(); ++pi) {
@@ -1359,7 +1446,6 @@ void MainWindow::saveAllSessionState() {
                 ids << mod->moduleId();
             s.setValue(pbase + "/moduleIds", ids);
 
-            // Save each module's own state under its panel prefix
             for (int mi = 0; mi < panel->modules().size(); ++mi) {
                 auto* mod = panel->modules()[mi];
                 const QString mbase = pbase + QString("/mod/%1").arg(mi);
@@ -1368,12 +1454,36 @@ void MainWindow::saveAllSessionState() {
                 s.endGroup();
             }
 
-            // Save splitter/dock layout for this sub-panel
             panel->saveLayout(s, pbase);
         }
+    };
+
+    // ── Save tabbed surfaces ─────────────────────────────────────────────
+    const int tabbedCount = m_surfaceBar->count();
+    for (int si = 0; si < tabbedCount; ++si) {
+        auto* sw = qobject_cast<SurfaceWidget*>(m_surfaceBar->widget(si));
+        if (!sw) continue;
+        s.setValue(QString("session/v2/%1/poppedOut").arg(si), false);
+        saveSurfaceAt(si, sw, m_surfaceBar->tabText(si));
     }
 
-    qInfo() << "[MainWindow] Session auto-saved:" << count << "surface(s)";
+    // ── Save popped-out surfaces ─────────────────────────────────────────
+    int idx = tabbedCount;
+    for (auto it = m_poppedOutWindows.constBegin(); it != m_poppedOutWindows.constEnd(); ++it, ++idx) {
+        auto* sw  = it.key();
+        auto* win = it.value();
+        const QString name = sw->customName().isEmpty() ? sw->surfaceName() : sw->customName();
+        const QString sbase = QString("session/v2/%1").arg(idx);
+        s.setValue(sbase + "/poppedOut",      true);
+        s.setValue(sbase + "/popOutGeometry", win->saveGeometry());
+        s.setValue(sbase + "/popOutScreen",   win->currentScreenIndex());
+        saveSurfaceAt(idx, sw, name);
+    }
+
+    const int totalCount = idx;
+    s.setValue("session/v2/count", totalCount);
+    qInfo() << "[MainWindow] Session auto-saved:" << tabbedCount
+            << "tabbed +" << m_poppedOutWindows.size() << "popped-out surface(s)";
 }
 
 void MainWindow::scheduleAutoSave() {
@@ -1423,6 +1533,9 @@ void MainWindow::connectSurfaceAutoSave(SurfaceWidget* sw) {
         if (mod) {
             sw->addModule(mod, /*startFloating=*/true);
             wireModuleConnections();
+            // If the new module is DB-aware, push this surface's DB context
+            if (dynamic_cast<M1::IDbAwareModule*>(mod))
+                pushDbContextToSurface(sw);
         }
     });
 }
@@ -1432,6 +1545,27 @@ void MainWindow::saveSurface(SurfaceWidget* sw) {
     saveAllSessionState();
     const QString displayName = sw->customName().isEmpty() ? sw->surfaceName() : sw->customName();
     statusBar()->showMessage(QString("Session saved: %1").arg(displayName), 3000);
+}
+
+void MainWindow::saveFullSession() {
+    // Save everything: surfaces, modules, layouts, window geometry, active tabs
+    saveAllSessionState();
+    saveAllLayouts();
+    saveWindowState();
+
+    // Save active surface tab + per-surface active sub-tab
+    QSettings s("Mcaster1", "Mcaster1Studio");
+    s.setValue("session/v2/activeSurfaceTab", m_surfaceBar->currentIndex());
+    for (int si = 0; si < m_surfaceBar->count(); ++si) {
+        auto* sw = qobject_cast<SurfaceWidget*>(m_surfaceBar->widget(si));
+        if (sw)
+            s.setValue(QString("session/v2/%1/activeSubTab").arg(si),
+                       sw->subTabBar()->currentIndex());
+    }
+    s.sync();
+
+    statusBar()->showMessage("Session saved — all surfaces, layouts, and preferences", 4000);
+    qInfo() << "[MainWindow] Full session saved:" << m_surfaceBar->count() << "surface(s)";
 }
 
 void MainWindow::onAddCustomSurface() {
@@ -1451,6 +1585,7 @@ void MainWindow::onAddCustomSurface() {
     }
     wireModuleConnections();
     connectSurfaceAutoSave(sw);
+    pushDbContextToSurface(sw);
 }
 
 void MainWindow::loadSavedSurfaces() {
@@ -1521,7 +1656,11 @@ void MainWindow::loadSavedSurfaces() {
                 targetPanel->restoreLayout(s, pbase);
             }
 
-            sw->subTabBar()->setCurrentIndex(0);
+            // Restore the active sub-tab for this surface
+            const int savedSubTab = s.value(
+                QString("session/v2/%1/activeSubTab").arg(si), 0).toInt();
+            sw->subTabBar()->setCurrentIndex(
+                qBound(0, savedSubTab, qMax(0, sw->panelCount() - 1)));
             wireModuleConnections();
             connectSurfaceAutoSave(sw);
         }
@@ -1531,6 +1670,49 @@ void MainWindow::loadSavedSurfaces() {
             s.beginGroup(dl.mbase);
             dl.mod->loadState(s);
             s.endGroup();
+        }
+
+        // ── Push DB contexts to all IDbAwareModule instances ─────────────────
+        pushDbContextToAllSurfaces();
+        pushThreadPoolToAllSurfaces();
+
+        // ── Restore the active surface tab ───────────────────────────────────
+        const int savedActiveTab = s.value("session/v2/activeSurfaceTab", 0).toInt();
+        m_surfaceBar->setCurrentIndex(
+            qBound(0, savedActiveTab, qMax(0, m_surfaceBar->count() - 1)));
+
+        // ── Pop out surfaces that were popped out last session ────────────────
+        // Collect first, then pop (modifying tab bar while iterating is unsafe)
+        struct PopOutRestore { int tabIdx; QByteArray geometry; int screenIdx; };
+        QList<PopOutRestore> toPopOut;
+        for (int si = 0; si < v2count; ++si) {
+            if (s.value(QString("session/v2/%1/poppedOut").arg(si), false).toBool()) {
+                // Find this surface in the tab bar — it was added at index si
+                // but earlier pop-out restores may have shifted indices, so
+                // match by tab label instead
+                const QString tabLabel = s.value(
+                    QString("session/v2/%1/tabLabel").arg(si)).toString();
+                for (int t = 0; t < m_surfaceBar->count(); ++t) {
+                    if (m_surfaceBar->tabText(t) == tabLabel) {
+                        toPopOut.append({
+                            t,
+                            s.value(QString("session/v2/%1/popOutGeometry").arg(si)).toByteArray(),
+                            s.value(QString("session/v2/%1/popOutScreen").arg(si), 0).toInt()
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+        // Pop out in reverse order so tab indices don't shift
+        for (int i = toPopOut.size() - 1; i >= 0; --i) {
+            const auto& pr = toPopOut[i];
+            auto* sw = qobject_cast<SurfaceWidget*>(m_surfaceBar->widget(pr.tabIdx));
+            if (!sw) continue;
+            popOutSurface(sw);
+            auto* win = m_poppedOutWindows.value(sw);
+            if (win && !pr.geometry.isEmpty())
+                win->restoreGeometry(pr.geometry);
         }
     } else {
         // ── First run / no v2 data: open Surface Alpha from YAML config ────────
@@ -1690,6 +1872,51 @@ void MainWindow::onPreferences() {
     m_audio->stopCueStream();
 
     PreferencesDialog dlg(m_audio, this);
+
+    // Provide open surface names for DB assignment
+    QStringList surfaceNames;
+    for (int i = 0; i < m_surfaceBar->count(); ++i) {
+        auto* sw = qobject_cast<SurfaceWidget*>(m_surfaceBar->widget(i));
+        if (sw) {
+            const QString name = sw->customName().isEmpty() ? sw->surfaceName() : sw->customName();
+            surfaceNames << name;
+        }
+    }
+    // Include popped-out surfaces
+    for (auto it = m_poppedOutWindows.begin(); it != m_poppedOutWindows.end(); ++it) {
+        const QString name = it.key()->customName().isEmpty()
+            ? it.key()->surfaceName() : it.key()->customName();
+        if (!surfaceNames.contains(name))
+            surfaceNames << name;
+    }
+    dlg.setSurfaceNames(surfaceNames);
+
+    // Live-wire: when user changes a surface DB assignment in the dialog,
+    // immediately push the updated context to all modules in that surface
+    connect(&dlg, &PreferencesDialog::surfaceDbAssignmentChanged,
+            this, [this](const QString& surfaceName) {
+        // Find the surface widget matching this name
+        auto findSurface = [this](const QString& name) -> SurfaceWidget* {
+            for (int i = 0; i < m_surfaceBar->count(); ++i) {
+                auto* sw = qobject_cast<SurfaceWidget*>(m_surfaceBar->widget(i));
+                if (!sw) continue;
+                const QString swName = sw->customName().isEmpty() ? sw->surfaceName() : sw->customName();
+                if (swName == name) return sw;
+            }
+            for (auto it = m_poppedOutWindows.constBegin(); it != m_poppedOutWindows.constEnd(); ++it) {
+                const QString swName = it.key()->customName().isEmpty()
+                    ? it.key()->surfaceName() : it.key()->customName();
+                if (swName == name) return it.key();
+            }
+            return nullptr;
+        };
+
+        if (auto* sw = findSurface(surfaceName))
+            pushDbContextToSurface(sw);
+
+        qInfo() << "[MainWindow] Live DB assignment update for surface:" << surfaceName;
+    });
+
     if (dlg.exec() == QDialog::Accepted) {
         QSettings s("Mcaster1", "Mcaster1Studio");
         s.setValue("audio/inputDevice",  dlg.selectedInputDevice());
@@ -1703,6 +1930,10 @@ void MainWindow::onPreferences() {
         // Open CUE stream on separate device
         if (dlg.selectedCueDevice() >= 0)
             m_audio->openCueStream(dlg.selectedCueDevice());
+
+        // Final push: ensure all surfaces have up-to-date DB contexts
+        // (catches any changes that might not have triggered the inline signal)
+        pushDbContextToAllSurfaces();
     } else if (wasRunning) {
         m_audio->startStream();
     }
@@ -1736,9 +1967,7 @@ void MainWindow::onAbout() {
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
-    saveAllSessionState();   // v2 stable-key save (module lists + splitter sizes)
-    saveAllLayouts();        // YAML floating dock positions
-    saveWindowState();
+    saveFullSession();       // everything: surfaces, layouts, geometry, active tabs
 
     // Close all pop-out windows (dock surfaces back first to avoid orphans)
     const auto poppedOut = m_poppedOutWindows.keys();

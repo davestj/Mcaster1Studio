@@ -24,10 +24,18 @@
 #include <QStackedWidget>
 #include <QScrollArea>
 #include <QTableWidget>
+#include <QMessageBox>
 #include <QHeaderView>
 #include "DbServerEntry.h"
+#include "SurfaceDbContext.h"
+#include "DatabaseFactory.h"
 #include "MonitorManager.h"
 #include "DbServerDialog.h"
+#include <QRegularExpression>
+#include <QStandardPaths>
+#include <QDir>
+#include <QProcess>
+#include <QFileInfo>
 
 PreferencesDialog::PreferencesDialog(M1::IAudioEngine* engine, QWidget* parent)
     : QDialog(parent)
@@ -120,6 +128,73 @@ QWidget* PreferencesDialog::buildAudioPage() {
     form->addRow("", asioNote);
 
     layout->addWidget(audioGroup);
+
+    // ── Mcaster1AudioPipe Integration ────────────────────────────────────
+    auto* pipeGroup = new QGroupBox("Mcaster1AudioPipe — Virtual Audio Routing");
+    pipeGroup->setObjectName("AudioPipeGroup");
+    auto* pipeLayout = new QVBoxLayout(pipeGroup);
+
+    auto* pipeDesc = new QLabel(
+        "Mcaster1AudioPipe creates virtual audio pipe devices that appear as "
+        "system audio devices. Use pipes for zero-latency internal routing between "
+        "AUX Decks, encoders, and other applications.", this);
+    pipeDesc->setWordWrap(true);
+    pipeDesc->setProperty("role", "status");
+    pipeLayout->addWidget(pipeDesc);
+
+    // Status row
+    auto* pipeStatusRow = new QHBoxLayout;
+    m_audioPipeStatusLabel = new QLabel("Checking...", this);
+    m_audioPipeStatusLabel->setObjectName("AudioPipeStatus");
+    pipeStatusRow->addWidget(new QLabel("Status:"));
+    pipeStatusRow->addWidget(m_audioPipeStatusLabel, 1);
+    pipeLayout->addLayout(pipeStatusRow);
+
+    // Path row
+    auto* pipePathRow = new QHBoxLayout;
+    const QString pipePath = QDir::homePath() + "/Mcaster1/Mcaster1AudioPipes/Mcaster1AudioPipe.exe";
+    auto* pipePathLabel = new QLabel(pipePath, this);
+    pipePathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    pipePathLabel->setProperty("role", "status");
+    pipePathRow->addWidget(new QLabel("Path:"));
+    pipePathRow->addWidget(pipePathLabel, 1);
+    pipeLayout->addLayout(pipePathRow);
+
+    // Buttons
+    auto* pipeBtnRow = new QHBoxLayout;
+
+    auto* launchPipeBtn = new QPushButton("Launch AudioPipe");
+    launchPipeBtn->setToolTip("Open Mcaster1AudioPipe to manage virtual audio devices and patch bay");
+    connect(launchPipeBtn, &QPushButton::clicked, this, [pipePath]() {
+        if (QFileInfo::exists(pipePath)) {
+            QProcess::startDetached(pipePath, {});
+        } else {
+            QMessageBox::information(nullptr, "AudioPipe Not Found",
+                "Mcaster1AudioPipe was not found at:\n" + pipePath +
+                "\n\nPlease install it from the Mcaster1 installer or copy it to the expected location.");
+        }
+    });
+    pipeBtnRow->addWidget(launchPipeBtn);
+
+    auto* refreshPipeBtn = new QPushButton("Refresh Pipe Devices");
+    refreshPipeBtn->setToolTip("Rescan for AudioPipe virtual devices in the device list");
+    connect(refreshPipeBtn, &QPushButton::clicked, this, &PreferencesDialog::onRefreshDevices);
+    pipeBtnRow->addWidget(refreshPipeBtn);
+
+    pipeBtnRow->addStretch();
+    pipeLayout->addLayout(pipeBtnRow);
+
+    layout->addWidget(pipeGroup);
+
+    // Check AudioPipe status
+    if (QFileInfo::exists(pipePath)) {
+        m_audioPipeStatusLabel->setText("Installed");
+        m_audioPipeStatusLabel->setStyleSheet("color: #22c55e; font-weight: bold;");
+    } else {
+        m_audioPipeStatusLabel->setText("Not installed");
+        m_audioPipeStatusLabel->setStyleSheet("color: #f59e0b; font-weight: bold;");
+    }
+
     layout->addStretch();
 
     populateDevices();
@@ -165,7 +240,10 @@ QWidget* PreferencesDialog::buildDatabasePage() {
     m_dbBackendCombo = new QComboBox(this);
     m_dbBackendCombo->addItem("SQLite (Embedded, Default)", "sqlite");
     m_dbBackendCombo->addItem("MySQL / MariaDB",            "mysql");
-    m_dbBackendCombo->setToolTip("SQLite requires no setup. MySQL is for enterprise/multi-user deployments.");
+    m_dbBackendCombo->addItem("PostgreSQL",                 "postgresql");
+    m_dbBackendCombo->addItem("Firebird",                   "firebird");
+    m_dbBackendCombo->addItem("SQL Server (MSSQL)",         "mssql");
+    m_dbBackendCombo->setToolTip("Select the database engine. SQLite requires no setup.");
     backendForm->addRow("Backend:", m_dbBackendCombo);
 
     m_dbStatusLabel = new QLabel(this);
@@ -237,14 +315,30 @@ QWidget* PreferencesDialog::buildDatabasePage() {
 void PreferencesDialog::onDbBackendChanged(int index) {
     const QString backend = m_dbBackendCombo->itemData(index).toString();
     m_sqliteGroup->setVisible(backend == "sqlite");
-    m_mysqlGroup->setVisible(backend == "mysql");
+    m_mysqlGroup->setVisible(backend != "sqlite");
 
-    if (backend == "sqlite") {
+    const auto b = M1::DbServerEntry::backendFromKey(backend);
+
+    if (b == M1::DbServerEntry::Backend::SQLite) {
         m_dbStatusLabel->setText("SQLite is zero-config. The database file is created automatically.");
     } else {
+        M1::DbServerEntry tmp;
+        tmp.backend = b;
         m_dbStatusLabel->setText(
-            "Requires a running MySQL/MariaDB server. "
-            "Changes take effect after restarting the application.");
+            QString("Requires a running %1 server. "
+                    "Changes take effect after restarting the application.")
+                .arg(tmp.backendDisplayName()));
+
+        // Update port to the selected backend's default
+        const int defPort = M1::DbServerEntry::defaultPort(b);
+        if (defPort > 0) {
+            for (auto other : M1::DbServerEntry::allBackends()) {
+                if (other != b && m_mysqlPort->value() == M1::DbServerEntry::defaultPort(other)) {
+                    m_mysqlPort->setValue(defPort);
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -879,6 +973,36 @@ QWidget* PreferencesDialog::buildDbServersPage() {
         }
     });
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── Surface Database Assignments ────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    auto* surfaceLabel = new QLabel("Surface Database Assignments", page);
+    surfaceLabel->setStyleSheet("font-weight: bold; font-size: 14px; margin-top: 8px;");
+    layout->addWidget(surfaceLabel);
+
+    auto* surfaceNote = new QLabel(
+        "Assign a database server and custom database name to each surface. "
+        "This enables per-surface data isolation. Database names cannot contain spaces.", page);
+    surfaceNote->setWordWrap(true);
+    surfaceNote->setProperty("role", "status");
+    layout->addWidget(surfaceNote);
+
+    m_surfaceDbTable = new QTableWidget(0, 4, page);
+    m_surfaceDbTable->setHorizontalHeaderLabels({"Surface", "DB Server", "Database Name", ""});
+    m_surfaceDbTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    m_surfaceDbTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    m_surfaceDbTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+    m_surfaceDbTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
+    m_surfaceDbTable->setColumnWidth(3, 90);
+    m_surfaceDbTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_surfaceDbTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_surfaceDbTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_surfaceDbTable->verticalHeader()->hide();
+    m_surfaceDbTable->setMinimumHeight(100);
+    layout->addWidget(m_surfaceDbTable, 1);
+
+    refreshSurfaceDbTable();
+
     return page;
 }
 
@@ -898,11 +1022,173 @@ void PreferencesDialog::refreshDbServerTable() {
         m_dbServerTable->setItem(i, 0, starItem);
 
         m_dbServerTable->setItem(i, 1, new QTableWidgetItem(s.displayName));
-        m_dbServerTable->setItem(i, 2, new QTableWidgetItem(
-            s.isSQLite() ? "SQLite" : "MySQL"));
+        m_dbServerTable->setItem(i, 2, new QTableWidgetItem(s.backendDisplayName()));
         m_dbServerTable->setItem(i, 3, new QTableWidgetItem(
             s.isSQLite() ? "(embedded)" : s.host));
         m_dbServerTable->setItem(i, 4, new QTableWidgetItem("--"));
+    }
+}
+
+// ─── Surface Database Assignments ─────────────────────────────────────────────
+
+void PreferencesDialog::setSurfaceNames(const QStringList& names) {
+    m_surfaceNames = names;
+    refreshSurfaceDbTable();
+}
+
+void PreferencesDialog::refreshSurfaceDbTable() {
+    if (!m_surfaceDbTable) return;
+
+    QSettings s("Mcaster1", "Mcaster1Studio");
+    const auto& reg = M1::DbServerRegistry::instance();
+    const auto servers = reg.servers();
+
+    m_surfaceDbTable->setRowCount(m_surfaceNames.size());
+
+    for (int i = 0; i < m_surfaceNames.size(); ++i) {
+        const QString& surfName = m_surfaceNames[i];
+        const QString settKey = "surfaceDb/" + M1::SurfaceDbContext::nameToSchema(surfName);
+
+        // Column 0: Surface name (read-only)
+        auto* nameItem = new QTableWidgetItem(surfName);
+        nameItem->setFlags(nameItem->flags() & ~Qt::ItemIsEditable);
+        m_surfaceDbTable->setItem(i, 0, nameItem);
+
+        // Column 1: DB Server combo
+        auto* serverCombo = new QComboBox(m_surfaceDbTable);
+        serverCombo->addItem("(Default)", "");
+        for (const auto& srv : servers)
+            serverCombo->addItem(srv.displayName, srv.id);
+        serverCombo->setToolTip("Choose which database server this surface uses");
+
+        // Load saved server assignment
+        const QString savedServerId = s.value(settKey + "/serverId", "").toString();
+        if (!savedServerId.isEmpty()) {
+            int idx = serverCombo->findData(savedServerId);
+            if (idx >= 0) serverCombo->setCurrentIndex(idx);
+        }
+
+        // Save on change and notify live modules
+        connect(serverCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, [this, settKey, serverCombo, surfName]() {
+            QSettings s2("Mcaster1", "Mcaster1Studio");
+            s2.setValue(settKey + "/serverId", serverCombo->currentData().toString());
+            emit surfaceDbAssignmentChanged(surfName);
+            M1::DbServerRegistry::instance().notifySurfaceAssignmentChanged(surfName);
+        });
+
+        m_surfaceDbTable->setCellWidget(i, 1, serverCombo);
+
+        // Column 2: Database name (editable QLineEdit)
+        const QString defaultSchema = M1::SurfaceDbContext::nameToSchema(surfName);
+        auto* dbNameEdit = new QLineEdit(m_surfaceDbTable);
+        dbNameEdit->setPlaceholderText(defaultSchema);
+        dbNameEdit->setToolTip("Custom database name (no spaces allowed)");
+        dbNameEdit->setText(s.value(settKey + "/schemaName", defaultSchema).toString());
+
+        // Validate: no spaces, alphanumeric + underscore only
+        connect(dbNameEdit, &QLineEdit::textChanged, this, [dbNameEdit](const QString& text) {
+            // Remove spaces as user types — visual feedback
+            if (text.contains(' ')) {
+                QString cleaned = text;
+                cleaned.remove(' ');
+                dbNameEdit->setText(cleaned);
+                return;
+            }
+            // Red border if invalid chars
+            const bool valid = QRegularExpression("^[a-zA-Z0-9_]*$").match(text).hasMatch();
+            dbNameEdit->setStyleSheet(valid ? "" : "border: 1px solid #ef4444;");
+        });
+
+        // Save on editing finished and notify live modules
+        connect(dbNameEdit, &QLineEdit::editingFinished, this, [this, settKey, dbNameEdit, surfName]() {
+            QSettings s2("Mcaster1", "Mcaster1Studio");
+            QString val = dbNameEdit->text().trimmed();
+            val.remove(' ');
+            s2.setValue(settKey + "/schemaName", val);
+            emit surfaceDbAssignmentChanged(surfName);
+            M1::DbServerRegistry::instance().notifySurfaceAssignmentChanged(surfName);
+        });
+
+        m_surfaceDbTable->setCellWidget(i, 2, dbNameEdit);
+
+        // Column 3: Initialize button
+        auto* initBtn = new QPushButton("Initialize", m_surfaceDbTable);
+        initBtn->setToolTip("Create/verify the database for this surface");
+        connect(initBtn, &QPushButton::clicked, this, [this, i, settKey]() {
+            QSettings s2("Mcaster1", "Mcaster1Studio");
+            const QString serverId = s2.value(settKey + "/serverId", "").toString();
+            const QString schema   = s2.value(settKey + "/schemaName", "").toString();
+
+            if (schema.isEmpty()) {
+                QMessageBox::warning(this, "Initialize Database",
+                    "Please enter a database name first.");
+                return;
+            }
+            if (schema.contains(' ')) {
+                QMessageBox::warning(this, "Initialize Database",
+                    "Database names cannot contain spaces.");
+                return;
+            }
+
+            // Get effective server
+            const auto* server = serverId.isEmpty()
+                ? M1::DbServerRegistry::instance().defaultServer()
+                : M1::DbServerRegistry::instance().findById(serverId);
+
+            if (!server) {
+                QMessageBox::warning(this, "Initialize Database",
+                    "No database server found. Add one first.");
+                return;
+            }
+
+            auto reply = QMessageBox::question(this, "Initialize Database",
+                QString("Create database \"%1\" on server \"%2\" (%3)?\n\n"
+                        "If it already exists, this will verify the schema.")
+                    .arg(schema, server->displayName, server->backendDisplayName()),
+                QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+            if (reply != QMessageBox::Yes) return;
+
+            // Check driver availability
+            const QString driverErr = M1::DatabaseFactory::checkDriverAvailable(server->backend);
+            if (!driverErr.isEmpty()) {
+                QMessageBox::warning(this, "Initialize Database",
+                    driverErr + "\n\nSchema will be created when the driver becomes available.");
+                return;
+            }
+
+            // Build dbPath for SQLite
+            QString dbPath;
+            if (server->isSQLite()) {
+                QString baseDir = server->sqlitePath;
+                if (baseDir.isEmpty())
+                    baseDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+                QDir dir(baseDir);
+                if (!dir.exists()) dir.mkpath(".");
+                dbPath = dir.absoluteFilePath(schema + ".db");
+            }
+
+            // Actually create and initialize the database
+            M1::IDatabase* db = M1::DatabaseFactory::create(*server, schema, dbPath);
+            if (!db) {
+                QMessageBox::critical(this, "Initialize Database",
+                    "Connection failed. Check server settings.");
+                return;
+            }
+
+            if (db->isConnected() && db->createSchema()) {
+                QMessageBox::information(this, "Initialize Database",
+                    QString("Database \"%1\" initialized successfully on %2.")
+                        .arg(schema, server->backendDisplayName()));
+            } else {
+                QMessageBox::critical(this, "Initialize Database",
+                    "Schema creation failed: " + db->lastError());
+            }
+            db->disconnect();
+            delete db;
+        });
+        m_surfaceDbTable->setCellWidget(i, 3, initBtn);
     }
 }
 

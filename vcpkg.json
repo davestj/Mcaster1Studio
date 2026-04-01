@@ -19,6 +19,7 @@
     "libxml2",
     "libyaml",
     "libmariadb",
+    "libpq",
     "sqlite3",
     "taglib",
     "zlib",

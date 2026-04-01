@@ -5,6 +5,7 @@
 #include "ISurface.h"
 #include "SurfaceConfigYaml.h"
 
+namespace M1 { class SurfaceThreadPool; }
 class ModuleDock;
 class SubSurfacePanel;
 class SubSurfaceTabBar;
@@ -61,6 +62,9 @@ public:
     SurfaceEventLog*  eventLog()  const { return m_eventLog;  }
     SurfaceScheduler* scheduler() const { return m_scheduler; }
 
+    /// Per-surface thread pool for background work (encoding, scanning, etc.)
+    M1::SurfaceThreadPool* threadPool() const { return m_threadPool; }
+
     /// Append a timestamped event to this surface's event log.
     void logEvent(const QString& category, const QString& message);
 
@@ -92,6 +96,7 @@ private:
     SurfaceTray*       m_tray       = nullptr;
     SurfaceEventLog*   m_eventLog   = nullptr;
     SurfaceScheduler*  m_scheduler  = nullptr;
+    M1::SurfaceThreadPool* m_threadPool = nullptr;
 
     QList<SubSurfacePanel*> m_panels;
 };

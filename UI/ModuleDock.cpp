@@ -58,7 +58,8 @@ QString ModuleDock::iconPathForModuleId(const QString& id) {
     if (id.contains("ptt"))      return ":/resources/icons/ptt.svg";
     if (id.contains("video"))    return ":/resources/icons/video.svg";
     if (id.contains("monitor"))  return ":/resources/icons/monitor.svg";
-    if (id.contains("cartwall")) return ":/resources/icons/cartwall.svg";
+    if (id.contains("cartwall"))  return ":/resources/icons/cartwall.svg";
+    if (id.contains("database")) return ":/resources/icons/database.svg";
     if (id.contains("health"))   return ":/resources/icons/health.svg";
     if (id.contains("timerclock"))  return ":/resources/icons/timerclock.svg";
     if (id.contains("graphics"))    return ":/resources/icons/graphics-engine.svg";

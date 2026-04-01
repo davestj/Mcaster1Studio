@@ -26,11 +26,20 @@ class PreferencesDialog : public QDialog {
 public:
     explicit PreferencesDialog(M1::IAudioEngine* engine, QWidget* parent = nullptr);
 
+    /// Set the list of open surfaces for surface-DB assignment.
+    /// Call before exec() so the DB Servers page can show the surface assignment table.
+    void setSurfaceNames(const QStringList& names);
+
     int selectedInputDevice()  const;
     int selectedOutputDevice() const;
     int selectedCueDevice()    const;
     int selectedSampleRate()   const;
     int selectedBufferSize()   const;
+
+signals:
+    /// Emitted when a surface DB assignment (server or schema) changes.
+    /// Connected to MainWindow to push updated DB contexts to live modules.
+    void surfaceDbAssignmentChanged(const QString& surfaceName);
 
 private slots:
     void onAccepted();
@@ -55,6 +64,7 @@ private:
     QWidget* buildAIPage();
 
     void refreshDbServerTable();
+    void refreshSurfaceDbTable();
     void refreshMonitorTable();
     void refreshCaptureTable();
 
@@ -70,6 +80,9 @@ private:
     QList<int> m_inputIndices;
     QList<int> m_outputIndices;
     QList<int> m_cueIndices;
+
+    // AudioPipe
+    QLabel* m_audioPipeStatusLabel = nullptr;
 
     // Appearance page
     QComboBox* m_themeCombo = nullptr;
@@ -88,6 +101,10 @@ private:
 
     // DB Servers page
     QTableWidget* m_dbServerTable  = nullptr;
+
+    // Surface DB assignment
+    QTableWidget* m_surfaceDbTable = nullptr;
+    QStringList   m_surfaceNames;
 
     // Displays page
     QTableWidget* m_monitorTable   = nullptr;

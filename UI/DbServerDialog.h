@@ -35,7 +35,7 @@ private:
     QGroupBox*  m_sqliteGroup  = nullptr;
     QLineEdit*  m_sqlitePath   = nullptr;
 
-    // MySQL group
+    // Network DB group (MySQL / PostgreSQL — shared connection fields)
     QGroupBox*  m_mysqlGroup   = nullptr;
     QLineEdit*  m_mysqlHost    = nullptr;
     QSpinBox*   m_mysqlPort    = nullptr;

@@ -2,6 +2,51 @@
 
 All notable changes to Mcaster1Studio are documented in this file.
 
+## [0.3.0-alpha] — 2026-03-14
+
+### Phase DB — Database Multi-Backend (5 drivers)
+- **DatabaseFactory** — central factory with driver registration pattern
+- **SqlDialect** — backend-specific DDL abstraction (SQLite, MySQL, PostgreSQL, Firebird, MSSQL)
+- **DbServerEntry::Backend** enum — `{SQLite, MySQL, PostgreSQL, Firebird, MSSQL}` with helpers
+- **PostgresManager** — PostgreSQL client via libpq (conditional `M1_HAS_POSTGRESQL`)
+- **FirebirdManager** — Firebird client via fbclient (conditional `M1_HAS_FIREBIRD`)
+- **MssqlManager** — SQL Server via ODBC (conditional `M1_HAS_MSSQL`, auto-detects best driver)
+- **DbServerDialog** — full 5-backend CRUD UI with dynamic port switching
+- **PreferencesDialog** DB Servers page — server management + per-surface DB assignments
+- **DatabaseModule** (`com.mcaster1.database`) — surface-loadable module with connection status, table browser
+- **Per-surface DB isolation** — IDbAwareModule mixin + SurfaceDbContext live wiring
+- **DbServerRegistry** signals — `serverListChanged()`, `surfaceAssignmentChanged()`
+- **Live DB context push** — changes in Preferences propagate to live modules instantly
+
+### Phase 12 — Installer + Polish + AuxDeck
+- **AuxDeckModule** (`com.mcaster1.auxdeck`) — custom auxiliary decks with per-deck audio device routing
+  - Custom deck naming (e.g. "Jingle Deck", "Interview Playback")
+  - Independent AIR OUT and CUE OUT device selection per deck
+  - Volume control + VU meters + full transport (load/play/pause/stop/cue)
+  - Mcaster1AudioPipe virtual devices appear automatically in device lists
+- **Mcaster1AudioPipe integration** — Preferences > Audio page shows AudioPipe status, launch button, refresh pipe devices
+- **Auto version bump** — build number increments on each CMake configure via `cmake/AutoBuildNumber.cmake`
+- **Test harnesses** — 6 test executables: TestDatabases, TestCore, TestModules, TestChurch, TestPodcast, TestAuxDeck
+- **NSIS installer** — installs to `C:\Users\USERNAME\Mcaster1\Mcaster1Studio` (no admin required)
+  - Desktop + Start Menu shortcuts
+  - Getting Started guide link
+  - Uninstaller with Add/Remove Programs registry
+- **Getting Started guide** — `docs/GettingStarted.html`, comprehensive first-run walkthrough
+- **3D SVG icon** — `auxdeck.svg` matching project icon style
+- Module catalog expanded to 43 built-in modules
+
+### Golden Path — Per-Surface Thread Pools + CPU Affinity
+- **ThreadPoolManager** singleton — creates/destroys per-surface `QThreadPool` instances, manages CPU core budget
+- **SurfaceThreadPool** — per-surface thread pool wrapper with atomic metrics (submitted/completed/pending/peak)
+- **IThreadPoolAware** mixin — opt-in interface for modules needing background thread access (follows `IDbAwareModule` pattern)
+- **PooledRunnable** — `QRunnable` wrapper with automatic completion counter
+- **CPU affinity** — PortAudio RT callback pinned to core 0, EncoderSlots round-robin cores 1-3 via `SetThreadAffinityMask`
+- **5 modules converted:** PodEncodeModule, PodEditorModule, PodTranscribeModule, TranscribeRecModule, MediaLibraryModule
+- **HealthSnapshot** extended with per-surface pool metrics (activeThreads, pendingTasks, tasksCompleted, availableCores)
+- **Thread budget algorithm** — `max(2, remaining / pools)` with Church/Podcast +1 bonus, respects `QThread::idealThreadCount()`
+- **TestThreadPool** — 37 integration tests: pool basics, 100-task submission, metrics, lifecycle, multi-pool, encoder core assignment, thread isolation
+- Zero RT violations confirmed across all `onAudioBlock()` implementations
+
 ## [0.2.0-alpha] — 2026-03-10
 
 ### Phase CH — Church Surface (12 modules)

@@ -122,6 +122,21 @@ void HealthModule::collectSnapshot() {
         }
     }
 
+    // Thread pool metrics (Golden Path)
+    auto& tpm = ThreadPoolManager::instance();
+    snap.availableCores    = tpm.availableCores();
+    snap.affinityEnabled   = tpm.affinityEnabled();
+    snap.totalWorkerThreads = tpm.totalActiveThreads();
+    for (const auto& pm : tpm.allMetrics()) {
+        PoolHealth ph;
+        ph.surfaceName    = pm.surfaceName;
+        ph.activeThreads  = pm.activeThreads;
+        ph.maxThreads     = pm.maxThreads;
+        ph.pendingTasks   = pm.pendingTasks;
+        ph.tasksCompleted = pm.tasksCompleted;
+        snap.threadPools.append(ph);
+    }
+
     m_lastSnapshot = snap;
 
     // History ring buffer

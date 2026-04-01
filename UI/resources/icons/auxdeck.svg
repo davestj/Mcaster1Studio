@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="55%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.30"/></filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5" fill="url(#bg)" stroke="#312e81" stroke-width="1.2" filter="url(#sh)"/>
+  <rect x="2.5" y="2.5" width="27" height="14" rx="4.5" fill="url(#shine)"/>
+  <!-- AUX text -->
+  <text x="16" y="14" text-anchor="middle" fill="white" font-family="Arial" font-size="7" font-weight="bold">AUX</text>
+  <!-- Speaker icon -->
+  <path d="M11 18 L14 18 L18 15 L18 25 L14 22 L11 22 Z" fill="white" opacity="0.9"/>
+  <!-- Sound waves -->
+  <path d="M20 17.5 Q22 20 20 22.5" stroke="white" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <path d="M22 16 Q25 20 22 24" stroke="white" stroke-width="1.2" fill="none" opacity="0.5"/>
+</svg>

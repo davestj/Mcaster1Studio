@@ -18,7 +18,13 @@ set(CORE_HEADERS
     include/SurfaceConfig.h
     include/DbServerEntry.h
     include/SurfaceDbContext.h
+    include/SqlDialect.h
+    include/DatabaseFactory.h
     include/MonitorManager.h
+    include/IThreadPoolAware.h
+    include/SurfaceThreadPool.h
+    include/ThreadPoolManager.h
+    include/PooledRunnable.h
 )
 
 set(CORE_SOURCES
@@ -29,7 +35,11 @@ set(CORE_SOURCES
     src/SurfaceConfig.cpp
     src/DbServerRegistry.cpp
     src/SurfaceDbContext.cpp
+    src/SqlDialect.cpp
+    src/DatabaseFactory.cpp
     src/MonitorManager.cpp
+    src/SurfaceThreadPool.cpp
+    src/ThreadPoolManager.cpp
 )
 
 add_library(Mcaster1Core STATIC ${CORE_SOURCES} ${CORE_HEADERS})
@@ -45,6 +55,7 @@ target_link_libraries(Mcaster1Core
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
+        Qt6::Concurrent
 )
 
 # Windows: DXGI for GPU enumeration, MediaFoundation for capture device enumeration

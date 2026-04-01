@@ -15,6 +15,7 @@
 ///   2026-03-09  Initial implementation — recorder, transcript editor, WAV export
 
 #include "IModule.h"
+#include "IThreadPoolAware.h"
 #include <QList>
 #include <QElapsedTimer>
 #include <atomic>
@@ -35,7 +36,7 @@ struct TranscriptEntry {
 };
 
 // ─── TranscribeRecModule ────────────────────────────────────────────────────
-class TranscribeRecModule : public IModule {
+class TranscribeRecModule : public IModule, public IThreadPoolAware {
     Q_OBJECT
 
 public:
@@ -147,6 +148,11 @@ private:
     // Drain scratch buffer
     static constexpr int kDrainBuf = 4096;
     float m_drainScratch[kDrainBuf]{};
+
+    // IThreadPoolAware
+    void setSurfaceThreadPool(SurfaceThreadPool* pool) override { m_pool = pool; }
+    SurfaceThreadPool* surfaceThreadPool() const override { return m_pool; }
+    SurfaceThreadPool* m_pool = nullptr;
 };
 
 } // namespace M1

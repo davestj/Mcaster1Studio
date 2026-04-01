@@ -7,6 +7,8 @@
 #include "SurfaceScheduler.h"
 #include "SurfaceSchedulerDialog.h"
 #include "IModule.h"
+#include "ThreadPoolManager.h"
+#include "SurfaceThreadPool.h"
 #include <QVBoxLayout>
 #include <QStackedWidget>
 #include <QSettings>
@@ -116,9 +118,17 @@ SurfaceWidget::SurfaceWidget(M1::SurfaceType type, QWidget* parent)
     m_stack->addWidget(firstPanel);
     m_panels.append(firstPanel);
     connectPanel(firstPanel);
+
+    // Create per-surface thread pool for background work
+    m_threadPool = M1::ThreadPoolManager::instance().createPoolForSurface(
+        surfaceName(), static_cast<int>(m_type));
 }
 
-SurfaceWidget::~SurfaceWidget() = default;
+SurfaceWidget::~SurfaceWidget()
+{
+    M1::ThreadPoolManager::instance().destroyPoolForSurface(surfaceName());
+    m_threadPool = nullptr;
+}
 
 // ─── Surface name ─────────────────────────────────────────────────────────────
 QString SurfaceWidget::surfaceName() const {

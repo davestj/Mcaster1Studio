@@ -1,14 +1,11 @@
 #include "SurfaceDbContext.h"
 #include "DbServerEntry.h"
+#include "DatabaseFactory.h"
 #include "IDatabase.h"
 #include <QRegularExpression>
 #include <QStandardPaths>
+#include <QDir>
 #include <QDebug>
-
-// Forward declarations for concrete DB implementations
-// (headers live in MediaLibraryModule, but we link against them)
-class SqliteManager;
-class DatabaseManager;
 
 namespace M1 {
 
@@ -25,25 +22,39 @@ IDatabase* SurfaceDbContext::createConnection() const {
         return nullptr;
     }
 
-    // The actual connection creation is deferred to the module layer
-    // since SqliteManager and DatabaseManager live in MediaLibraryModule.
-    // This method returns nullptr; modules use the context to create their own
-    // connections via their local factory.
-    //
-    // Usage pattern in modules:
-    //   if (ctx.server->isSQLite()) {
-    //       auto* db = new SqliteManager;
-    //       db->connect(ctx.sqlitePath());
-    //   } else {
-    //       auto* db = new DatabaseManager;
-    //       DatabaseManager::Config cfg { ... };
-    //       cfg.database = ctx.schemaName;
-    //       db->connect(cfg);
-    //   }
+    if (!DatabaseFactory::isDriverRegistered(server->backend)) {
+        qWarning() << "[SurfaceDbContext] No driver registered for"
+                    << server->backendDisplayName();
+        return nullptr;
+    }
 
-    qInfo() << "[SurfaceDbContext] Context ready for schema:" << schemaName
-            << "on server:" << server->displayName;
-    return nullptr;  // Modules create their own connection
+    // Build the DB file path for SQLite
+    QString dbPath;
+    if (server->isSQLite()) {
+        QString baseDir = server->sqlitePath;
+        if (baseDir.isEmpty())
+            baseDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        QDir dir(baseDir);
+        if (!dir.exists()) dir.mkpath(".");
+        dbPath = dir.absoluteFilePath(schemaName + ".db");
+    }
+
+    IDatabase* db = DatabaseFactory::create(*server, schemaName, dbPath);
+    if (!db) {
+        qWarning() << "[SurfaceDbContext] DatabaseFactory::create() returned null for"
+                    << server->backendDisplayName() << "schema:" << schemaName;
+        return nullptr;
+    }
+
+    if (!db->isConnected()) {
+        qWarning() << "[SurfaceDbContext] Connection failed:" << db->lastError();
+        delete db;
+        return nullptr;
+    }
+
+    qInfo() << "[SurfaceDbContext] Connected to" << server->backendDisplayName()
+            << "schema:" << schemaName;
+    return db;
 }
 
 // ─── Generate schema name from surface display name ──────────────────────────

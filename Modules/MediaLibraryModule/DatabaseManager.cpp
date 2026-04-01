@@ -304,4 +304,54 @@ QString DatabaseManager::escapeString(const QString& s) {
     return QString::fromUtf8(buf.constData(), static_cast<int>(len));
 }
 
+// ─── Raw query execution ─────────────────────────────────────────────────────
+QList<QVariantList> DatabaseManager::executeQuery(const QString& sql) {
+    QList<QVariantList> results;
+    if (!m_conn) { m_lastError = "Not connected"; return results; }
+
+    QByteArray utf8 = sql.toUtf8();
+    if (mysql_real_query(toConn(m_conn), utf8.constData(),
+                         static_cast<unsigned long>(utf8.size())) != 0) {
+        m_lastError = QString::fromUtf8(mysql_error(toConn(m_conn)));
+        return results;
+    }
+
+    MYSQL_RES* res = mysql_store_result(toConn(m_conn));
+    if (!res) return results;
+
+    const unsigned int colCount = mysql_num_fields(res);
+    MYSQL_ROW row;
+    while ((row = mysql_fetch_row(res))) {
+        unsigned long* lengths = mysql_fetch_lengths(res);
+        QVariantList qrow;
+        qrow.reserve(static_cast<int>(colCount));
+        for (unsigned int c = 0; c < colCount; ++c) {
+            if (row[c])
+                qrow.append(QString::fromUtf8(row[c], static_cast<int>(lengths[c])));
+            else
+                qrow.append(QVariant());
+        }
+        results.append(qrow);
+    }
+    mysql_free_result(res);
+    return results;
+}
+
+QStringList DatabaseManager::tableNames() {
+    QStringList names;
+    if (!m_conn) return names;
+
+    if (mysql_query(toConn(m_conn), "SHOW TABLES") != 0) return names;
+
+    MYSQL_RES* res = mysql_store_result(toConn(m_conn));
+    if (!res) return names;
+
+    MYSQL_ROW row;
+    while ((row = mysql_fetch_row(res))) {
+        if (row[0]) names.append(QString::fromUtf8(row[0]));
+    }
+    mysql_free_result(res);
+    return names;
+}
+
 } // namespace M1

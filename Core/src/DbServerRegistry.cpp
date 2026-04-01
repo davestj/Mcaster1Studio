@@ -1,10 +1,15 @@
 #include "DbServerEntry.h"
+#include "DatabaseFactory.h"
 #include <QSettings>
 #include <QStandardPaths>
 #include <QDir>
+#include <QFileInfo>
 #include <QDebug>
 
 namespace M1 {
+
+// ─── Constructor ─────────────────────────────────────────────────────────────
+DbServerRegistry::DbServerRegistry() : QObject(nullptr) {}
 
 // ─── Singleton ───────────────────────────────────────────────────────────────
 DbServerRegistry& DbServerRegistry::instance() {
@@ -36,6 +41,7 @@ void DbServerRegistry::addServer(const DbServerEntry& entry) {
     if (m_servers.size() == 1)
         m_defaultServerId = entry.id;
     saveToSettings();
+    emit serverListChanged();
 }
 
 void DbServerRegistry::updateServer(const DbServerEntry& entry) {
@@ -43,6 +49,8 @@ void DbServerRegistry::updateServer(const DbServerEntry& entry) {
         if (s.id == entry.id) {
             s = entry;
             saveToSettings();
+            emit serverChanged(entry.id);
+            emit serverListChanged();
             return;
         }
     }
@@ -53,11 +61,17 @@ void DbServerRegistry::removeServer(const QString& id) {
     if (m_defaultServerId == id)
         m_defaultServerId = m_servers.isEmpty() ? QString() : m_servers.first().id;
     saveToSettings();
+    emit serverListChanged();
 }
 
 void DbServerRegistry::setDefaultServerId(const QString& id) {
     m_defaultServerId = id;
     saveToSettings();
+    emit serverListChanged();
+}
+
+void DbServerRegistry::notifySurfaceAssignmentChanged(const QString& surfaceName) {
+    emit surfaceAssignmentChanged(surfaceName);
 }
 
 // ─── QSettings persistence ──────────────────────────────────────────────────
@@ -92,13 +106,14 @@ void DbServerRegistry::loadFromSettings() {
         e.id          = s.value(prefix + "/id").toString();
         e.displayName = s.value(prefix + "/name").toString();
         const QString backend = s.value(prefix + "/backend", "sqlite").toString();
-        e.backend     = (backend == "mysql") ? DbServerEntry::Backend::MySQL
-                                             : DbServerEntry::Backend::SQLite;
-        e.sqlitePath  = s.value(prefix + "/sqlite/path").toString();
-        e.host        = s.value(prefix + "/mysql/host", "127.0.0.1").toString();
-        e.port        = s.value(prefix + "/mysql/port", 3306).toInt();
-        e.username    = s.value(prefix + "/mysql/user", "root").toString();
-        e.password    = s.value(prefix + "/mysql/pass").toString();
+        e.backend = DbServerEntry::backendFromKey(backend);
+        e.sqlitePath    = s.value(prefix + "/sqlite/path").toString();
+        e.firebirdPath  = s.value(prefix + "/firebird/path").toString();
+        e.host        = s.value(prefix + "/host", s.value(prefix + "/mysql/host", "127.0.0.1")).toString();
+        e.port        = s.value(prefix + "/port", s.value(prefix + "/mysql/port",
+                            DbServerEntry::defaultPort(e.backend))).toInt();
+        e.username    = s.value(prefix + "/user", s.value(prefix + "/mysql/user", "root")).toString();
+        e.password    = s.value(prefix + "/pass", s.value(prefix + "/mysql/pass", "")).toString();
         m_servers.append(e);
     }
 
@@ -118,8 +133,15 @@ void DbServerRegistry::saveToSettings() const {
         const auto& e = m_servers[i];
         s.setValue(prefix + "/id",          e.id);
         s.setValue(prefix + "/name",        e.displayName);
-        s.setValue(prefix + "/backend",     e.isSQLite() ? "sqlite" : "mysql");
-        s.setValue(prefix + "/sqlite/path", e.sqlitePath);
+        s.setValue(prefix + "/backend",     e.backendKey());
+
+        s.setValue(prefix + "/sqlite/path",   e.sqlitePath);
+        s.setValue(prefix + "/firebird/path", e.firebirdPath);
+        // Generic network keys (also write legacy mysql/ keys for back-compat)
+        s.setValue(prefix + "/host",  e.host);
+        s.setValue(prefix + "/port",  e.port);
+        s.setValue(prefix + "/user",  e.username);
+        s.setValue(prefix + "/pass",  e.password);
         s.setValue(prefix + "/mysql/host",  e.host);
         s.setValue(prefix + "/mysql/port",  e.port);
         s.setValue(prefix + "/mysql/user",  e.username);
@@ -183,14 +205,30 @@ QString DbServerRegistry::testConnection(const DbServerEntry& entry) {
         return {};  // success
     }
 
-    // MySQL: attempt connection (deferred to actual MySQL test when module is available)
-    // For now, basic host/port validation
+    // Basic validation
     if (entry.host.isEmpty())
         return "Host cannot be empty";
     if (entry.port < 1 || entry.port > 65535)
         return "Port must be 1-65535";
     if (entry.username.isEmpty())
         return "Username cannot be empty";
+
+    // If a driver is registered, attempt a real connection test
+    if (DatabaseFactory::isDriverRegistered(entry.backend)) {
+        IDatabase* db = DatabaseFactory::create(entry, "mcaster1studio_test");
+        if (!db)
+            return "Connection failed (driver returned null)";
+        const bool ok = db->isConnected();
+        const QString err = ok ? QString() : db->lastError();
+        db->disconnect();
+        delete db;
+        return ok ? QString() : err;
+    }
+
+    // No driver registered — check availability message
+    const QString driverErr = DatabaseFactory::checkDriverAvailable(entry.backend);
+    if (!driverErr.isEmpty())
+        return driverErr;
 
     return {};  // basic validation passed
 }

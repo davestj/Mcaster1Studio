@@ -36,6 +36,9 @@ public:
     QList<MediaItem> loadAll()                  override;
     bool    pathExists(const QString& path)     override;
 
+    QList<QVariantList> executeQuery(const QString& sql) override;
+    QStringList         tableNames() override;
+
     QString lastError()    const override { return m_lastError; }
     QString backendName()  const override { return QStringLiteral("MySQL"); }
 

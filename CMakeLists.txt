@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(Mcaster1Studio
-    VERSION 0.2.0
+    VERSION 0.3.0
     DESCRIPTION "Mcaster1Studio - Broadcast Automation Software Suite"
     HOMEPAGE_URL "https://mcaster1.com"
     LANGUAGES CXX
@@ -71,12 +71,16 @@ if(NOT unofficial-libmariadb_FOUND)
     find_package(unofficial-libmysql CONFIG REQUIRED)
 endif()
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
+find_package(PostgreSQL QUIET)
 find_package(taglib CONFIG REQUIRED)
 find_package(CURL CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(ffmpeg COMPONENTS avcodec avformat avutil swresample swscale QUIET)
+
+# Auto-increment build number on each configure
+include(${CMAKE_SOURCE_DIR}/cmake/AutoBuildNumber.cmake)
 
 # Version header
 configure_file(
@@ -108,6 +112,7 @@ add_subdirectory(Modules/MonitorModule)
 add_subdirectory(Modules/ClockModule)
 add_subdirectory(Modules/QueueModule)
 add_subdirectory(Modules/CartWallModule)
+add_subdirectory(Modules/DatabaseModule)
 add_subdirectory(Modules/HealthModule)
 add_subdirectory(Modules/TimerClockModule)
 add_subdirectory(Modules/GraphicsEngineModule)
@@ -134,8 +139,10 @@ add_subdirectory(Modules/PodRSSModule)
 add_subdirectory(Modules/PodPublisherModule)
 add_subdirectory(Modules/PodAnalyticsModule)
 add_subdirectory(Modules/PodRemoteModule)
+add_subdirectory(Modules/AuxDeckModule)
 add_subdirectory(SDK)
 add_subdirectory(UI)
+add_subdirectory(tests)
 
 # ─── Visual Studio solution folders ──────────────────────────────────────────
 # Groups projects in Solution Explorer for easy navigation.
@@ -162,6 +169,7 @@ set_target_properties(MonitorModule      PROPERTIES FOLDER "Modules/Broadcast")
 set_target_properties(ClockModule        PROPERTIES FOLDER "Modules/Broadcast")
 set_target_properties(QueueModule        PROPERTIES FOLDER "Modules/Broadcast")
 set_target_properties(CartWallModule     PROPERTIES FOLDER "Modules/Broadcast")
+set_target_properties(DatabaseModule    PROPERTIES FOLDER "Modules/Broadcast")
 set_target_properties(HealthModule       PROPERTIES FOLDER "Modules/Broadcast")
 
 # Church modules
@@ -193,6 +201,9 @@ set_target_properties(PodPublisherModule  PROPERTIES FOLDER "Modules/Podcast")
 set_target_properties(PodAnalyticsModule  PROPERTIES FOLDER "Modules/Podcast")
 set_target_properties(PodRemoteModule     PROPERTIES FOLDER "Modules/Podcast")
 
+# AUX Deck
+set_target_properties(AuxDeckModule       PROPERTIES FOLDER "Modules/Broadcast")
+
 # Effects plugins
 set_target_properties(FxSonicMaximizer    PROPERTIES FOLDER "Effects")
 set_target_properties(FxEqualizer31Band   PROPERTIES FOLDER "Effects")
@@ -201,6 +212,15 @@ set_target_properties(FxCompressorLimiter PROPERTIES FOLDER "Effects")
 # SDK examples
 set_target_properties(SampleModule PROPERTIES FOLDER "SDK/Examples")
 set_target_properties(SampleEffect PROPERTIES FOLDER "SDK/Examples")
+
+# Tests
+set_target_properties(TestDatabases PROPERTIES FOLDER "Tests")
+set_target_properties(TestCore      PROPERTIES FOLDER "Tests")
+set_target_properties(TestModules   PROPERTIES FOLDER "Tests")
+set_target_properties(TestChurch    PROPERTIES FOLDER "Tests")
+set_target_properties(TestPodcast   PROPERTIES FOLDER "Tests")
+set_target_properties(TestAuxDeck   PROPERTIES FOLDER "Tests")
+set_target_properties(TestThreadPool PROPERTIES FOLDER "Tests")
 
 # Install targets (Phase 12)
 # install(TARGETS Mcaster1Studio DESTINATION bin)

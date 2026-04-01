@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mcaster1Studio &mdash; Getting Started Guide</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#0c1a2e; --raised:#1e3a5f;
+    --blue:#0ea5e9; --cyan:#38bdf8; --green:#22c55e;
+    --red:#ef4444; --amber:#f59e0b; --purple:#a78bfa;
+    --text:#e2e8f0; --muted:#64748b; --border:#1e3a5f;
+    --church:#a78bfa; --podcast:#f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Inter,Arial,sans-serif;
+       font-size:14px;line-height:1.6;padding:24px 32px;max-width:1300px;margin:0 auto}
+  h1{color:var(--cyan);font-size:2.2rem;margin-bottom:4px;letter-spacing:-0.5px}
+  h2{color:var(--cyan);font-size:1.2rem;margin:40px 0 12px;
+     border-bottom:1px solid var(--border);padding-bottom:6px;
+     text-transform:uppercase;letter-spacing:.5px}
+  h3{color:var(--blue);font-size:1rem;margin:20px 0 8px}
+  h4{color:var(--text);font-size:.92rem;margin:14px 0 6px}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:28px}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{color:var(--cyan)}
+
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0 20px}
+  th{background:var(--raised);color:var(--cyan);padding:7px 12px;text-align:left;
+     font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;
+     border-bottom:1px solid var(--blue)}
+  td{padding:7px 12px;border-bottom:1px solid #0d1a2e;color:var(--text);vertical-align:top}
+  tr:hover td{background:#0a1422}
+
+  code{background:#060d18;border:1px solid #1e293b;border-radius:3px;
+       padding:1px 5px;font-family:"Consolas","Courier New",monospace;
+       font-size:.84em;color:var(--cyan)}
+  pre{background:#060d18;border:1px solid #1e293b;border-radius:4px;
+      padding:12px 16px;font-family:"Consolas","Courier New",monospace;
+      font-size:.84em;color:var(--cyan);overflow-x:auto;margin:10px 0;line-height:1.5}
+
+  .box{background:var(--panel);border:1px solid var(--border);
+       border-left:3px solid var(--blue);border-radius:4px;
+       padding:12px 16px;margin:12px 0;font-size:.88rem;color:#94a3b8}
+  .box.g{border-left-color:var(--green)}
+  .box.a{border-left-color:var(--amber)}
+  .box.r{border-left-color:var(--red)}
+  .box.p{border-left-color:var(--purple)}
+  .box strong{color:var(--text)}
+
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:12px 0}
+  .cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:12px 0}
+  @media(max-width:900px){.cols2,.cols3{grid-template-columns:1fr}}
+
+  ul{margin:6px 0 10px 20px;color:#94a3b8;font-size:.88rem;line-height:1.7}
+  ul li strong{color:var(--text)}
+  ol{margin:6px 0 10px 20px;color:#94a3b8;font-size:.88rem;line-height:1.7}
+  ol li strong{color:var(--text)}
+  ol li{margin-bottom:4px}
+
+  .feature-card{background:var(--panel);border:1px solid var(--border);
+    border-radius:6px;padding:14px 16px;margin-bottom:0}
+  .feature-card h3{margin-top:0;color:var(--cyan)}
+  .feature-card ul{margin-top:6px}
+  .feature-card.cc{border-left:3px solid var(--church)}
+  .feature-card.cc h3{color:var(--church)}
+  .feature-card.pc{border-left:3px solid var(--podcast)}
+  .feature-card.pc h3{color:var(--podcast)}
+
+  .hero{background:linear-gradient(135deg, #0c1a2e 0%, #1e3a5f 50%, #0c1a2e 100%);
+        border:1px solid var(--border);border-radius:8px;padding:32px 36px;margin:20px 0 32px;
+        text-align:center}
+  .hero h2{border:none;margin:0 0 8px;font-size:1.6rem;text-transform:none;letter-spacing:-.3px}
+  .hero p{color:#94a3b8;max-width:720px;margin:0 auto;font-size:.95rem;line-height:1.6}
+
+  .toc{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+       padding:20px 28px;margin:20px 0 32px}
+  .toc h3{margin:0 0 12px;color:var(--cyan);font-size:1rem;text-transform:uppercase;letter-spacing:.5px}
+  .toc ol{margin:0 0 0 20px;counter-reset:toc;list-style:none}
+  .toc ol li{counter-increment:toc;margin-bottom:6px;font-size:.9rem}
+  .toc ol li::before{content:counter(toc) ". ";color:var(--muted);font-weight:700;font-size:.85rem}
+  .toc ol li a{color:var(--blue);text-decoration:none}
+  .toc ol li a:hover{color:var(--cyan)}
+
+  .step-num{display:inline-flex;align-items:center;justify-content:center;
+            width:28px;height:28px;border-radius:50%;background:var(--blue);
+            color:#0f172a;font-weight:800;font-size:.85rem;margin-right:8px;
+            flex-shrink:0;vertical-align:middle}
+
+  .surface-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+                padding:16px 18px}
+  .surface-card h3{margin:0 0 6px;font-size:1rem}
+  .surface-card .mc{color:var(--muted);font-size:.8rem;margin-bottom:8px}
+
+  .wf{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+  .wf .st{background:var(--panel);border:1px solid var(--border);border-radius:4px;
+          padding:6px 14px;font-size:.82rem;color:var(--text)}
+  .wf .ar{color:var(--muted);font-size:1.2rem}
+
+  .kbd{display:inline-block;background:#1e293b;border:1px solid #334155;border-radius:3px;
+       padding:1px 6px;font-family:"Consolas",monospace;font-size:.8em;color:var(--cyan);
+       box-shadow:0 1px 0 #0f172a}
+
+  .stat-row{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+        padding:16px 20px;text-align:center;flex:1;min-width:120px}
+  .stat .num{font-size:2rem;font-weight:800;color:var(--cyan);display:block}
+  .stat .lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:2px}
+
+  footer{margin-top:56px;color:var(--muted);font-size:.8rem;
+         border-top:1px solid var(--border);padding-top:12px}
+</style>
+</head>
+<body>
+
+<h1>Mcaster1Studio</h1>
+<p class="sub">Getting Started Guide &mdash; First-time user walkthrough &mdash; v0.2.0-alpha &mdash; 2026-03-14</p>
+
+<!-- ═══ HERO ════════════════════════════════════════════════════════════════ -->
+<div class="hero">
+  <h2>Welcome to Mcaster1Studio</h2>
+  <p>
+    Mcaster1Studio is a professional broadcast automation suite built for <strong>radio broadcasters</strong>,
+    <strong>podcasters</strong>, <strong>worship leaders</strong>, and <strong>content creators</strong>.
+    This guide walks you through your first launch, audio setup, and getting on the air.
+    Whether you are streaming live to thousands or recording a podcast episode, everything starts here.
+  </p>
+</div>
+
+<!-- ═══ TABLE OF CONTENTS ═══════════════════════════════════════════════════ -->
+<div class="toc">
+  <h3>Table of Contents</h3>
+  <ol>
+    <li><a href="#welcome">Welcome and Overview</a></li>
+    <li><a href="#requirements">System Requirements</a></li>
+    <li><a href="#first-launch">First Launch</a></li>
+    <li><a href="#audio-setup">Audio Device Setup</a></li>
+    <li><a href="#surfaces">Understanding Surfaces</a></li>
+    <li><a href="#modules">Working with Modules</a></li>
+    <li><a href="#media-library">Media Library</a></li>
+    <li><a href="#broadcasting">Broadcasting</a></li>
+    <li><a href="#church">Church Surface</a></li>
+    <li><a href="#podcast">Podcast Surface</a></li>
+    <li><a href="#tips">Tips and Troubleshooting</a></li>
+  </ol>
+</div>
+
+<!-- ═══ 1. WELCOME ══════════════════════════════════════════════════════════ -->
+<h2 id="welcome">1. Welcome and Overview</h2>
+
+<div class="box g">
+  Mcaster1Studio combines audio playback, live encoding, metadata management, effects processing,
+  video switching, and podcast production into a single, modular application. Choose a
+  <strong>Surface</strong> for your workflow and you are ready to go.
+</div>
+
+<h3>Key Capabilities</h3>
+<div class="cols3">
+  <div class="feature-card">
+    <h3>DJ / Radio Broadcasting</h3>
+    <ul>
+      <li><strong>Dual-deck audio player</strong> with waveform, EQ, and crossfader</li>
+      <li>7-codec encoder with Icecast/Shoutcast/DNAS support</li>
+      <li>AutoDJ playlist scheduling with clock templates</li>
+      <li>ICY 2.2 rich metadata push (70+ fields)</li>
+      <li>CartWall for instant jingles and sound effects</li>
+    </ul>
+  </div>
+  <div class="feature-card cc">
+    <h3>Church / Worship Services</h3>
+    <ul>
+      <li><strong>12 dedicated church modules</strong></li>
+      <li>Lyrics display with section-based arrangement</li>
+      <li>Scripture lookup with 6 Bible translations</li>
+      <li>Program/Preview video switcher with transitions</li>
+      <li>Service rundown manager with auto-advance</li>
+    </ul>
+  </div>
+  <div class="feature-card pc">
+    <h3>Podcast Production</h3>
+    <ul>
+      <li><strong>13 dedicated podcast modules</strong></li>
+      <li>Multi-track recording with take management</li>
+      <li>DAW-style waveform editor</li>
+      <li>RSS feed generation and publishing</li>
+      <li>Remote guest support for up to 4 participants</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ 2. SYSTEM REQUIREMENTS ══════════════════════════════════════════════ -->
+<h2 id="requirements">2. System Requirements</h2>
+
+<table>
+  <tr><th>Component</th><th>Minimum</th><th>Recommended</th></tr>
+  <tr>
+    <td><strong>Operating System</strong></td>
+    <td>Windows 10 (64-bit)</td>
+    <td>Windows 11 Pro (64-bit)</td>
+  </tr>
+  <tr>
+    <td><strong>Processor</strong></td>
+    <td>Intel Core i5 / AMD Ryzen 5</td>
+    <td>Intel Core i7 / AMD Ryzen 7 or better</td>
+  </tr>
+  <tr>
+    <td><strong>Memory</strong></td>
+    <td>8 GB RAM</td>
+    <td>16 GB RAM or more</td>
+  </tr>
+  <tr>
+    <td><strong>Storage</strong></td>
+    <td>500 MB for application + media library space</td>
+    <td>SSD with 50+ GB free for media</td>
+  </tr>
+  <tr>
+    <td><strong>Audio Interface</strong></td>
+    <td>Built-in sound card (WDM/WASAPI)</td>
+    <td>Professional ASIO audio interface (e.g., Focusrite, MOTU, RME)</td>
+  </tr>
+  <tr>
+    <td><strong>Display</strong></td>
+    <td>1920 &times; 1080</td>
+    <td>2560 &times; 1440 or dual monitors</td>
+  </tr>
+  <tr>
+    <td><strong>Network</strong></td>
+    <td>Broadband for streaming</td>
+    <td>Wired Ethernet for reliable live broadcasts</td>
+  </tr>
+</table>
+
+<div class="box a">
+  <strong>Audio interface recommendation:</strong> While Mcaster1Studio works with any Windows sound device,
+  a dedicated ASIO audio interface provides significantly lower latency (under 10 ms round-trip),
+  more reliable playback, and better audio quality. ASIO is strongly recommended for live broadcasting.
+</div>
+
+<!-- ═══ 3. FIRST LAUNCH ════════════════════════════════════════════════════ -->
+<h2 id="first-launch">3. First Launch</h2>
+
+<p>When you launch Mcaster1Studio for the first time, you will see the main window with its three primary regions.</p>
+
+<h3>Main Window Layout</h3>
+<div class="cols2">
+  <div class="feature-card">
+    <h3>Window Structure</h3>
+    <ul>
+      <li><strong>AppRibbon</strong> (top, 48 px) &mdash; drag-and-drop widget bar with Clock, Weather, VU Meter, and ON AIR toggle</li>
+      <li><strong>Surface Tabs</strong> (below ribbon) &mdash; one tab per open surface; click <code>+</code> to add more</li>
+      <li><strong>Module Docks</strong> (center) &mdash; resizable, dockable panels for each module on the active surface</li>
+      <li><strong>Sub-Surface Panels</strong> &mdash; secondary tabs within a surface for organizing module groups</li>
+      <li><strong>Status Bar</strong> (bottom) &mdash; audio engine status, sample rate, buffer info</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>Default Surface: Alpha</h3>
+    <ul>
+      <li>Your first launch opens the <strong>Surface Alpha</strong> workspace, preconfigured for radio broadcasting</li>
+      <li>Includes 5 starter modules: <strong>VU Meter</strong>, <strong>Deck A/B</strong>, <strong>Playlist</strong>, <strong>Encoder</strong>, and <strong>Metadata</strong></li>
+      <li>Modules appear as dockable panels that you can drag, resize, float, or close</li>
+      <li>The layout auto-saves across sessions &mdash; your arrangement persists on next launch</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Quick Device Setup Walkthrough</h3>
+<div class="box">
+  On first launch, Mcaster1Studio uses your system default audio device. To configure your preferred
+  audio interface, open <strong>Edit &rarr; Preferences</strong> (or press <span class="kbd">Ctrl+,</span>)
+  and navigate to the <strong>Audio</strong> tab. Select your output device, input device, and CUE (headphone)
+  device. Click <strong>OK</strong> to apply.
+</div>
+
+<ol>
+  <li><span class="step-num">1</span> <strong>Launch Mcaster1Studio.</strong> The main window opens with Surface Alpha.</li>
+  <li><span class="step-num">2</span> <strong>Open Preferences:</strong> <strong>Edit &rarr; Preferences</strong> or press <span class="kbd">Ctrl+,</span></li>
+  <li><span class="step-num">3</span> <strong>Select your audio devices</strong> in the Audio tab (output, input, CUE).</li>
+  <li><span class="step-num">4</span> <strong>Import music:</strong> Open the Media Library module and add a folder to start scanning tracks.</li>
+  <li><span class="step-num">5</span> <strong>Drag a track to Deck A</strong> and press Play. You should hear audio through your selected output device.</li>
+</ol>
+
+<!-- ═══ 4. AUDIO DEVICE SETUP ══════════════════════════════════════════════ -->
+<h2 id="audio-setup">4. Audio Device Setup</h2>
+
+<div class="box g">
+  Mcaster1Studio uses <strong>PortAudio</strong> for audio I/O, supporting ASIO, WASAPI, and WDM drivers.
+  Correct device setup is essential for reliable playback and low-latency broadcasting.
+</div>
+
+<h3>Opening Preferences</h3>
+<p>Navigate to <strong>Edit &rarr; Preferences</strong> from the menu bar, or use the keyboard shortcut
+<span class="kbd">Ctrl+,</span> (Ctrl and comma). Select the <strong>Audio</strong> tab on the left.</p>
+
+<h3>Device Selection</h3>
+<table>
+  <tr><th>Device</th><th>Purpose</th><th>Example</th></tr>
+  <tr>
+    <td><strong>Output Device</strong></td>
+    <td>Main audio output &mdash; speakers, broadcast feed, or audio interface outputs</td>
+    <td>Focusrite USB ASIO, Realtek WASAPI</td>
+  </tr>
+  <tr>
+    <td><strong>Input Device</strong></td>
+    <td>Microphone or line-in for PTT, recording, and podcast modules</td>
+    <td>Audio interface mic input, USB microphone</td>
+  </tr>
+  <tr>
+    <td><strong>CUE Device</strong></td>
+    <td>Headphone pre-listen output &mdash; cue tracks before they go on-air</td>
+    <td>Secondary output on audio interface, separate USB headphone adapter</td>
+  </tr>
+</table>
+
+<h3>ASIO vs. WDM / WASAPI</h3>
+<div class="cols2">
+  <div class="feature-card">
+    <h3>ASIO (Recommended)</h3>
+    <ul>
+      <li><strong>Lowest latency</strong> &mdash; typically 3&ndash;10 ms round-trip</li>
+      <li>Direct hardware access, bypasses Windows audio mixer</li>
+      <li>Exclusive device mode &mdash; other applications cannot use the device simultaneously</li>
+      <li>Requires an ASIO-compatible audio interface or ASIO4ALL driver</li>
+      <li>Best for <strong>live broadcasting</strong> and <strong>real-time monitoring</strong></li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>WDM / WASAPI</h3>
+    <ul>
+      <li><strong>Works with any Windows sound device</strong> including built-in audio</li>
+      <li>Higher latency (20&ndash;50 ms typical) but no special driver needed</li>
+      <li>Shared mode: other applications can use audio simultaneously</li>
+      <li>Good for <strong>testing</strong>, <strong>podcast editing</strong>, and <strong>non-critical playback</strong></li>
+      <li>WASAPI Exclusive mode offers better latency than standard WDM</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Sample Rate and Buffer Size</h3>
+<table>
+  <tr><th>Setting</th><th>Recommended</th><th>Notes</th></tr>
+  <tr>
+    <td><strong>Sample Rate</strong></td>
+    <td>44100 Hz or 48000 Hz</td>
+    <td>44100 Hz matches CD quality and most streaming services; 48000 Hz is standard for video production</td>
+  </tr>
+  <tr>
+    <td><strong>Buffer Size</strong></td>
+    <td>256 or 512 samples</td>
+    <td>Lower values reduce latency but increase CPU load; 256 is ideal for ASIO, 512 is a safe default</td>
+  </tr>
+</table>
+
+<div class="box a">
+  <strong>Buffer size tip:</strong> If you hear crackling, pops, or dropouts, increase the buffer size.
+  Start at 512 samples and reduce to 256 or 128 only if your system handles it without glitches.
+  A buffer of 256 samples at 44100 Hz gives approximately 5.8 ms of latency.
+</div>
+
+<h3>Mcaster1AudioPipe (Optional Virtual Routing)</h3>
+<div class="box p">
+  <strong>Mcaster1AudioPipe</strong> is an optional virtual audio cable that routes audio between
+  Mcaster1Studio and other applications. Use it to send your studio mix into OBS, Discord, Zoom,
+  or any application that accepts a Windows audio input. Configure AudioPipe as an output device in
+  Mcaster1Studio and as an input device in the receiving application.
+</div>
+
+<!-- ═══ 5. UNDERSTANDING SURFACES ══════════════════════════════════════════ -->
+<h2 id="surfaces">5. Understanding Surfaces</h2>
+
+<div class="box">
+  A <strong>Surface</strong> is a purpose-built workspace containing the right set of modules for a specific
+  workflow. Think of surfaces as different studio configurations you can switch between instantly using
+  tabs along the top of the window.
+</div>
+
+<h3>Built-in Surface Types</h3>
+<div class="cols3">
+  <div class="surface-card">
+    <h3>Alpha</h3>
+    <div class="mc">5 modules &middot; Primary broadcast</div>
+    <ul>
+      <li>VU meters, dual-deck, playlist, encoder, metadata</li>
+      <li>Your default <strong>main on-air</strong> workspace</li>
+    </ul>
+  </div>
+  <div class="surface-card">
+    <h3>Beta</h3>
+    <div class="mc">3 modules &middot; Backup broadcast</div>
+    <ul>
+      <li>Lean fallback layout: deck, encoder, playlist</li>
+      <li>Quickly switch if Alpha has issues</li>
+    </ul>
+  </div>
+  <div class="surface-card">
+    <h3>DJ</h3>
+    <div class="mc">4 modules &middot; Live performance</div>
+    <ul>
+      <li>Dual decks, effects rack, media library</li>
+      <li>Crossfader, BPM matching, waveforms</li>
+    </ul>
+  </div>
+  <div class="surface-card">
+    <h3>Company</h3>
+    <div class="mc">4 modules &middot; Corporate streaming</div>
+    <ul>
+      <li>Encoder, metadata, monitor, playlist</li>
+      <li>Scheduled automation for business broadcasts</li>
+    </ul>
+  </div>
+  <div class="surface-card">
+    <h3>Entertainment</h3>
+    <div class="mc">3 modules &middot; Video automation</div>
+    <ul>
+      <li>Video module, encoder, playlist</li>
+      <li>QMediaPlayer with video output</li>
+    </ul>
+  </div>
+  <div class="surface-card">
+    <h3>Social</h3>
+    <div class="mc">3 modules &middot; Social media streaming</div>
+    <ul>
+      <li>Encoder, metadata, monitor</li>
+      <li>Optimized for social platform broadcasting</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">Church</h3>
+    <div class="mc">17 modules &middot; Live worship production</div>
+    <ul>
+      <li>Lyrics, scripture, graphics, video switcher</li>
+      <li>Service rundown, stage monitor, mixer</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--podcast)">
+    <h3 style="color:var(--podcast)">Podcast</h3>
+    <div class="mc">17 modules &middot; End-to-end production</div>
+    <ul>
+      <li>Recording, editing, encoding, transcription</li>
+      <li>RSS feed, publishing, analytics</li>
+    </ul>
+  </div>
+  <div class="surface-card">
+    <h3>Custom</h3>
+    <div class="mc">User-defined &middot; Build your own</div>
+    <ul>
+      <li>Choose a name and pick any combination of modules</li>
+      <li>Perfect for specialized workflows</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Managing Surfaces</h3>
+<div class="cols2">
+  <div class="feature-card">
+    <h3>Adding a Surface</h3>
+    <ol>
+      <li>Click the <code>+</code> button at the end of the surface tab bar</li>
+      <li>Select a surface type from the dropdown menu (Alpha, DJ, Church, Podcast, Custom, etc.)</li>
+      <li>The new surface opens as a tab with its preconfigured modules</li>
+      <li>For <strong>Custom</strong> surfaces, a dialog lets you name the surface and select which modules to include</li>
+    </ol>
+  </div>
+  <div class="feature-card">
+    <h3>Surface Tab Actions</h3>
+    <ul>
+      <li><strong>Click</strong> a tab to switch surfaces</li>
+      <li><strong>Double-click</strong> a tab to rename it inline</li>
+      <li><strong>Right-click</strong> a tab for context menu: Rename, Close, Add Module</li>
+      <li><strong>Right-click &rarr; Add Module</strong> to add any of the 40+ modules to the current surface</li>
+      <li>At least one surface tab is always kept open</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ 6. WORKING WITH MODULES ════════════════════════════════════════════ -->
+<h2 id="modules">6. Working with Modules</h2>
+
+<div class="box">
+  Modules are the building blocks of every surface. Each module provides a specific capability &mdash;
+  audio playback, encoding, effects, metadata, and more. Modules live inside <strong>dock widgets</strong>
+  that you can freely arrange within the surface.
+</div>
+
+<h3>Adding Modules to a Surface</h3>
+<ol>
+  <li><strong>Right-click</strong> the surface tab and select <strong>Add Module</strong> from the context menu</li>
+  <li>Choose from the module list (Deck, Media Library, Encoder, Effects Rack, etc.)</li>
+  <li>The module appears as a new dock panel in the surface</li>
+</ol>
+
+<h3>Moving and Resizing Docks</h3>
+<ul>
+  <li><strong>Drag</strong> a dock by its title bar to move it to a new position within the surface</li>
+  <li><strong>Drop indicators</strong> appear showing where the dock will snap (left, right, top, bottom, center)</li>
+  <li><strong>Resize</strong> by dragging the edge between two docks</li>
+  <li><strong>Float</strong> a dock by dragging it outside the main window &mdash; it becomes its own window</li>
+  <li><strong>Close</strong> a dock using the &times; button on its title bar (re-add via Add Module)</li>
+  <li>All dock positions and sizes <strong>persist automatically</strong> across sessions</li>
+</ul>
+
+<h3>Key Broadcast Modules</h3>
+<table>
+  <tr><th>Module</th><th>What It Does</th><th>ID</th></tr>
+  <tr>
+    <td><strong>VU Meter</strong></td>
+    <td>Stereo peak + RMS level meters with green/amber/red thresholds and clip indicator</td>
+    <td><code>com.mcaster1.vumeter</code></td>
+  </tr>
+  <tr>
+    <td><strong>Deck A / B</strong></td>
+    <td>Dual audio players with waveform display, 3-band EQ, cue points, loop, BPM detection, and HTTP stream playback</td>
+    <td><code>com.mcaster1.deck</code></td>
+  </tr>
+  <tr>
+    <td><strong>Media Library</strong></td>
+    <td>Music database with tag scanning, search, album art, and drag-to-deck loading</td>
+    <td><code>com.mcaster1.library</code></td>
+  </tr>
+  <tr>
+    <td><strong>Encoder</strong></td>
+    <td>7-codec streaming encoder with per-slot DSP chain, 7-state machine, ICY metadata push, and reconnect watchdog</td>
+    <td><code>com.mcaster1.encoder</code></td>
+  </tr>
+  <tr>
+    <td><strong>Effects Rack</strong></td>
+    <td>Virtual 19-inch rack with EQ31, Sonic, Compressor, AGC, MicPre, and Stereo Width effects</td>
+    <td><code>com.mcaster1.effects</code></td>
+  </tr>
+  <tr>
+    <td><strong>Playlist</strong></td>
+    <td>Clock-based scheduling with rotation engine, broadcast log, and AutoDJ auto-advance</td>
+    <td><code>com.mcaster1.playlist</code></td>
+  </tr>
+  <tr>
+    <td><strong>Metadata</strong></td>
+    <td>ICY 2.2 metadata editor with 70+ fields across 8 groups, ICY 1.x fallback, HTTP PUT to DNAS</td>
+    <td><code>com.mcaster1.metadata</code></td>
+  </tr>
+  <tr>
+    <td><strong>PTT</strong></td>
+    <td>Push-to-Talk microphone with Armed/Live/Off states and encoder duck attenuation</td>
+    <td><code>com.mcaster1.ptt</code></td>
+  </tr>
+  <tr>
+    <td><strong>CartWall</strong></td>
+    <td>Hot-start audio pads for jingles and sound effects with drag-from-library loading and one-shot/loop modes</td>
+    <td><code>com.mcaster1.cartwall</code></td>
+  </tr>
+  <tr>
+    <td><strong>Monitor</strong></td>
+    <td>Server stats: polls Icecast2/Shoutcast/DNAS for listener count, bandwidth, and uptime with chart display</td>
+    <td><code>com.mcaster1.monitor</code></td>
+  </tr>
+  <tr>
+    <td><strong>Video</strong></td>
+    <td>Video player with playlist, QMediaPlayer backend, RTMP streaming stub</td>
+    <td><code>com.mcaster1.video</code></td>
+  </tr>
+</table>
+
+<h3>AUX Decks &mdash; Auxiliary Players</h3>
+<div class="box g">
+  In addition to the primary Deck A and Deck B, you can add <strong>AUX Deck</strong> modules to any surface.
+  Each AUX Deck is a fully independent audio player with its own audio routing, EQ, and transport controls.
+  Use AUX Decks for background music beds, pre-recorded segments, or additional playback channels
+  that run alongside your main decks.
+</div>
+
+<!-- ═══ 7. MEDIA LIBRARY ═══════════════════════════════════════════════════ -->
+<h2 id="media-library">7. Media Library</h2>
+
+<div class="box">
+  The Media Library module manages your audio file collection. It scans folders for music files,
+  reads ID3/Vorbis/FLAC tags using <strong>TagLib</strong>, stores metadata in a database, and provides
+  fast search and drag-to-deck loading.
+</div>
+
+<h3>Importing Music</h3>
+<ol>
+  <li>Open the <strong>Media Library</strong> module on your surface</li>
+  <li>Click <strong>Add Folder</strong> and select a directory containing your audio files</li>
+  <li>Mcaster1Studio scans the folder recursively, reading tags from MP3, OGG, FLAC, WAV, AAC, Opus, and other formats</li>
+  <li>Tracks appear in the library table with Title, Artist, Album, Duration, BPM, and other metadata</li>
+  <li>Use the <strong>search bar</strong> at the top to filter by artist, title, or album</li>
+</ol>
+
+<h3>Playing Tracks</h3>
+<ul>
+  <li><strong>Double-click</strong> a track in the library to load it into the next available deck</li>
+  <li><strong>Drag and drop</strong> a track onto Deck A or Deck B to load it directly</li>
+  <li><strong>Right-click</strong> a track for additional options (Load to Deck A, Load to Deck B, Add to Playlist, etc.)</li>
+  <li>Drag tracks from the library to <strong>CartWall</strong> pads for instant hot-start buttons</li>
+</ul>
+
+<h3>Database Backend Options</h3>
+
+<div class="box a">
+  <strong>Default backend:</strong> Mcaster1Studio uses <strong>SQLite</strong> out of the box. No database server
+  installation is required &mdash; your library database is stored locally at
+  <code>%APPDATA%/Mcaster1Studio/mcaster1studio.db</code>. For multi-user or enterprise deployments,
+  switch to a networked database backend in Preferences.
+</div>
+
+<table>
+  <tr><th>Backend</th><th>Use Case</th><th>Default Port</th></tr>
+  <tr>
+    <td><strong>SQLite</strong></td>
+    <td>Single-user, embedded, zero-configuration (default)</td>
+    <td>N/A (file-based)</td>
+  </tr>
+  <tr>
+    <td><strong>MySQL / MariaDB</strong></td>
+    <td>Enterprise multi-user deployments with shared media libraries</td>
+    <td>3306</td>
+  </tr>
+  <tr>
+    <td><strong>PostgreSQL</strong></td>
+    <td>Enterprise deployments requiring advanced SQL features</td>
+    <td>5432</td>
+  </tr>
+  <tr>
+    <td><strong>Firebird</strong></td>
+    <td>Lightweight networked database, embedded or server mode</td>
+    <td>3050</td>
+  </tr>
+  <tr>
+    <td><strong>SQL Server (MSSQL)</strong></td>
+    <td>Windows-native enterprise environments using Microsoft SQL Server</td>
+    <td>1433</td>
+  </tr>
+</table>
+
+<p>To change your database backend, go to <strong>Edit &rarr; Preferences &rarr; Database</strong> tab.
+Select your backend, enter connection details (host, port, username, password), and click
+<strong>Test Connection</strong> to verify. If a networked backend connection fails, Mcaster1Studio
+automatically falls back to SQLite so you are never left without a working library.</p>
+
+<h3>Per-Surface Database Isolation</h3>
+<div class="box p">
+  Each surface can be assigned its own database server and schema. This means your Church surface
+  can use a dedicated database for worship media while your DJ surface uses a separate library for
+  music tracks. Configure per-surface assignments in <strong>Preferences &rarr; DB Servers</strong>.
+  Changes take effect <strong>immediately</strong> without restarting the application.
+</div>
+
+<!-- ═══ 8. BROADCASTING ════════════════════════════════════════════════════ -->
+<h2 id="broadcasting">8. Broadcasting</h2>
+
+<div class="box g">
+  Mcaster1Studio can encode and stream audio to Icecast2, Shoutcast, and Mcaster1DNAS servers.
+  The Encoder module supports <strong>7 audio codecs</strong>, a 7-state connection machine with
+  automatic reconnection, and per-slot DSP processing.
+</div>
+
+<h3>Setting Up an Encoder</h3>
+<ol>
+  <li>Open the <strong>Encoder</strong> module on your surface</li>
+  <li><strong>Double-click</strong> an encoder slot (or click Add) to open the Encoder Configuration dialog</li>
+  <li>Configure the 5 tabs:</li>
+</ol>
+
+<div class="cols2">
+  <div class="feature-card">
+    <h3>Connection Settings</h3>
+    <ul>
+      <li><strong>Server type:</strong> Icecast2, Shoutcast v1/v2, or Mcaster1DNAS</li>
+      <li><strong>Host:</strong> your server address (e.g., <code>stream.example.com</code>)</li>
+      <li><strong>Port:</strong> server port (default 8000 for Icecast)</li>
+      <li><strong>Mount:</strong> mount point (e.g., <code>/live</code>)</li>
+      <li><strong>Password:</strong> source password for authentication</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>Codec Settings</h3>
+    <ul>
+      <li><strong>MP3</strong> &mdash; 32&ndash;320 kbps, widest compatibility (requires LAME)</li>
+      <li><strong>Opus</strong> &mdash; best quality-per-bit, 32&ndash;256 kbps</li>
+      <li><strong>Vorbis (OGG)</strong> &mdash; open format, quality -1 to 10</li>
+      <li><strong>FLAC</strong> &mdash; lossless compression for archival streams</li>
+      <li><strong>AAC-LC / HE-AAC v1 / HE-AAC v2</strong> &mdash; efficient for low bitrates (requires fdk-aac)</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Encoder States</h3>
+<div class="wf">
+  <div class="st">Idle</div>
+  <div class="ar">&rarr;</div>
+  <div class="st">Starting</div>
+  <div class="ar">&rarr;</div>
+  <div class="st">Connecting</div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--green)"><strong>Streaming</strong></div>
+</div>
+<div class="wf">
+  <div class="st" style="border-color:var(--green)"><strong>Streaming</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--amber)">Reconnecting</div>
+  <div class="ar">&rarr;</div>
+  <div class="st">Sleep</div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--red)">Error</div>
+</div>
+
+<div class="box">
+  The encoder automatically reconnects if the connection drops. The <strong>Reconnecting</strong> state
+  retries at increasing intervals. After repeated failures, the encoder enters <strong>Sleep</strong> mode,
+  which you can wake manually using the <code>wake()</code> action.
+</div>
+
+<h3>Per-Slot DSP Chain</h3>
+<p>Each encoder slot has its own real-time DSP processing chain applied before encoding:</p>
+<div class="wf">
+  <div class="st">Input Gain</div>
+  <div class="ar">&rarr;</div>
+  <div class="st">10-Band EQ</div>
+  <div class="ar">&rarr;</div>
+  <div class="st">AGC + Limiter</div>
+  <div class="ar">&rarr;</div>
+  <div class="st">PTT Duck</div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--green)"><strong>Encoder</strong></div>
+</div>
+
+<h3>ICY Metadata</h3>
+<div class="box">
+  <strong>ICY 1.x metadata</strong> (StreamTitle, StreamUrl) is sent automatically when tracks change.
+  When streaming to <strong>Mcaster1DNAS</strong>, Mcaster1Studio also sends <strong>ICY 2.2 metadata</strong>
+  with 70+ fields across 8 groups (Station, Show, Track, DJ, Social, Podcast, Broadcast, Content Flags).
+  Use the Metadata module to edit and push rich metadata in real time.
+</div>
+
+<h3>Streaming Server Compatibility</h3>
+<table>
+  <tr><th>Server</th><th>ICY Protocol</th><th>Notes</th></tr>
+  <tr>
+    <td><strong>Icecast2</strong></td>
+    <td>ICY 1.x only</td>
+    <td>Open-source, widely deployed, mount-point based</td>
+  </tr>
+  <tr>
+    <td><strong>Shoutcast v1/v2</strong></td>
+    <td>ICY 1.x only</td>
+    <td>Classic streaming server, SID-based</td>
+  </tr>
+  <tr>
+    <td><strong>Mcaster1DNAS</strong></td>
+    <td>ICY 1.x + ICY 2.2</td>
+    <td>Full rich metadata, 70+ fields, YAML config, admin XML API</td>
+  </tr>
+</table>
+
+<h3>AutoDJ / Playlist Scheduling</h3>
+<div class="cols2">
+  <div class="feature-card">
+    <h3>AutoDJ Mode</h3>
+    <ul>
+      <li>Enable AutoDJ in the Playlist module to automatically advance tracks</li>
+      <li>When Deck A finishes a track, AutoDJ loads and starts the next track from the playlist</li>
+      <li>Crossfade between tracks for seamless transitions</li>
+      <li>Works with both manual playlists and clock-scheduled rotation</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>Clock Templates</h3>
+    <ul>
+      <li>Define a <strong>clock template</strong> with time-based slots for different content types</li>
+      <li>Slots can specify: category (Music, Jingle, Promo), duration, and rotation rules</li>
+      <li>The rotation engine fills slots from matching library tracks</li>
+      <li>A <strong>broadcast log</strong> records every track played with timestamps</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ 9. CHURCH SURFACE ══════════════════════════════════════════════════ -->
+<h2 id="church">9. Church Surface</h2>
+
+<div class="box p">
+  The Church surface provides a complete production environment for <strong>live worship services</strong>.
+  It includes 12 church-specific modules on top of the 5 core broadcast modules, covering everything
+  from lyrics and scripture display to video switching and service rundown management.
+</div>
+
+<h3>The 12 Church Modules</h3>
+<div class="cols3">
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">TimerClock</h3>
+    <div class="mc">Master clock with named timers</div>
+    <ul>
+      <li>Countdown, count-up, time-of-day</li>
+      <li>Warning (amber) and alarm (red) thresholds</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">GraphicsEngine</h3>
+    <div class="mc">Theme-based visual renderer</div>
+    <ul>
+      <li>Custom themes with fonts, colors, images</li>
+      <li>Renders lyrics, scripture, titles, lower thirds</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">LyricsCaster</h3>
+    <div class="mc">Worship song lyrics display</div>
+    <ul>
+      <li>Song library with sections and arrangements</li>
+      <li>Live transport: Previous / Blank / Next</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">ScriptureCaster</h3>
+    <div class="mc">Bible verse lookup and display</div>
+    <ul>
+      <li>66 books, 6 translations (KJV, NIV, ESV, etc.)</li>
+      <li>Dual scripture side-by-side mode</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">AnnounceCaster</h3>
+    <div class="mc">Announcement slide manager</div>
+    <ul>
+      <li>Date-range scheduling, loop playback</li>
+      <li>Lower third overlays</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">TelePrompter</h3>
+    <div class="mc">Scrolling script display</div>
+    <ul>
+      <li>Adjustable speed and font size</li>
+      <li>Mirror mode for beam-splitter rigs</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">MediaCaster</h3>
+    <div class="mc">Video and image playback</div>
+    <ul>
+      <li>Drag-drop playlist, cue points, loop mode</li>
+      <li>9 media formats with volume control</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">StageMon</h3>
+    <div class="mc">Confidence monitor</div>
+    <ul>
+      <li>Worship, Sermon, and Combined modes</li>
+      <li>Clock bar with active timer countdowns</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">AudioMix</h3>
+    <div class="mc">8-channel mixing console</div>
+    <ul>
+      <li>Per-channel gain, EQ, compressor, VU bars</li>
+      <li>Master bus recording to WAV</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">TranscribeRec</h3>
+    <div class="mc">Sermon recording and transcription</div>
+    <ul>
+      <li>Record/Pause/Resume with timestamps</li>
+      <li>Export: WAV, TXT, SRT formats</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">SwitchCaster</h3>
+    <div class="mc">Program/Preview video switcher</div>
+    <ul>
+      <li>7 sources, CUT/DISSOLVE/FTB transitions</li>
+      <li>LIVE badge, 60fps transitions</li>
+    </ul>
+  </div>
+  <div class="surface-card" style="border-left:3px solid var(--church)">
+    <h3 style="color:var(--church)">ServiceRunner</h3>
+    <div class="mc">Service order rundown</div>
+    <ul>
+      <li>11 segment types with auto-advance</li>
+      <li>JSON template save/load</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Setting Up a Worship Service</h3>
+<ol>
+  <li><span class="step-num">1</span> <strong>Open the Church surface</strong> by clicking <code>+</code> on the tab bar and selecting <strong>Church</strong></li>
+  <li><span class="step-num">2</span> <strong>Configure your GraphicsEngine theme</strong> &mdash; set background colors, fonts, and logo for your church branding</li>
+  <li><span class="step-num">3</span> <strong>Add songs to LyricsCaster</strong> &mdash; enter song titles, lyrics sections (Verse, Chorus, Bridge), and arrangement order</li>
+  <li><span class="step-num">4</span> <strong>Prepare scripture readings</strong> in ScriptureCaster &mdash; look up passages by book, chapter, and verse</li>
+  <li><span class="step-num">5</span> <strong>Build your service rundown</strong> in ServiceRunner &mdash; add segments (Welcome, Worship, Prayer, Sermon, etc.) with durations</li>
+  <li><span class="step-num">6</span> <strong>Set up SwitchCaster sources</strong> &mdash; assign Lyrics, Scripture, Announce, and Media to switcher inputs</li>
+  <li><span class="step-num">7</span> <strong>Go live</strong> &mdash; use SwitchCaster to transition between sources during the service; ServiceRunner advances the rundown</li>
+</ol>
+
+<h3>Church Module Wiring</h3>
+<div class="box">
+  Church modules are automatically wired together when the surface loads. The <strong>GraphicsEngine</strong>
+  feeds themed visuals to LyricsCaster, ScriptureCaster, and AnnounceCaster. The <strong>SwitchCaster</strong>
+  aggregates all visual sources into a Program/Preview bus. <strong>ServiceRunner</strong> orchestrates
+  timers, switching, recording, and mixing. No manual wiring is needed.
+</div>
+
+<div class="wf">
+  <div class="st"><strong>GraphicsEngine</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st">Lyrics / Scripture / Announce</div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--church)"><strong>SwitchCaster</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st">Program Out</div>
+</div>
+<div class="wf">
+  <div class="st"><strong>ServiceRunner</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st">TimerClock + SwitchCaster + TranscribeRec + AudioMix</div>
+</div>
+
+<!-- ═══ 10. PODCAST SURFACE ════════════════════════════════════════════════ -->
+<h2 id="podcast">10. Podcast Surface</h2>
+
+<div class="box a">
+  The Podcast surface covers the <strong>entire production pipeline</strong> from recording through
+  distribution. Each module is self-contained &mdash; no cross-module wiring is needed. Multiple
+  Podcast surfaces can run independently for different shows.
+</div>
+
+<h3>The 13 Podcast Modules</h3>
+<div class="cols2">
+  <div class="feature-card pc">
+    <h3>Recording Stage</h3>
+    <ul>
+      <li><strong>PodMixer</strong> &mdash; 6-channel mixer (Host, Guest 1-2, Soundboard, Music, Phone) with per-channel EQ and aux sends</li>
+      <li><strong>PodPTT</strong> &mdash; Enhanced push-to-talk with Hold, Toggle, AlwaysOn modes, cough button, and VAD</li>
+      <li><strong>PodRecorder</strong> &mdash; Multi-track WAV recorder with show/episode metadata, markers, and take management</li>
+      <li><strong>PodSoundboard</strong> &mdash; Sound pad grid with banks (Intro/Outro, SFX, Beds), OneShot/Toggle/Loop modes</li>
+      <li><strong>PodFX</strong> &mdash; 7-processor voice chain: Noise Gate, Compressor, De-Esser, EQ, HPF, Limiter, LUFS</li>
+      <li><strong>PodRemote</strong> &mdash; Remote guest manager for up to 4 guests with audio levels and mute controls</li>
+    </ul>
+  </div>
+  <div class="feature-card pc">
+    <h3>Post-Production and Distribution</h3>
+    <ul>
+      <li><strong>PodEditor</strong> &mdash; DAW-style waveform editor with regions, markers, cut/trim, zoom, and playback</li>
+      <li><strong>PodEncode</strong> &mdash; Multi-format export (MP3, AAC, OGG, FLAC, Opus) with LUFS normalization and job queue</li>
+      <li><strong>PodTranscribe</strong> &mdash; Transcript editor with speaker labels, timestamps, SRT/VTT export</li>
+      <li><strong>PodShowNotes</strong> &mdash; WYSIWYG editor with templates, chapter markers, guest bios, HTML/Markdown export</li>
+      <li><strong>PodRSS</strong> &mdash; RSS 2.0 + iTunes namespace feed generator with validation and XML preview</li>
+      <li><strong>PodPublisher</strong> &mdash; Multi-target distribution (Local Copy, SFTP/FTP/HTTP) with progress tracking</li>
+      <li><strong>PodAnalytics</strong> &mdash; Episode statistics dashboard with downloads, subscribers, growth trend, CSV export</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Recording a Podcast</h3>
+<ol>
+  <li><span class="step-num">1</span> <strong>Open the Podcast surface</strong> by clicking <code>+</code> on the tab bar and selecting <strong>Podcast</strong></li>
+  <li><span class="step-num">2</span> <strong>Configure PodMixer</strong> &mdash; assign your microphone to the Host channel, set gain and EQ</li>
+  <li><span class="step-num">3</span> <strong>Set up PodFX</strong> &mdash; enable the voice processing chain (noise gate, compressor, de-esser) for broadcast-quality audio</li>
+  <li><span class="step-num">4</span> <strong>Load sound effects</strong> into PodSoundboard &mdash; assign intro/outro clips, stingers, and bed music to pads</li>
+  <li><span class="step-num">5</span> <strong>Start recording</strong> with PodRecorder &mdash; enter show/episode info, then click Record. Use markers to flag key moments.</li>
+  <li><span class="step-num">6</span> <strong>Edit in PodEditor</strong> &mdash; trim silence, cut mistakes, arrange segments on the timeline</li>
+  <li><span class="step-num">7</span> <strong>Export with PodEncode</strong> &mdash; choose format (MP3 at 128 kbps is standard), apply LUFS normalization, add ID3 tags</li>
+</ol>
+
+<h3>Publishing Your Podcast</h3>
+<div class="wf">
+  <div class="st" style="border-color:var(--podcast)"><strong>PodRecorder</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodEditor</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodEncode</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodRSS</strong></div>
+  <div class="ar">&rarr;</div>
+  <div class="st" style="border-color:var(--podcast)"><strong>PodPublisher</strong></div>
+</div>
+<ol>
+  <li><strong>Transcribe:</strong> Use PodTranscribe to generate a text transcript with speaker labels and timestamps</li>
+  <li><strong>Show Notes:</strong> Write show notes in PodShowNotes using the WYSIWYG editor; add chapter markers and guest bios</li>
+  <li><strong>RSS Feed:</strong> Use PodRSS to generate an RSS 2.0 + iTunes feed with your show settings and episode metadata</li>
+  <li><strong>Publish:</strong> Distribute via PodPublisher to your hosting platform (local copy, SFTP, FTP, or HTTP upload)</li>
+  <li><strong>Track:</strong> Monitor downloads and subscriber growth in PodAnalytics</li>
+</ol>
+
+<!-- ═══ 11. TIPS & TROUBLESHOOTING ═════════════════════════════════════════ -->
+<h2 id="tips">11. Tips and Troubleshooting</h2>
+
+<h3>Theme Switching</h3>
+<div class="box">
+  Mcaster1Studio ships with <strong>three themes</strong>: <strong>Dark</strong> (default, deep navy),
+  <strong>Classic</strong> (medium gray), and <strong>Light</strong> (bright). Switch themes in
+  <strong>Edit &rarr; Preferences &rarr; Appearance</strong>. The theme applies immediately to all
+  surfaces, modules, and dialogs. All themes use the Fusion Qt style for consistent rendering.
+</div>
+
+<h3>Session Auto-Save</h3>
+<div class="box g">
+  Your entire workspace &mdash; open surfaces, module layouts, dock positions, floating window locations,
+  splitter sizes, and ribbon box arrangement &mdash; is <strong>saved automatically</strong> when you close
+  the application and restored on next launch. There is no manual save step needed.
+</div>
+
+<h3>Keyboard Shortcuts</h3>
+<table>
+  <tr><th>Shortcut</th><th>Action</th></tr>
+  <tr><td><span class="kbd">Ctrl+,</span></td><td>Open Preferences</td></tr>
+  <tr><td><span class="kbd">Space</span></td><td>Play/Pause active deck</td></tr>
+  <tr><td><span class="kbd">Ctrl+N</span></td><td>New surface</td></tr>
+  <tr><td><span class="kbd">Ctrl+W</span></td><td>Close current surface</td></tr>
+</table>
+
+<h3>Common Issues and Solutions</h3>
+<div class="cols2">
+  <div class="feature-card">
+    <h3>No Audio Output</h3>
+    <ul>
+      <li>Check <strong>Preferences &rarr; Audio</strong> &mdash; ensure the correct output device is selected</li>
+      <li>Verify your audio interface is powered on and connected</li>
+      <li>If using ASIO, ensure no other application has exclusive access to the device</li>
+      <li>Try switching to WDM/WASAPI temporarily to confirm the issue is driver-related</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>Audio Crackling or Dropouts</h3>
+    <ul>
+      <li>Increase the <strong>buffer size</strong> (try 512 or 1024 samples)</li>
+      <li>Close other CPU-intensive applications</li>
+      <li>Ensure your audio interface has the latest drivers installed</li>
+      <li>Disable power-saving modes that may throttle your CPU</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>Encoder Won't Connect</h3>
+    <ul>
+      <li>Verify the server address, port, and mount point are correct</li>
+      <li>Check that the source password matches the server configuration</li>
+      <li>Ensure your firewall allows outbound connections on the streaming port</li>
+      <li>Confirm the streaming server is running and accepting sources</li>
+      <li>If in Sleep state, click <strong>Wake</strong> to retry the connection</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>OGG/Vorbis Files Won't Play</h3>
+    <ul>
+      <li>Mcaster1Studio uses the <strong>FFmpeg</strong> media backend, not Windows Media Foundation</li>
+      <li>The FFmpeg backend is set automatically at startup via <code>QT_MEDIA_BACKEND=ffmpeg</code></li>
+      <li>If OGG files fail to decode, verify FFmpeg libraries are present in the installation directory</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>Database Connection Failed</h3>
+    <ul>
+      <li>The application <strong>automatically falls back to SQLite</strong> if a networked database cannot be reached</li>
+      <li>Check your database server is running and accepting connections</li>
+      <li>Verify credentials in <strong>Preferences &rarr; Database</strong></li>
+      <li>Use the <strong>Test Connection</strong> button to diagnose issues</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>Modules Missing or Not Loading</h3>
+    <ul>
+      <li>Right-click the surface tab and select <strong>Add Module</strong> to re-add any removed module</li>
+      <li>Plugin modules require DLL files in the <code>plugins/modules/</code> directory</li>
+      <li>Check that plugin API versions match (<code>MCASTER1_PLUGIN_API_VERSION</code>)</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Per-Surface Database Isolation</h3>
+<div class="box p">
+  Each surface can use a different database server and schema, configured in
+  <strong>Preferences &rarr; DB Servers</strong>. This isolation ensures that your Church worship
+  media library, DJ music collection, and Podcast episode database remain separate and organized.
+  Changes to database assignments are pushed to running modules in real time &mdash; no restart required.
+</div>
+
+<h3>Plugin System</h3>
+<div class="box">
+  Mcaster1Studio supports <strong>third-party plugins</strong> via DLL C ABI factory functions. Place
+  module plugins in <code>plugins/modules/</code> and effect plugins in <code>plugins/effects/</code>.
+  Plugins are loaded via <code>QLibrary</code> and must export <code>mcaster1_plugin_info()</code> and
+  <code>mcaster1_create_module()</code> functions. The plugin API version must match the host application.
+</div>
+
+<h3>Getting Help</h3>
+<div class="cols2">
+  <div class="feature-card">
+    <h3>Documentation</h3>
+    <ul>
+      <li><a href="index.html">Documentation Home</a> &mdash; overview of all surfaces and modules</li>
+      <li><a href="FEATURES.html">Feature Reference</a> &mdash; detailed capabilities of every module</li>
+      <li><a href="PLANNING.html">Project Plan</a> &mdash; phase roadmap and architecture details</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3>Support</h3>
+    <ul>
+      <li><strong>Website:</strong> <a href="https://mcaster1.com">mcaster1.com</a></li>
+      <li><strong>ICY 2.2 Specification:</strong> <a href="https://mcaster1.com/icy2-spec/">mcaster1.com/icy2-spec</a></li>
+      <li>Report issues and feature requests through the project repository</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  Mcaster1Studio v0.2.0-alpha &middot;
+  Getting Started Guide &middot;
+  <a href="index.html">Documentation Home</a> &middot;
+  <a href="FEATURES.html">Feature Reference</a> &middot;
+  <a href="PLANNING.html">Project Plan</a> &middot;
+  Last updated: 2026-03-14 &middot;
+  <a href="https://mcaster1.com">mcaster1.com</a>
+</footer>
+</body>
+</html>

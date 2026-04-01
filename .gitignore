@@ -80,3 +80,14 @@ plugins/effects/*.dll
 # ─── Runtime data (generated at first launch) ─────────────────────────────────
 *.db-wal
 *.db-shm
+
+# ─── Claude Code session ───────────────────────────────────────────────────
+.claude/
+resume-session.txt
+
+# ─── Auto-generated build number (per-machine) ─────────────────────────────
+BUILD_NUMBER
+
+# ─── NSIS installer output ─────────────────────────────────────────────────
+installer/*.exe
+installer/staging/

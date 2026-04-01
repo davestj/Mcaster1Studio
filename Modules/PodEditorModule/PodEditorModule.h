@@ -14,6 +14,7 @@
 ///   2026-03-09  Initial implementation — waveform timeline, regions, markers, stubs
 
 #include "IModule.h"
+#include "IThreadPoolAware.h"
 #include <QList>
 #include <QColor>
 #include <QElapsedTimer>
@@ -47,7 +48,7 @@ struct EditorMarker {
 };
 
 // ─── PodEditorModule ─────────────────────────────────────────────────────────
-class PodEditorModule : public IModule {
+class PodEditorModule : public IModule, public IThreadPoolAware {
     Q_OBJECT
 
 public:
@@ -142,6 +143,11 @@ private:
 
     // Clipboard region (for paste)
     EditorRegion m_clipboard;
+
+    // IThreadPoolAware
+    void setSurfaceThreadPool(SurfaceThreadPool* pool) override { m_pool = pool; }
+    SurfaceThreadPool* surfaceThreadPool() const override { return m_pool; }
+    SurfaceThreadPool* m_pool = nullptr;
 
     // Helpers
     void generatePlaceholderWaveform(qint64 durationMs);
