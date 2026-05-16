@@ -6,6 +6,8 @@
 
 namespace M1 {
 
+class AlbumArtCache;
+
 /// ScanWorker — background thread that scans directories for audio files using TagLib.
 ///
 /// Compiled with /EHa (MSVC) for SEH exception safety on corrupt audio files.
@@ -24,6 +26,9 @@ public:
 
     int itemsScanned() const { return m_itemsScanned.load(); }
 
+    /// Set album art cache for pre-caching artwork during scan.
+    void setAlbumArtCache(AlbumArtCache* cache) { m_artCache = cache; }
+
 signals:
     void scanStarted(int estimatedCount);
     void itemScanned(const M1::MediaItem& item);
@@ -36,10 +41,12 @@ protected:
 
 private:
     MediaItem readTags(const QString& filePath);
+    bool      hasEmbeddedArt(const QString& filePath);
 
     QStringList           m_directories;
     std::atomic<bool>     m_cancelled{false};
     std::atomic<int>      m_itemsScanned{0};
+    AlbumArtCache*        m_artCache = nullptr;
 
     static const QStringList s_audioExtensions;
 };

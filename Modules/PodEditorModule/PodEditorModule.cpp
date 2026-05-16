@@ -2,6 +2,7 @@
 /// @path   Modules/PodEditorModule/PodEditorModule.cpp
 
 #include "PodEditorModule.h"
+#include "ThemePalette.h"
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -723,7 +724,8 @@ void PodEditorModule::loadState(QSettings& s) {
         EditorMarker m;
         m.positionMs = s.value(prefix + "posMs", 0).toLongLong();
         m.label      = s.value(prefix + "label").toString();
-        m.color      = QColor(s.value(prefix + "color", "#0ea5e9").toString());
+        m.color      = QColor(s.value(prefix + "color",
+                         ThemePalette::forCurrentTheme().accent.name()).toString());
         m_markers.append(m);
     }
 

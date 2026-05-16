@@ -2,6 +2,7 @@
 #include "PlaylistModule.h"
 #include "PlaylistConfigDialog.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QDragEnterEvent>
@@ -118,7 +119,7 @@ void PlaylistItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& 
     const bool isCurrent = index.data(IsCurrentRole).toBool();
     const bool isSelected = option.state & QStyle::State_Selected;
     const bool isHover = option.state & QStyle::State_MouseOver;
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro);
 
     const QRect r = option.rect;
 
@@ -341,19 +342,19 @@ void PlaylistWidget::buildUi()
 // ─────────────────────────────────────────────────────────────────────────────
 void PlaylistWidget::applyTheme()
 {
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
-    const QString bg      = isLight ? "#ffffff"  : "#0c1a2e";
-    const QString border  = isLight ? "#d8d4ce"  : "#1e3a5f";
-    const QString selBg   = isLight ? "#1c5caa"  : "#1e3a5f";
-    const QString selText = isLight ? "#ffffff"  : "#00d8ff";
-    const QString btnBg   = isLight ? "#e8e4de"  : "#12263d";
-    const QString btnText = isLight ? "#1a1814"  : "#8ab4d8";
-    const QString btnHov  = isLight ? "#ddd8d0"  : "#1e3a5f";
-    const QString btnHovT = isLight ? "#1e3a5f"  : "#c8d8f0";
-    const QString statusC = isLight ? "#1c5caa"  : "#5a8ab0";
-    const QString lblText = isLight ? "#6b6258"  : "#5a8ab0";
-    const QString spinBg  = isLight ? "#f0ece6"  : "#12263d";
-    const QString spinTxt = isLight ? "#1a1814"  : "#c8d8f0";
+    const auto tp = ThemePalette::forCurrentTheme();
+    const QString bg      = tp.panelBg.name();
+    const QString border  = tp.border.name();
+    const QString selBg   = tp.border.name();
+    const QString selText = tp.info.name();
+    const QString btnBg   = tp.cardBg.name();
+    const QString btnText = tp.textMuted.name();
+    const QString btnHov  = tp.border.name();
+    const QString btnHovT = tp.text.name();
+    const QString statusC = tp.accent.name();
+    const QString lblText = tp.textMuted.name();
+    const QString spinBg  = tp.inputBg.name();
+    const QString spinTxt = tp.text.name();
 
     setStyleSheet(QString("PlaylistWidget { background-color: %1; }").arg(bg));
 
@@ -383,18 +384,18 @@ void PlaylistWidget::applyTheme()
     for (auto* b : {m_btnAddFiles, m_btnPlay, m_btnSkip, m_btnAutoDJ, m_btnConfig, m_btnClear})
         b->setStyleSheet(btnStyle);
 
-    const QString lblStyle = QString("QLabel { color: %1; font-size: 11px; font-weight: bold; background: transparent; }").arg(lblText);
+    const QString lblStyle = QString("QLabel { color: %1; font-size: 12px; font-weight: bold; background: transparent; }").arg(lblText);
     for (auto* lbl : findChildren<QLabel*>("PlaylistRuleLabel"))
         lbl->setStyleSheet(lblStyle);
 
     const QString spinStyle = QString(R"(
-        QSpinBox { background: %1; color: %2; border: 1px solid %3; border-radius: 2px; font-size: 11px; padding: 1px 3px; }
+        QSpinBox { background: %1; color: %2; border: 1px solid %3; border-radius: 2px; font-size: 12px; padding: 1px 3px; }
     )").arg(spinBg, spinTxt, border);
     m_artistSepSpin->setStyleSheet(spinStyle);
     m_titleSepSpin->setStyleSheet(spinStyle);
     m_minQueueSpin->setStyleSheet(spinStyle);
 
-    m_statusBar->setStyleSheet(QString("QLabel { color: %1; font-size: 11px; background: transparent; }").arg(statusC));
+    m_statusBar->setStyleSheet(QString("QLabel { color: %1; font-size: 12px; background: transparent; }").arg(statusC));
 
     // Force repaint of all items with new theme
     m_listWidget->viewport()->update();
@@ -453,9 +454,9 @@ void PlaylistWidget::onAutoDJChanged(bool enabled)
 
 void PlaylistWidget::onQueueLow(int remaining)
 {
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro);
     m_statusBar->setStyleSheet(QString(
-        "QLabel { background: %1; color: %2; font-size: 11px; font-weight: bold; }"
+        "QLabel { background: %1; color: %2; font-size: 12px; font-weight: bold; }"
     ).arg(isLight ? "#fff3e0" : "#2a1a00", isLight ? "#a05000" : "#ffb040"));
     m_statusBar->setText(QString("Queue low — only %1 track%2 remaining. Add more tracks.")
                          .arg(remaining).arg(remaining == 1 ? "" : "s"));
@@ -468,7 +469,16 @@ void PlaylistWidget::onQueueLow(int remaining)
 
 void PlaylistWidget::onPlayNext()     { m_module->playNext(); }
 void PlaylistWidget::onSkip()         { m_module->skip(); }
-void PlaylistWidget::onToggleAutoDJ() { m_module->setAutoDJ(!m_module->autoDJ()); }
+void PlaylistWidget::onToggleAutoDJ() {
+    const bool enabling = !m_module->autoDJ();
+    m_module->setAutoDJ(enabling);
+    // When AutoDJ is turned ON, also trigger play so the first track starts
+    if (enabling && !m_module->queue().isEmpty()) {
+        QTimer::singleShot(500, this, [this]() {
+            m_module->playNext();
+        });
+    }
+}
 void PlaylistWidget::onClearQueue()   { m_module->clearQueue(); }
 
 void PlaylistWidget::onAddFiles()
@@ -519,12 +529,12 @@ void PlaylistWidget::showContextMenu(const QPoint& pos)
     const QListWidgetItem* rowItem = m_listWidget->itemAt(pos);
     const int row = rowItem ? rowItem->data(QueueIndexRole).toInt() : -1;
 
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
-    const QString menuBg   = isLight ? "#ffffff"  : "#12263d";
-    const QString menuText = isLight ? "#1a1814"  : "#c8d8f0";
-    const QString menuBord = isLight ? "#d8d4ce"  : "#1e3a5f";
-    const QString menuHov  = isLight ? "#dbeafe"  : "#1e3a5f";
-    const QString menuHovT = isLight ? "#1c5caa"  : "#00d8ff";
+    const auto tp2 = ThemePalette::forCurrentTheme();
+    const QString menuBg   = tp2.cardBg.name();
+    const QString menuText = tp2.text.name();
+    const QString menuBord = tp2.border.name();
+    const QString menuHov  = tp2.border.name();
+    const QString menuHovT = tp2.info.name();
 
     QMenu menu(this);
     menu.setStyleSheet(QString(R"(

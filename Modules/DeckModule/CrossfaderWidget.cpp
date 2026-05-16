@@ -1,6 +1,7 @@
 #include "CrossfaderWidget.h"
 #include "CrossfaderSettingsDialog.h"
 #include "DeckPlayer.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -12,26 +13,25 @@
 #include <algorithm>
 #include <cmath>
 
-// ─── Shared sandy-theme helpers ───────────────────────────────────────────────
+// ─── ThemePalette-driven helpers ──────────────────────────────────────────────
 namespace {
-    const QColor kBgTop(245, 240, 233);
-    const QColor kBgBot(232, 226, 218);
-    const QColor kAccent("#1c5caa");
-    const QColor kDivider(190, 180, 166);
-
     // Simple flat button QSS
-    QString btnQss(const QString& checkColor = "#1c5caa") {
+    QString btnQss(const ThemePalette& p, const QString& checkColor = QString()) {
+        const QString chk = checkColor.isEmpty() ? p.accent.name() : checkColor;
         return QString(
             "QPushButton {"
-            "  background:#e1dbd2; color:#1a1814;"
-            "  border:1px solid #a09080; border-radius:2px;"
-            "  font-size:9px; font-weight:700; padding:1px 5px;"
+            "  background:%1; color:%2;"
+            "  border:1px solid %3; border-radius:2px;"
+            "  font-size:12px; font-weight:700; padding:1px 5px;"
             "}"
-            "QPushButton:hover  { background:#d4cec5; border-color:%1; }"
-            "QPushButton:pressed{ background:#cbc4bb; }"
-            "QPushButton:checked{ background:%1; color:#ffffff; border-color:%1; }"
-            "QPushButton:disabled{ background:#eae6e0; color:#aaa49a; }"
-        ).arg(checkColor);
+            "QPushButton:hover  { background:%4; border-color:%5; }"
+            "QPushButton:pressed{ background:%6; }"
+            "QPushButton:checked{ background:%5; color:#ffffff; border-color:%5; }"
+            "QPushButton:disabled{ background:%7; color:%8; }"
+        ).arg(p.panelBg.name(), p.text.name(), p.border.name(),
+              p.panelBg.lighter(95).name(), chk,
+              p.panelBg.darker(110).name(),
+              p.cardBg.name(), p.textDisabled.name());
     }
 }
 
@@ -51,11 +51,13 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
     root->setSpacing(5);
 
     // ── Title ─────────────────────────────────────────────────────────────────
+    auto p = ThemePalette::forCurrentTheme();
     auto* titleLbl = new QLabel("CROSSFADER", this);
     titleLbl->setStyleSheet(
-        "QLabel { color:#1c5caa; font-size:10px; font-weight:900;"
+        QString("QLabel { color:%1; font-size:12px; font-weight:900;"
         "  font-family:'Consolas','Courier New',monospace;"
-        "  border-bottom:1px solid #c0b8ae; padding-bottom:2px; }");
+        "  border-bottom:1px solid %2; padding-bottom:2px; }")
+        .arg(p.accent.name(), p.border.name()));
     titleLbl->setAlignment(Qt::AlignHCenter);
     root->addWidget(titleLbl);
 
@@ -65,8 +67,9 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
         bpmRow->setSpacing(4);
         auto mkBpmLbl = [&](const QString& deck) -> QLabel* {
             auto* l = new QLabel(deck + ": ---", this);
-            l->setStyleSheet("QLabel { color:#6b6258; font-size:8px;"
-                             "  font-family:'Consolas','Courier New',monospace; }");
+            l->setStyleSheet(QString("QLabel { color:%1; font-size:12px;"
+                             "  font-family:'Consolas','Courier New',monospace; }")
+                             .arg(p.textMuted.name()));
             return l;
         };
         m_aBpmLabel = mkBpmLbl("A");
@@ -84,8 +87,9 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
 
         auto mkABLbl = [&](const QString& t) {
             auto* l = new QLabel(t, this);
-            l->setStyleSheet("QLabel { color:#1c5caa; font-size:11px; font-weight:900;"
-                             "  font-family:'Consolas','Courier New',monospace; }");
+            l->setStyleSheet(QString("QLabel { color:%1; font-size:12px; font-weight:900;"
+                             "  font-family:'Consolas','Courier New',monospace; }")
+                             .arg(p.accent.name()));
             l->setAlignment(Qt::AlignCenter);
             l->setFixedWidth(14);
             return l;
@@ -98,19 +102,21 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
         m_cfSlider->setTickPosition(QSlider::TicksBelow);
         m_cfSlider->setTickInterval(100);
         m_cfSlider->setToolTip("Crossfader — drag left for Deck A, right for Deck B");
-        m_cfSlider->setStyleSheet(
+        m_cfSlider->setStyleSheet(QString(
             "QSlider::groove:horizontal {"
-            "  background:#c8c2b8; height:7px; border-radius:3px; border:1px solid #a09080;"
+            "  background:%1; height:7px; border-radius:3px; border:1px solid %2;"
             "}"
             "QSlider::handle:horizontal {"
             "  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,"
-            "    stop:0 #e8e2d8, stop:1 #cec8be);"
-            "  border:1px solid #8a8070; width:14px; height:20px;"
+            "    stop:0 %3, stop:1 %4);"
+            "  border:1px solid %2; width:14px; height:20px;"
             "  margin:-7px 0; border-radius:3px;"
             "}"
-            "QSlider::sub-page:horizontal { background:#1c5caa; border-radius:3px; }"
-            "QSlider::add-page:horizontal { background:#c8c2b8; border-radius:3px; }"
-        );
+            "QSlider::sub-page:horizontal { background:%5; border-radius:3px; }"
+            "QSlider::add-page:horizontal { background:%1; border-radius:3px; }"
+        ).arg(p.border.name(), p.border.darker(120).name(),
+              p.panelBg.name(), p.cardBg.name(),
+              p.accent.name()));
         connect(m_cfSlider, &QSlider::valueChanged, this, &CrossfaderWidget::onCfSliderMoved);
 
         cfRow->addWidget(mkABLbl("A"));
@@ -124,7 +130,8 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
         auto* curveRow = new QHBoxLayout;
         curveRow->setSpacing(3);
         auto* curveLbl = new QLabel("Curve:", this);
-        curveLbl->setStyleSheet("QLabel { color:#6b6258; font-size:8px; font-weight:700; }");
+        curveLbl->setStyleSheet(QString("QLabel { color:%1; font-size:12px; font-weight:700; }")
+                                .arg(p.textMuted.name()));
 
         m_stdBtn  = new QPushButton("STD",   this);
         m_sCrvBtn = new QPushButton("S-CRV", this);
@@ -134,7 +141,7 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
             b->setCheckable(true);
             b->setMaximumHeight(20);
             b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            b->setStyleSheet(btnQss());
+            b->setStyleSheet(btnQss(p));
         }
         m_stdBtn ->setToolTip("Standard linear crossfade");
         m_sCrvBtn->setToolTip("Equal-power S-Curve (recommended for music)");
@@ -157,7 +164,8 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
         auto* durRow = new QHBoxLayout;
         durRow->setSpacing(4);
         auto* durLbl = new QLabel("Fade:", this);
-        durLbl->setStyleSheet("QLabel { color:#6b6258; font-size:8px; font-weight:700; }");
+        durLbl->setStyleSheet(QString("QLabel { color:%1; font-size:12px; font-weight:700; }")
+                              .arg(p.textMuted.name()));
 
         m_durSpin = new QDoubleSpinBox(this);
         m_durSpin->setRange(0.5, 30.0);
@@ -167,13 +175,13 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
         m_durSpin->setDecimals(1);
         m_durSpin->setMaximumHeight(22);
         m_durSpin->setToolTip("Crossfade duration in seconds (used by Auto-fade and AutoDJ)");
-        m_durSpin->setStyleSheet(
+        m_durSpin->setStyleSheet(QString(
             "QDoubleSpinBox {"
-            "  background:#ece6de; color:#1a1814;"
-            "  border:1px solid #a09080; border-radius:2px;"
-            "  font-size:9px; padding:1px 3px;"
+            "  background:%1; color:%2;"
+            "  border:1px solid %3; border-radius:2px;"
+            "  font-size:12px; padding:1px 3px;"
             "}"
-        );
+        ).arg(p.inputBg.name(), p.text.name(), p.border.name()));
 
         durRow->addWidget(durLbl);
         durRow->addWidget(m_durSpin, 1);
@@ -184,7 +192,7 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
     {
         auto* sep = new QFrame(this);
         sep->setFrameShape(QFrame::HLine);
-        sep->setStyleSheet("QFrame { color:#c0b8ae; }");
+        sep->setStyleSheet(QString("QFrame { color:%1; }").arg(p.border.name()));
         root->addWidget(sep);
     }
 
@@ -197,7 +205,7 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
         m_autoFadeBtn->setCheckable(true);
         m_autoFadeBtn->setMaximumHeight(22);
         m_autoFadeBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        m_autoFadeBtn->setStyleSheet(btnQss("#d97706"));  // amber when checked/active
+        m_autoFadeBtn->setStyleSheet(btnQss(p, p.warning.name()));  // amber when checked/active
         m_autoFadeBtn->setToolTip(
             "AUTO SYNC FADE — detects the currently playing deck and fades to the opposite\n"
             "deck over the remaining track time. Starts immediately, ends when track ends.");
@@ -210,7 +218,7 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
         for (auto* b : {m_fadeABBtn, m_fadeBABtn}) {
             b->setMaximumHeight(22);
             b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            b->setStyleSheet(btnQss("#1c5caa"));
+            b->setStyleSheet(btnQss(p, p.accent.name()));
         }
         m_fadeABBtn->setToolTip("Fade from Deck A to Deck B over configured fade duration");
         m_fadeBABtn->setToolTip("Fade from Deck B to Deck A over configured fade duration");
@@ -229,7 +237,7 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
         m_syncBtn = new QPushButton("A=B  Sync BPM", this);
         m_syncBtn->setMaximumHeight(22);
         m_syncBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        m_syncBtn->setStyleSheet(btnQss("#1a8a40"));
+        m_syncBtn->setStyleSheet(btnQss(p, p.success.name()));
         m_syncBtn->setToolTip("Match Deck B BPM to Deck A (adjusts pitch)");
         connect(m_syncBtn, &QPushButton::clicked, this, &CrossfaderWidget::syncDecksRequested);
         root->addWidget(m_syncBtn);
@@ -240,7 +248,7 @@ CrossfaderWidget::CrossfaderWidget(QWidget* parent)
         auto* cfgBtn = new QPushButton("⚙  Crossfade Settings...", this);
         cfgBtn->setMaximumHeight(22);
         cfgBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        cfgBtn->setStyleSheet(btnQss("#5a7a9a"));
+        cfgBtn->setStyleSheet(btnQss(p, p.info.name()));
         cfgBtn->setToolTip("Open advanced crossfade curve settings (SAM-style)");
         connect(cfgBtn, &QPushButton::clicked, this, &CrossfaderWidget::openSettingsDialog);
         root->addWidget(cfgBtn);
@@ -385,14 +393,15 @@ void CrossfaderWidget::openSettingsDialog() {
     onCurveSelected(curveIdx);
 }
 
-// ─── paintEvent — sandy background ───────────────────────────────────────────
+// ─── paintEvent — themed background ──────────────────────────────────────────
 void CrossfaderWidget::paintEvent(QPaintEvent* e) {
+    auto pal = ThemePalette::forCurrentTheme();
     QPainter p(this);
     QLinearGradient bg(0, 0, 0, height());
-    bg.setColorAt(0.0, kBgTop);
-    bg.setColorAt(1.0, kBgBot);
+    bg.setColorAt(0.0, pal.bg);
+    bg.setColorAt(1.0, pal.cardBg);
     p.fillRect(rect(), bg);
-    p.setPen(QPen(kDivider, 1));
+    p.setPen(QPen(pal.border, 1));
     p.drawRect(rect().adjusted(0, 0, -1, -1));
     QWidget::paintEvent(e);
 }

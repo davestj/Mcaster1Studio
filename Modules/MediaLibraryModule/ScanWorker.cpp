@@ -1,4 +1,5 @@
 #include "ScanWorker.h"
+#include "AlbumArtCache.h"
 #include <QDirIterator>
 #include <QFileInfo>
 #include <QDateTime>
@@ -8,6 +9,15 @@
 #include <taglib/fileref.h>
 #include <taglib/tag.h>
 #include <taglib/audioproperties.h>
+#include <taglib/mpegfile.h>
+#include <taglib/id3v2tag.h>
+#include <taglib/attachedpictureframe.h>
+#include <taglib/flacfile.h>
+#include <taglib/mp4file.h>
+#include <taglib/mp4tag.h>
+#include <taglib/oggfile.h>
+#include <taglib/vorbisfile.h>
+#include <taglib/xiphcomment.h>
 
 namespace M1 {
 
@@ -53,7 +63,7 @@ void ScanWorker::run() {
     }
 
     emit scanStarted(total);
-    qInfo() << "[ScanWorker] Starting scan of" << m_directories << "—" << total << "estimated files";
+    qInfo() << "[ScanWorker] Starting scan of" << m_directories << "\u2014" << total << "estimated files";
 
     // Pass 2: read tags and emit items
     int done = 0;
@@ -72,6 +82,14 @@ void ScanWorker::run() {
             ++done;
             MediaItem item = readTags(path);
             if (!item.filePath.isEmpty()) {
+                // Check for embedded artwork and pre-cache it
+                if (hasEmbeddedArt(path)) {
+                    item.hasArt = true;
+                    if (m_artCache) {
+                        m_artCache->cacheArt(path);
+                    }
+                }
+
                 m_itemsScanned.fetch_add(1);
                 emit itemScanned(item);
             } else {
@@ -85,7 +103,7 @@ void ScanWorker::run() {
 
     emit scanProgress(done, total);
     emit scanFinished(m_itemsScanned.load());
-    qInfo() << "[ScanWorker] Scan complete —" << m_itemsScanned.load() << "items read";
+    qInfo() << "[ScanWorker] Scan complete \u2014" << m_itemsScanned.load() << "items read";
 }
 
 MediaItem ScanWorker::readTags(const QString& filePath) {
@@ -132,6 +150,36 @@ MediaItem ScanWorker::readTags(const QString& filePath) {
     }
 
     return item;
+}
+
+bool ScanWorker::hasEmbeddedArt(const QString& filePath) {
+    try {
+        const QString ext = QFileInfo(filePath).suffix().toLower();
+
+        if (ext == "mp3") {
+            TagLib::MPEG::File file(filePath.toLocal8Bit().constData());
+            if (auto* tag = file.ID3v2Tag()) {
+                auto frames = tag->frameListMap()["APIC"];
+                return !frames.isEmpty();
+            }
+        } else if (ext == "flac") {
+            TagLib::FLAC::File file(filePath.toLocal8Bit().constData());
+            return !file.pictureList().isEmpty();
+        } else if (ext == "m4a" || ext == "aac") {
+            TagLib::MP4::File file(filePath.toLocal8Bit().constData());
+            if (auto* tag = file.tag()) {
+                return tag->contains("covr");
+            }
+        } else if (ext == "ogg") {
+            TagLib::Ogg::Vorbis::File file(filePath.toLocal8Bit().constData());
+            if (auto* tag = file.tag()) {
+                return !tag->pictureList().isEmpty();
+            }
+        }
+    } catch (...) {
+        // Silently fail — artwork detection is best-effort
+    }
+    return false;
 }
 
 } // namespace M1

@@ -2,8 +2,8 @@
 #include "DbServerEntry.h"
 #include "DatabaseFactory.h"
 #include "IDatabase.h"
+#include <QCoreApplication>
 #include <QRegularExpression>
-#include <QStandardPaths>
 #include <QDir>
 #include <QDebug>
 
@@ -33,7 +33,7 @@ IDatabase* SurfaceDbContext::createConnection() const {
     if (server->isSQLite()) {
         QString baseDir = server->sqlitePath;
         if (baseDir.isEmpty())
-            baseDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+            baseDir = QCoreApplication::applicationDirPath() + "/data";
         QDir dir(baseDir);
         if (!dir.exists()) dir.mkpath(".");
         dbPath = dir.absoluteFilePath(schemaName + ".db");

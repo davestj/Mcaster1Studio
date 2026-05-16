@@ -1,5 +1,6 @@
 #include "CrossfaderSettingsDialog.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -33,29 +34,24 @@ namespace {
     DlgColors dlgColors() {
         using T = ThemeManager::Theme;
         switch (ThemeManager::instance()->currentTheme()) {
-        case T::Light:
-            return { "#f5f5f5","#ffffff","#cccccc","#1a1814","#777777","#1c5caa",
-                     "#f0f0f0","#dddddd" };
         case T::Classic:
             return { "#e8e0d0","#f0e8d8","#bfb090","#2a1810","#806040","#8b3a0a",
                      "#e0d8c8","#ccbfa8" };
-        default: // Dark
-            return { "#1e2128","#252830","#3a3f4b","#e8eaf0","#8890a0","#1c5caa",
-                     "#0a0d14","#1a2030" };
+        default: { // EnterprisePro (via ThemePalette)
+            auto p = ThemePalette::forCurrentTheme();
+            return { p.bg.name(), p.panelBg.name(), p.border.name(),
+                     p.text.name(), p.textMuted.name(), p.accent.name(),
+                     p.cardBg.name(), p.border.lighter(110).name() };
+        }
         }
     }
-
-    // Accent colors are fixed (theme-independent) for readability
-    const QString kGreen      = "#22aa55";
-    const QString kBlue       = "#2255cc";
-    const QString kRed        = "#cc3333";
 
     QString groupBoxQss() {
         const auto c = dlgColors();
         return QString(
             "QGroupBox {"
             "  background:%1; border:1px solid %2; border-radius:4px;"
-            "  color:%3; font-size:9px; font-weight:700;"
+            "  color:%3; font-size:12px; font-weight:700;"
             "  margin-top:12px; padding:6px 4px 4px 4px;"
             "}"
             "QGroupBox::title {"
@@ -67,7 +63,7 @@ namespace {
 
     QString labelQss(bool muted = false) {
         const auto c = dlgColors();
-        return QString("QLabel { color:%1; font-size:9px; background:transparent; }")
+        return QString("QLabel { color:%1; font-size:12px; background:transparent; }")
                .arg(muted ? c.textMuted : c.textPrimary);
     }
 
@@ -78,11 +74,12 @@ namespace {
             "  background:%1; height:5px; border-radius:2px;"
             "}"
             "QSlider::handle:horizontal {"
-            "  background:#c8ccd8; border:1px solid #888ea8;"
+            "  background:%3; border:1px solid %4;"
             "  width:12px; height:16px; margin:-6px 0; border-radius:2px;"
             "}"
             "QSlider::sub-page:horizontal { background:%2; border-radius:2px; }"
-        ).arg(c.border, c.accent);
+        ).arg(c.border, c.accent, c.panel,
+              QColor(c.border).darker(120).name());
     }
 
     QString comboQss() {
@@ -90,7 +87,7 @@ namespace {
         return QString(
             "QComboBox {"
             "  background:%1; color:%2; border:1px solid %3; border-radius:3px;"
-            "  font-size:9px; padding:2px 6px; min-height:20px;"
+            "  font-size:12px; padding:2px 6px; min-height:20px;"
             "}"
             "QComboBox:hover { border-color:%4; }"
             "QComboBox::drop-down { border:none; width:18px; }"
@@ -106,7 +103,7 @@ namespace {
         return QString(
             "QSpinBox, QDoubleSpinBox {"
             "  background:%1; color:%2; border:1px solid %3; border-radius:3px;"
-            "  font-size:9px; padding:1px 4px;"
+            "  font-size:12px; padding:1px 4px;"
             "}"
             "QSpinBox::up-button, QDoubleSpinBox::up-button {"
             "  background:%3; border:none; width:14px;"
@@ -122,7 +119,7 @@ namespace {
     QString checkQss() {
         const auto c = dlgColors();
         return QString(
-            "QCheckBox { color:%1; font-size:9px; font-weight:700; background:transparent; }"
+            "QCheckBox { color:%1; font-size:12px; font-weight:700; background:transparent; }"
             "QCheckBox::indicator { width:13px; height:13px; border:1px solid %2; border-radius:2px; background:%3; }"
             "QCheckBox::indicator:checked { background:%4; border-color:%4; }"
         ).arg(c.textPrimary, c.border, c.panel, c.accent);
@@ -134,7 +131,7 @@ namespace {
         return QString(
             "QPushButton {"
             "  background:%1; color:%2; border:1px solid %3; border-radius:3px;"
-            "  font-size:9px; font-weight:700; padding:4px 12px; min-height:24px;"
+            "  font-size:12px; font-weight:700; padding:4px 12px; min-height:24px;"
             "}"
             "QPushButton:hover  { background:%4; border-color:%5; }"
             "QPushButton:pressed{ background:%6; }"
@@ -628,7 +625,7 @@ void CrossfaderSettingsDialog::buildUi() {
             "ℹ  Green = fade out  •  Blue = fade in  •  Red = dB trigger threshold  "
             "•  Custom curve: set Curve to 'Custom', then Ctrl+click to add points, drag to reshape",
             chartGroup);
-        note->setStyleSheet("QLabel { color:#507090; font-size:8px; background:transparent; }");
+        note->setStyleSheet(labelQss(true));
         note->setWordWrap(true);
         cLay->addWidget(note);
 

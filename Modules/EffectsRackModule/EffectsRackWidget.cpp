@@ -5,6 +5,7 @@
 #include "Equalizer31Band.h"
 #include "CompressorLimiter.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>
@@ -27,21 +28,19 @@ struct FxColors {
 FxColors fxColors() {
     using T = ThemeManager::Theme;
     switch (ThemeManager::instance()->currentTheme()) {
-    case T::Light:
-        return { "#f0eee8", "#e0ddd4", "#c8c2b8", "#1a1814", "#888078",
-                 "#1c6ccc", "#ffffff", "#d8d4ce",
-                 "#e0dcd4", "#d0ccc2", "#1c6ccc",
-                 "#22c55e", "#888078", "#dc2626" };
     case T::Classic:
         return { "#ede0cc", "#d8ccb0", "#bfb090", "#2a1810", "#7a6850",
                  "#8b3a0a", "#f0e8d8", "#bfb090",
                  "#ddd0b8", "#ccc0a0", "#8b3a0a",
                  "#22c55e", "#7a6850", "#dc2626" };
-    default: // Dark
-        return { "#0a1628", "#0e1f3a", "#1a3358", "#e2e8f0", "#8094b0",
-                 "#0ea5e9", "#0c1a30", "#1a3358",
-                 "#142a4a", "#1a3860", "#0ea5e9",
-                 "#22c55e", "#4a5568", "#ef4444" };
+    default: { // EnterprisePro (via ThemePalette)
+        auto p = ThemePalette::forCurrentTheme();
+        return { p.bg.name(), p.cardBg.name(), p.border.name(),
+                 p.text.name(), p.textMuted.name(),
+                 p.accent.name(), p.panelBg.name(), p.border.name(),
+                 p.cardBg.name(), p.cardBg.darker(105).name(), p.accent.name(),
+                 p.success.name(), p.textMuted.name(), p.error.name() };
+    }
     }
 }
 } // namespace
@@ -236,12 +235,14 @@ void EffectsRackWidget::applyTheme()
 
     if (m_addBtn) m_addBtn->setStyleSheet(btnStyle);
     if (m_bypassAllBtn) {
+        auto tp = ThemePalette::forCurrentTheme();
         m_bypassAllBtn->setStyleSheet(QString(
             "QPushButton { background: %1; color: %2; font: bold 9pt; "
             "border: 1px solid %3; border-radius: 4px; padding: 4px 12px; }"
             "QPushButton:hover { background: %4; }"
-            "QPushButton:checked { background: #f59e0b; color: #1a1a1a; border-color: #d97706; }"
-        ).arg(c.btnBg).arg(c.text).arg(c.border).arg(c.btnHover));
+            "QPushButton:checked { background: %5; color: %6; border-color: %7; }"
+        ).arg(c.btnBg, c.text, c.border, c.btnHover,
+              tp.warning.name(), tp.text.name(), tp.warning.darker(130).name()));
     }
 
     // Reset button
@@ -338,10 +339,11 @@ void EffectsRackWidget::rebuildSlots()
         const bool bypassed = u->isBypassed();
         auto* ledLbl = new QLabel(header);
         ledLbl->setFixedSize(14, 14);
+        auto tp = ThemePalette::forCurrentTheme();
         ledLbl->setStyleSheet(QString(
             "QLabel { background: %1; border: 1px solid %2; border-radius: 7px; }"
         ).arg(bypassed ? c.ledOff : c.ledOn)
-         .arg(bypassed ? c.border : "#16a34a"));
+         .arg(bypassed ? c.border : tp.success.name()));
         ledLbl->setToolTip(bypassed ? "Bypassed" : "Active");
         headerH->addWidget(ledLbl);
 
@@ -356,17 +358,19 @@ void EffectsRackWidget::rebuildSlots()
             "QPushButton { background: %1; color: %2; font: bold 9pt; "
             "border: 1px solid %3; border-radius: 4px; padding: 2px 10px; }"
             "QPushButton:hover { background: %4; }"
-            "QPushButton:checked { background: #f59e0b; color: #1a1a1a; border-color: #d97706; }"
-        ).arg(c.btnBg).arg(c.text).arg(c.border).arg(c.btnHover));
+            "QPushButton:checked { background: %5; color: %6; border-color: %7; }"
+        ).arg(c.btnBg, c.text, c.border, c.btnHover,
+              tp.warning.name(), tp.text.name(), tp.warning.darker(130).name()));
 
+        const QString ledActiveColor = tp.success.name();
         connect(bypassBtn, &QPushButton::toggled, this,
-            [u, bypassBtn, ledLbl, c](bool checked) {
+            [u, bypassBtn, ledLbl, c, ledActiveColor](bool checked) {
                 u->setBypassed(checked);
                 bypassBtn->setText(checked ? "BYPASSED" : "ACTIVE");
                 ledLbl->setStyleSheet(QString(
                     "QLabel { background: %1; border: 1px solid %2; border-radius: 7px; }"
                 ).arg(checked ? c.ledOff : c.ledOn)
-                 .arg(checked ? c.border : "#16a34a"));
+                 .arg(checked ? c.border : ledActiveColor));
                 ledLbl->setToolTip(checked ? "Bypassed" : "Active");
             });
         headerH->addWidget(bypassBtn);
@@ -380,7 +384,7 @@ void EffectsRackWidget::rebuildSlots()
             "QPushButton { background: %1; color: white; font: bold 10pt; "
             "border: 1px solid %2; border-radius: 4px; }"
             "QPushButton:hover { background: %3; border-color: %3; }"
-        ).arg(c.danger).arg(c.danger).arg("#f87171"));
+        ).arg(c.danger, c.danger, tp.error.lighter(140).name()));
 
         const int capturedIndex = i;
         connect(removeBtn, &QPushButton::clicked, this,

@@ -3,6 +3,8 @@
 #include <QAbstractTableModel>
 #include <QList>
 #include <QStringList>
+#include <QSet>
+#include <QPixmap>
 #include <QMimeData>
 
 namespace M1 {
@@ -14,7 +16,9 @@ class LibraryModel : public QAbstractTableModel {
 
 public:
     enum Column {
-        ColTitle = 0, ColArtist, ColAlbum, ColGenre,
+        ColIntel = 0,   // AI Intel badge icon
+        ColTitle,
+        ColArtist, ColAlbum, ColGenre,
         ColDuration, ColBpm, ColKey, ColBitrate, ColRating, ColCodec,
         ColCount
     };
@@ -47,8 +51,17 @@ public:
     int       rowForId(qint64 id) const;
     int       itemCount() const { return m_items.size(); }
 
+    // AI Intel badge support
+    void setArtistsWithIntel(const QStringList& artists);
+    bool hasIntelForArtist(const QString& artist) const;
+
 private:
     QList<MediaItem> m_items;
+    QSet<QString>    m_artistsWithIntel;
+
+    // Cached badge pixmaps (lazily created, theme-aware)
+    mutable QPixmap  m_cachedReportBadge;
+    mutable int      m_cachedBadgeTheme = -1;  ///< theme index when badge was cached
 };
 
 } // namespace M1

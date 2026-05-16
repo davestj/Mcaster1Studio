@@ -1,4 +1,5 @@
 #include "AppRibbon.h"
+#include "ThemePalette.h"
 #include <QLabel>
 #include <QFrame>
 #include <QHBoxLayout>
@@ -146,7 +147,9 @@ AppRibbon::AppRibbon(QWidget* parent)
     m_dropIndicator->setFrameShape(QFrame::VLine);
     m_dropIndicator->setObjectName("RibbonDropIndicator");
     m_dropIndicator->setFixedWidth(3);
-    m_dropIndicator->setStyleSheet("QFrame { background: #0ea5e9; border: none; }");
+    m_dropIndicator->setStyleSheet(
+        QString("QFrame { background: %1; border: none; }")
+            .arg(ThemePalette::forCurrentTheme().accent.name()));
     m_dropIndicator->hide();
 
     // Right section: + Add, ON AIR

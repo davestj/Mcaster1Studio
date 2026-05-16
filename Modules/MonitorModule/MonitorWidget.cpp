@@ -1,6 +1,7 @@
 #include "MonitorWidget.h"
 #include "MonitorModule.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QPainter>
 #include <QPainterPath>
 #include <QPaintEvent>
@@ -27,18 +28,18 @@ void ChartWidget::paintEvent(QPaintEvent* /*event*/) {
     p.setRenderHint(QPainter::Antialiasing);
 
     const QRect r = rect();
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const auto pal = ThemePalette::forCurrentTheme();
 
     // Background
-    p.fillRect(r, isLight ? QColor("#f5f3f0") : QColor("#0a1628"));
+    p.fillRect(r, pal.cardBg);
 
     // Border
-    p.setPen(isLight ? QColor("#d8d4ce") : QColor("#1e3a5f"));
+    p.setPen(pal.border);
     p.drawRect(r.adjusted(0, 0, -1, -1));
 
     const auto& history = m_module->history();
     if (history.size() < 2) {
-        p.setPen(isLight ? QColor("#6b6560") : QColor("#475569"));
+        p.setPen(pal.textMuted);
         p.drawText(r, Qt::AlignCenter, "Waiting for data...");
         return;
     }
@@ -74,7 +75,7 @@ void ChartWidget::paintEvent(QPaintEvent* /*event*/) {
         path.closeSubpath();
 
         QLinearGradient grad(0, r.top(), 0, r.bottom());
-        const QColor lineColor = isLight ? QColor(28, 92, 170) : QColor(14, 165, 233);
+        const QColor lineColor = pal.accent;
         grad.setColorAt(0.0, QColor(lineColor.red(), lineColor.green(), lineColor.blue(), 120));
         grad.setColorAt(1.0, QColor(lineColor.red(), lineColor.green(), lineColor.blue(), 20));
         p.fillPath(path, grad);
@@ -86,9 +87,9 @@ void ChartWidget::paintEvent(QPaintEvent* /*event*/) {
     }
 
     // Y-axis labels: 0 and max
-    p.setPen(isLight ? QColor("#6b6560") : QColor("#64748b"));
+    p.setPen(pal.textMuted);
     QFont f = p.font();
-    f.setPixelSize(10);
+    f.setPixelSize(12);
     p.setFont(f);
     p.drawText(QPointF(3, r.bottom() - 8), "0");
     p.drawText(QPointF(3, r.top() + 12), QString::number(maxListeners));
@@ -293,16 +294,16 @@ void MonitorWidget::buildUi() {
 }
 
 void MonitorWidget::applyStyles() {
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
-    const QString bg      = isLight ? "#f5f3f0" : "#0c1a2e";
-    const QString text    = isLight ? "#1a1814" : "#e2e8f0";
-    const QString accent  = isLight ? "#1c5caa" : "#0ea5e9";
-    const QString muted   = isLight ? "#6b6560" : "#94a3b8";
-    const QString section = isLight ? "#6b6560" : "#64748b";
-    const QString chartBg = isLight ? "#f5f3f0" : "#0a1628";
-    const QString border  = isLight ? "#d8d4ce" : "#1e3a5f";
-    const QString inBg    = isLight ? "#ffffff"  : "#0c1a2e";
-    const QString cfgBg   = isLight ? "#ede8e0" : "#0f2040";
+    const auto pal = ThemePalette::forCurrentTheme();
+    const QString bg      = pal.panelBg.name();
+    const QString text    = pal.text.name();
+    const QString accent  = pal.accent.name();
+    const QString muted   = pal.textMuted.name();
+    const QString section = pal.textMuted.name();
+    const QString chartBg = pal.cardBg.name();
+    const QString border  = pal.border.name();
+    const QString inBg    = pal.inputBg.name();
+    const QString cfgBg   = pal.cardBg.name();
 
     setStyleSheet(QString(R"(
         #MonitorWidget {
@@ -320,7 +321,7 @@ void MonitorWidget::applyStyles() {
         }
         #SectionTitle {
             color: %5;
-            font-size: 11px;
+            font-size: 12px;
         }
         #NowPlayingLabel {
             color: %2;
@@ -383,7 +384,7 @@ void MonitorWidget::applyStyles() {
             padding: 4px 16px;
             font-size: 12px;
         }
-        #DisconnectBtn:hover { background: #dc2626; color: #ffffff; }
+        #DisconnectBtn:hover { background: %3; color: #ffffff; }
         #DisconnectBtn:disabled { color: %5; }
     )").arg(bg, text, accent, muted, section, chartBg, border, inBg, cfgBg));
 }
@@ -394,8 +395,7 @@ void MonitorWidget::paintEvent(QPaintEvent* event) {
     QWidget::paintEvent(event);
     // Additional background fill to ensure theme color reaches edges
     QPainter p(this);
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
-    p.fillRect(rect(), isLight ? QColor("#f5f3f0") : QColor("#0c1a2e"));
+    p.fillRect(rect(), ThemePalette::forCurrentTheme().panelBg);
 }
 
 // ─── Slots ────────────────────────────────────────────────────────────────────
@@ -471,20 +471,21 @@ void MonitorWidget::onToggleConfig() {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 void MonitorWidget::updateLed(bool connected, bool error) {
+    const auto pal = ThemePalette::forCurrentTheme();
     if (!connected) {
-        // Gray
         m_ledLabel->setStyleSheet(
-            "background:#475569; border-radius:7px; border:1px solid #334155;");
+            QString("background:%1; border-radius:7px; border:1px solid %2;")
+                .arg(pal.textDisabled.name(), pal.border.name()));
         m_ledLabel->setToolTip("Disconnected");
     } else if (error) {
-        // Red
         m_ledLabel->setStyleSheet(
-            "background:#ef4444; border-radius:7px; border:1px solid #dc2626;");
+            QString("background:%1; border-radius:7px; border:1px solid %2;")
+                .arg(pal.error.name(), pal.error.darker(120).name()));
         m_ledLabel->setToolTip("Poll error");
     } else {
-        // Green
         m_ledLabel->setStyleSheet(
-            "background:#22c55e; border-radius:7px; border:1px solid #16a34a;");
+            QString("background:%1; border-radius:7px; border:1px solid %2;")
+                .arg(pal.success.name(), pal.success.darker(120).name()));
         m_ledLabel->setToolTip("Polling OK");
     }
 }

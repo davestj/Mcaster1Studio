@@ -1,5 +1,6 @@
 #include "EncoderConfigDialog.h"
 #include "EncoderSlot.h"
+#include "ThemePalette.h"
 #include <QTabWidget>
 #include <QFormLayout>
 #include <QVBoxLayout>
@@ -227,7 +228,10 @@ void EncoderConfigDialog::buildIcy2Tab(QTabWidget* tabs)
     ovbox->setContentsMargins(6, 6, 6, 6);
 
     m_icy2Warning = new QLabel("⚠  ICY 2.2 fields are only sent when Server Type = Mcaster1DNAS.");
-    m_icy2Warning->setStyleSheet("color:#e8a828; font-size:9px; padding:4px;");
+    {
+        const auto tp = ThemePalette::forCurrentTheme();
+        m_icy2Warning->setStyleSheet(QString("color:%1; font-size:12px; padding:4px;").arg(tp.warning.name()));
+    }
     m_icy2Warning->setWordWrap(true);
     ovbox->addWidget(m_icy2Warning);
 
@@ -338,9 +342,15 @@ void EncoderConfigDialog::buildArchiveTab(QTabWidget* tabs)
     dirRow->addWidget(m_archiveDir);
     auto* browseBtn = new QPushButton("Browse…");
     browseBtn->setFixedWidth(60);
-    browseBtn->setStyleSheet("QPushButton { background:#1e3a5f; color:#9ec8f4;"
-                             "border:1px solid #2a5a8f; padding:2px 6px; font-size:9px; }"
-                             "QPushButton:hover { background:#2a5080; }");
+    {
+        const auto tp = ThemePalette::forCurrentTheme();
+        browseBtn->setStyleSheet(QString(
+            "QPushButton { background:%1; color:%2;"
+            "border:1px solid %3; padding:2px 6px; font-size:12px; }"
+            "QPushButton:hover { background:%4; }")
+            .arg(tp.accent.name(), tp.panelBg.name(),
+                 tp.borderAccent.name(), tp.accentHover.name()));
+    }
     dirRow->addWidget(browseBtn);
     form->addRow("Directory:", dirRow);
     connect(browseBtn, &QPushButton::clicked, this, &EncoderConfigDialog::onBrowseArchive);
@@ -358,7 +368,10 @@ void EncoderConfigDialog::buildArchiveTab(QTabWidget* tabs)
     form->addRow("", m_archiveMp3);
 
     auto* hint = new QLabel("Files saved as:  {station_name}_{YYYY-MM-DD}_{HH-MM-SS}.wav/.mp3");
-    hint->setStyleSheet("color:#6a9abf; font-size:8px;");
+    {
+        const auto tp = ThemePalette::forCurrentTheme();
+        hint->setStyleSheet(QString("color:%1; font-size:12px;").arg(tp.textMuted.name()));
+    }
     form->addRow("", hint);
 
     tabs->addTab(w, "Archive");

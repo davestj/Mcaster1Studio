@@ -1,4 +1,5 @@
 #include "EncoderLogDialog.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QListWidget>
@@ -55,7 +56,7 @@ EncoderLogDialog::EncoderLogDialog(EncoderEventLog* log,
     // ── Log list ─────────────────────────────────────────────────────────────
     m_list = new QListWidget(this);
     m_list->setObjectName("EncoderLogList");
-    m_list->setFont(QFont("Consolas", 9));
+    m_list->setFont(QFont("Consolas", 10));
     m_list->setWordWrap(false);
     m_list->setAlternatingRowColors(true);
     root->addWidget(m_list);
@@ -86,22 +87,25 @@ void EncoderLogDialog::addEntryToList(const EncoderEventLog::Entry& entry)
 
     auto* item = new QListWidgetItem(EncoderEventLog::formatEntry(entry));
 
-    // Color-code by level
-    switch (entry.level) {
-        case EncoderEventLog::Level::ERR:
-            item->setForeground(QColor("#dc2626")); break;
-        case EncoderEventLog::Level::WARN:
-            item->setForeground(QColor("#d97706")); break;
-        case EncoderEventLog::Level::CONNECT:
-            item->setForeground(QColor("#16a34a")); break;
-        case EncoderEventLog::Level::AUTH:
-            item->setForeground(QColor("#7c3aed")); break;
-        case EncoderEventLog::Level::ICY_META:
-            item->setForeground(QColor("#0891b2")); break;
-        case EncoderEventLog::Level::DEBUG:
-            item->setForeground(QColor("#6b7280")); break;
-        default:
-            break;
+    // Color-code by level using ThemePalette semantic colors
+    {
+        const auto tp = ThemePalette::forCurrentTheme();
+        switch (entry.level) {
+            case EncoderEventLog::Level::ERR:
+                item->setForeground(tp.error);     break;
+            case EncoderEventLog::Level::WARN:
+                item->setForeground(tp.warning);   break;
+            case EncoderEventLog::Level::CONNECT:
+                item->setForeground(tp.success);   break;
+            case EncoderEventLog::Level::AUTH:
+                item->setForeground(tp.accent);    break;
+            case EncoderEventLog::Level::ICY_META:
+                item->setForeground(tp.info);      break;
+            case EncoderEventLog::Level::DEBUG:
+                item->setForeground(tp.textMuted); break;
+            default:
+                break;
+        }
     }
 
     m_list->addItem(item);

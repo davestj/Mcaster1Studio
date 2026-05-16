@@ -105,8 +105,14 @@ void PlaylistModule::connectDecks(M1::DeckPlayer* a, M1::DeckPlayer* b, M1::Deck
     qInfo() << "[PlaylistModule] connectDecks: A=" << (a ? "YES" : "null")
             << "B=" << (b ? "YES" : "null")
             << "DeckMod=" << (dm ? "YES" : "null");
-    if (m_autoDJ && m_deckA && m_deckB)
+    if (m_autoDJ && m_deckA && m_deckB) {
         m_pollTimer->start();
+        // If AutoDJ was enabled before decks were wired, kick off playback now
+        if (!m_queue.isEmpty() && m_currentIndex < 0) {
+            m_currentIndex = 0;
+            playNext();
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -275,8 +281,8 @@ void PlaylistModule::setAutoDJ(bool enabled)
         if (m_deckA && m_deckB)
             m_pollTimer->start();
 
-        // Auto-start: load and play the first track
-        if (m_autoDJConfig.autoStartOnEnable && !m_queue.isEmpty()) {
+        // Auto-start: load and play the first track immediately
+        if (!m_queue.isEmpty()) {
             if (m_currentIndex < 0) m_currentIndex = 0;
             playNext();
         }
@@ -554,15 +560,22 @@ void PlaylistModule::playNext()
         m_recentPlayPaths.removeFirst();
     }
 
-    // Auto-play the target deck once loading completes, then preload next
+    // Auto-play the target deck once loading completes, then preload next.
+    // Use a short delay to ensure the file load has started before we connect.
     M1::DeckPlayer* targetDeck = (deck == 0) ? m_deckA : m_deckB;
     if (targetDeck) {
-        connect(targetDeck, &M1::DeckPlayer::loadingFinished,
-                this, [this, targetDeck]() {
-                    targetDeck->play();
-                    preloadNextOnIdleDeck();
-                },
-                Qt::SingleShotConnection);
+        // If deck is already Ready (fast load / cached), play immediately
+        if (targetDeck->state() == M1::DeckPlayer::State::Ready) {
+            targetDeck->play();
+            preloadNextOnIdleDeck();
+        } else {
+            connect(targetDeck, &M1::DeckPlayer::loadingFinished,
+                    this, [this, targetDeck]() {
+                        targetDeck->play();
+                        preloadNextOnIdleDeck();
+                    },
+                    Qt::SingleShotConnection);
+        }
     }
 }
 

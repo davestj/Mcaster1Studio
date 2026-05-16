@@ -2,6 +2,7 @@
 #include "HealthModule.h"
 #include "LiveMonitorChart.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
@@ -38,7 +39,7 @@ protected:
         const float pct = m_fill * 100.0f;
 
         // Track background
-        const bool isLight = ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light;
+        const bool isLight = ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro;
         const bool isClassic = ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Classic;
 
         QColor trackBg = isLight ? QColor("#e2e0dc") :
@@ -48,13 +49,14 @@ protected:
         p.drawRoundedRect(r, 4, 4);
 
         // Fill color — green < 60%, amber 60-85%, red > 85%
+        const auto pal = ThemePalette::forCurrentTheme();
         QColor fillColor;
         if (pct < 60.0f)
-            fillColor = QColor("#22c55e");
+            fillColor = pal.vuGreen;
         else if (pct < 85.0f)
-            fillColor = QColor("#f59e0b");
+            fillColor = pal.vuYellow;
         else
-            fillColor = QColor("#ef4444");
+            fillColor = pal.vuRed;
 
         // Filled portion
         if (m_fill > 0.001f) {
@@ -65,10 +67,9 @@ protected:
         }
 
         // Percentage text
-        QColor textCol = isLight ? QColor("#1a1814") : QColor("#e2e8f0");
-        p.setPen(textCol);
+        p.setPen(pal.text);
         QFont f = font();
-        f.setPixelSize(11);
+        f.setPixelSize(12);
         f.setBold(true);
         p.setFont(f);
         p.drawText(r, Qt::AlignCenter, QString::number(int(pct)) + "%");
@@ -156,7 +157,8 @@ void HealthWidget::buildUi()
         dot->setFixedSize(12, 12);
         dot->setToolTip(QString("Encoder %1").arg(i + 1));
         dot->setStyleSheet(
-            "background: #6b7280; border-radius: 6px; border: none;");
+            QString("background: %1; border-radius: 6px; border: none;")
+                .arg(ThemePalette::forCurrentTheme().textDisabled.name()));
         dot->setVisible(false);
         dotRow->addWidget(dot);
         m_encoderDots.append(dot);
@@ -234,24 +236,15 @@ void HealthWidget::buildUi()
 // ═════════════════════════════════════════════════════════════════════════════
 void HealthWidget::applyStyles()
 {
-    const auto theme = ThemeManager::instance()->currentTheme();
-    const bool isLight   = (theme == ThemeManager::Theme::Light);
-    const bool isClassic = (theme == ThemeManager::Theme::Classic);
+    const auto pal = ThemePalette::forCurrentTheme();
 
-    QString bg, text, accent, border, groupBg, btnBg, btnHover;
-    if (isLight) {
-        bg = "#f5f3f0"; text = "#1a1814"; accent = "#7c3aed";
-        border = "#d8d4ce"; groupBg = "#ffffff";
-        btnBg = "#e2e0dc"; btnHover = "#d0cec8";
-    } else if (isClassic) {
-        bg = "#2a1e14"; text = "#f0e6d8"; accent = "#9b59b6";
-        border = "#5a4030"; groupBg = "#3d2c1e";
-        btnBg = "#4a3628"; btnHover = "#5a4030";
-    } else {
-        bg = "#0f172a"; text = "#e2e8f0"; accent = "#8b5cf6";
-        border = "#1e3a5f"; groupBg = "#0c1a2e";
-        btnBg = "#1e293b"; btnHover = "#334155";
-    }
+    const QString bg      = pal.bg.name();
+    const QString text    = pal.text.name();
+    const QString accent  = pal.accent.name();
+    const QString border  = pal.border.name();
+    const QString groupBg = pal.cardBg.name();
+    const QString btnBg   = pal.panelBg.name();
+    const QString btnHover = pal.border.name();
 
     setStyleSheet(QString(R"(
         #HealthWidget { background: %1; }
@@ -264,7 +257,7 @@ void HealthWidget::applyStyles()
             subcontrol-origin: margin; left: 10px; padding: 0 4px;
         }
         QLabel#HealthLabel { color: %2; font-size: 12px; }
-        QLabel#HealthDetail { color: %3; font-size: 11px; }
+        QLabel#HealthDetail { color: %3; font-size: 12px; }
         QPushButton#HealthExportBtn {
             background: %6; color: %2; border: 1px solid %4;
             border-radius: 4px; padding: 4px 12px; font-size: 12px;
@@ -337,17 +330,20 @@ void HealthWidget::updateEncoderIndicators(const M1::HealthSnapshot& snap)
     const int total = qMin(snap.encoderTotal, 8);
     const int live  = snap.encoderLive;
 
+    const auto pal = ThemePalette::forCurrentTheme();
     for (int i = 0; i < 8; ++i) {
         if (i < total) {
             m_encoderDots[i]->setVisible(true);
             // Color: first N dots green (live), rest gray (idle)
             if (i < live) {
                 m_encoderDots[i]->setStyleSheet(
-                    "background: #22c55e; border-radius: 6px; border: none;");
+                    QString("background: %1; border-radius: 6px; border: none;")
+                        .arg(pal.success.name()));
                 m_encoderDots[i]->setToolTip(QString("Encoder %1: Streaming").arg(i + 1));
             } else {
                 m_encoderDots[i]->setStyleSheet(
-                    "background: #6b7280; border-radius: 6px; border: none;");
+                    QString("background: %1; border-radius: 6px; border: none;")
+                        .arg(pal.textDisabled.name()));
                 m_encoderDots[i]->setToolTip(QString("Encoder %1: Idle").arg(i + 1));
             }
         } else {

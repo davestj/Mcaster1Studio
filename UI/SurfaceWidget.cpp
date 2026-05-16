@@ -9,8 +9,12 @@
 #include "IModule.h"
 #include "ThreadPoolManager.h"
 #include "SurfaceThreadPool.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QStackedWidget>
+#include <QResizeEvent>
+#include <QCoreApplication>
+#include <QTimer>
 #include <QSettings>
 #include <QApplication>
 #include <QScreen>
@@ -24,7 +28,7 @@ SurfaceWidget::SurfaceWidget(M1::SurfaceType type, QWidget* parent)
 
     // ── Sub-surface tab bar ───────────────────────────────────────
     const QString defaultName = M1::surfaceTypeName(type);
-    m_subTabBar = new SubSurfaceTabBar(defaultName, QColor("#0ea5e9"), this);
+    m_subTabBar = new SubSurfaceTabBar(defaultName, ThemePalette::forCurrentTheme().accent, this);
 
     // ── Stacked canvas ────────────────────────────────────────────
     m_stack = new QStackedWidget(this);
@@ -82,6 +86,7 @@ SurfaceWidget::SurfaceWidget(M1::SurfaceType type, QWidget* parent)
     // ── Sub-surface tab bar signal wiring ─────────────────────────
     connect(m_subTabBar, &SubSurfaceTabBar::currentChanged,
             this, [this](int index) {
+        if (index < 0 || index >= m_stack->count()) return;
         m_stack->setCurrentIndex(index);
     });
 
@@ -271,7 +276,7 @@ void SurfaceWidget::restoreLayout(QSettings& s) {
         // Add via the tab bar so chip + panel stay in sync.
         // subSurfaceAdded signal will call addPanel() automatically.
         if (i >= m_panels.size())
-            m_subTabBar->addSubSurface(name, QColor("#0ea5e9"));
+            m_subTabBar->addSubSurface(name, ThemePalette::forCurrentTheme().accent);
         m_panels[i]->restoreLayout(s, key);
     }
 }

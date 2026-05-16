@@ -1,6 +1,8 @@
 #include "PreferencesDialog.h"
 #include "AudioEngine.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
+#include <QScreen>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -32,7 +34,7 @@
 #include "MonitorManager.h"
 #include "DbServerDialog.h"
 #include <QRegularExpression>
-#include <QStandardPaths>
+#include <QCoreApplication>
 #include <QDir>
 #include <QProcess>
 #include <QFileInfo>
@@ -42,7 +44,26 @@ PreferencesDialog::PreferencesDialog(M1::IAudioEngine* engine, QWidget* parent)
     , m_engine(engine)
 {
     setWindowTitle("Preferences");
-    setMinimumWidth(520);
+
+    // ── Window flags: minimize, maximize, resize, system menu ─────────
+    setWindowFlags(Qt::Window | Qt::WindowMinMaxButtonsHint
+                 | Qt::WindowCloseButtonHint | Qt::WindowTitleHint);
+    setSizeGripEnabled(true);
+
+    // ── Size: fit within screen, with sensible defaults ──────────────
+    setMinimumSize(600, 400);
+    if (auto* screen = this->screen()) {
+        const QRect avail = screen->availableGeometry();
+        // Default to 70% of screen width, 80% of available height
+        const int w = qMin(900, static_cast<int>(avail.width() * 0.7));
+        const int h = qMin(avail.height() - 60, static_cast<int>(avail.height() * 0.8));
+        resize(w, h);
+        // Center on screen
+        move(avail.x() + (avail.width() - w) / 2,
+             avail.y() + (avail.height() - h) / 2);
+    } else {
+        resize(800, 600);
+    }
 
     auto* root = new QVBoxLayout(this);
     root->setSpacing(12);
@@ -189,10 +210,12 @@ QWidget* PreferencesDialog::buildAudioPage() {
     // Check AudioPipe status
     if (QFileInfo::exists(pipePath)) {
         m_audioPipeStatusLabel->setText("Installed");
-        m_audioPipeStatusLabel->setStyleSheet("color: #22c55e; font-weight: bold;");
+        m_audioPipeStatusLabel->setStyleSheet(
+            QString("color: %1; font-weight: bold;").arg(ThemePalette::forCurrentTheme().success.name()));
     } else {
         m_audioPipeStatusLabel->setText("Not installed");
-        m_audioPipeStatusLabel->setStyleSheet("color: #f59e0b; font-weight: bold;");
+        m_audioPipeStatusLabel->setStyleSheet(
+            QString("color: %1; font-weight: bold;").arg(ThemePalette::forCurrentTheme().warning.name()));
     }
 
     layout->addStretch();
@@ -212,9 +235,8 @@ QWidget* PreferencesDialog::buildAppearancePage() {
     form->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
     m_themeCombo = new QComboBox(this);
-    m_themeCombo->addItem("Dark (Default)",       "dark");
-    m_themeCombo->addItem("Classic (Brown)",      "classic");
-    m_themeCombo->addItem("Enterprise (Pro)",     "light");
+    m_themeCombo->addItem("Enterprise Pro (Default)", "enterprise-pro");
+    m_themeCombo->addItem("Classic (Brown)",          "classic");
 
     const QString cur = ThemeManager::themeName(ThemeManager::instance()->currentTheme());
     int idx = m_themeCombo->findData(cur);
@@ -460,8 +482,13 @@ static QWidget* buildApiProviderPanel(const QString& providerName,
 }
 
 QWidget* PreferencesDialog::buildAIPage() {
+    // Wrap AI page in a scroll area since it has many settings
+    auto* scroll = new QScrollArea;
+    scroll->setWidgetResizable(true);
+    scroll->setFrameShape(QFrame::NoFrame);
     auto* page = new QWidget;
     auto* layout = new QVBoxLayout(page);
+    scroll->setWidget(page);
 
     // Network manager for Ollama API calls
     m_aiNam = new QNetworkAccessManager(this);
@@ -578,6 +605,88 @@ QWidget* PreferencesDialog::buildAIPage() {
 
     layout->addWidget(m_aiStack);
 
+    // ── AI Persona (Global) ──────────────────────────────────────────────
+    {
+        auto* personaGroup = new QGroupBox("AI Persona (Global)", page);
+        auto* personaLayout = new QVBoxLayout(personaGroup);
+
+        auto* personaDesc = new QLabel(
+            "Select a preset persona or write your own. This personality is used "
+            "across DJ cues, artist intel, tag manager, and playlist generator.", page);
+        personaDesc->setWordWrap(true);
+        personaDesc->setProperty("role", "status");
+        personaLayout->addWidget(personaDesc);
+
+        auto* personaForm = new QFormLayout;
+
+        m_personaCombo = new QComboBox(page);
+        m_personaCombo->setToolTip("Select an AI persona preset");
+
+        // Hardcoded 15 presets (DB-backed personas will replace when schema agent finishes)
+        const QList<QPair<QString, QString>> presets = {
+            {"Classic DJ",           "You are a classic radio DJ with a warm, authoritative voice. Use radio lingo, give smooth segues, and keep energy up."},
+            {"Late Night Chill",     "You are a laid-back late-night DJ. Keep it mellow, suggest smooth tracks, and speak softly with a jazz lounge vibe."},
+            {"Morning Show Host",    "You are an upbeat morning show host. High energy, crack jokes, give weather/time references, and pump up the audience."},
+            {"Top 40 Hype",          "You are a Top 40 hype DJ. Everything is exciting, trending, and fire. Use pop culture references and social media lingo."},
+            {"Country Radio",        "You are a country radio host. Down-to-earth, folksy humor, reference heartland values and storytelling."},
+            {"Hip-Hop / R&B",        "You are an urban radio personality. Street-smart, culturally aware, reference hip-hop history and current vibes."},
+            {"Rock & Metal",         "You are a rock radio host. Gritty, rebellious energy. Reference guitar riffs, mosh pits, and legendary rock moments."},
+            {"Classical / NPR",      "You are a refined classical music host. Articulate, knowledgeable, reference composers, movements, and musical theory."},
+            {"Electronic / EDM",     "You are an EDM DJ host. Talk about drops, builds, BPM, festivals, and the dance floor energy."},
+            {"Christian Radio",      "You are a Christian radio host. Uplifting, faith-centered, reference scripture and encouragement."},
+            {"Sports Talk",          "You are a sports radio personality. Passionate, opinionated, reference stats, trades, and game highlights."},
+            {"News / Talk",          "You are a news/talk radio host. Professional, informed, balanced. Present facts clearly with measured delivery."},
+            {"Podcast Conversational", "You are a conversational podcast host. Curious, engaging, ask follow-up questions, and build rapport with guests."},
+            {"Bilingual (EN/ES)",    "You are a bilingual DJ comfortable in English and Spanish. Mix both languages naturally, reference Latin music culture."},
+            {"AI Assistant (Neutral)", "You are a helpful AI assistant for broadcast automation. Be concise, accurate, and professional. No personality flourishes."},
+            {"Custom (edit below)",  ""}
+        };
+
+        for (const auto& [name, prompt] : presets)
+            m_personaCombo->addItem(name, prompt);
+
+        personaForm->addRow("Persona:", m_personaCombo);
+        personaLayout->addLayout(personaForm);
+
+        m_personaText = new QTextEdit(page);
+        m_personaText->setPlaceholderText("Enter your custom AI persona system prompt...");
+        m_personaText->setMaximumHeight(80);
+        m_personaText->setToolTip("System prompt sent to the AI with every request (max 500 characters)");
+        personaLayout->addWidget(m_personaText);
+
+        m_personaCharCount = new QLabel("0 / 500 chars", page);
+        m_personaCharCount->setAlignment(Qt::AlignRight);
+        m_personaCharCount->setProperty("role", "status");
+        personaLayout->addWidget(m_personaCharCount);
+
+        // Update text area when persona combo changes
+        connect(m_personaCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, [this](int idx) {
+            if (idx < 0) return;
+            const QString prompt = m_personaCombo->itemData(idx).toString();
+            // Only auto-populate if not "Custom" (last item)
+            if (idx < m_personaCombo->count() - 1)
+                m_personaText->setPlainText(prompt);
+        });
+
+        // Update character count and color
+        connect(m_personaText, &QTextEdit::textChanged, this, [this]() {
+            int len = m_personaText->toPlainText().length();
+            m_personaCharCount->setText(QString("%1 / 500 chars").arg(len));
+            if (len > 500) {
+                m_personaCharCount->setStyleSheet(
+                    QString("color: %1; font-weight: bold;")
+                        .arg(ThemePalette::forCurrentTheme().error.name()));
+            } else {
+                m_personaCharCount->setStyleSheet(
+                    QString("color: %1;")
+                        .arg(ThemePalette::forCurrentTheme().textMuted.name()));
+            }
+        });
+
+        layout->addWidget(personaGroup);
+    }
+
     // Connect provider combo → stack page
     connect(m_aiProviderCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &PreferencesDialog::onAiProviderChanged);
@@ -618,7 +727,15 @@ QWidget* PreferencesDialog::buildAIPage() {
     ci = m_veniceModel->findText(veniceModel);
     if (ci >= 0) m_veniceModel->setCurrentIndex(ci); else m_veniceModel->setEditText(veniceModel);
 
-    return page;
+    // Restore AI Persona
+    const QString savedPersonaName = s.value("ai/persona/name", "Classic DJ").toString();
+    int pi = m_personaCombo->findText(savedPersonaName);
+    if (pi >= 0) m_personaCombo->setCurrentIndex(pi);
+    const QString savedPersonaText = s.value("ai/persona/global", "").toString();
+    if (!savedPersonaText.isEmpty())
+        m_personaText->setPlainText(savedPersonaText);
+
+    return scroll;  // return the scroll area wrapping the AI page
 }
 
 void PreferencesDialog::onAiProviderChanged(int index) {
@@ -846,6 +963,10 @@ void PreferencesDialog::onAccepted() {
     s.setValue("ai/venice/apiKey",         m_veniceApiKey->text());
     s.setValue("ai/venice/model",          m_veniceModel->currentText());
 
+    // AI Persona
+    s.setValue("ai/persona/global",        m_personaText->toPlainText());
+    s.setValue("ai/persona/name",          m_personaCombo->currentText());
+
     accept();
 }
 
@@ -966,10 +1087,10 @@ QWidget* PreferencesDialog::buildDbServersPage() {
         if (!item) { item = new QTableWidgetItem; m_dbServerTable->setItem(row, 4, item); }
         if (err.isEmpty()) {
             item->setText("OK");
-            item->setForeground(QColor("#22c55e"));
+            item->setForeground(ThemePalette::forCurrentTheme().success);
         } else {
             item->setText(err);
-            item->setForeground(QColor("#ef4444"));
+            item->setForeground(ThemePalette::forCurrentTheme().error);
         }
     });
 
@@ -1097,7 +1218,8 @@ void PreferencesDialog::refreshSurfaceDbTable() {
             }
             // Red border if invalid chars
             const bool valid = QRegularExpression("^[a-zA-Z0-9_]*$").match(text).hasMatch();
-            dbNameEdit->setStyleSheet(valid ? "" : "border: 1px solid #ef4444;");
+            dbNameEdit->setStyleSheet(valid ? "" :
+                QString("border: 1px solid %1;").arg(ThemePalette::forCurrentTheme().error.name()));
         });
 
         // Save on editing finished and notify live modules
@@ -1163,7 +1285,7 @@ void PreferencesDialog::refreshSurfaceDbTable() {
             if (server->isSQLite()) {
                 QString baseDir = server->sqlitePath;
                 if (baseDir.isEmpty())
-                    baseDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+                    baseDir = QCoreApplication::applicationDirPath() + "/data";
                 QDir dir(baseDir);
                 if (!dir.exists()) dir.mkpath(".");
                 dbPath = dir.absoluteFilePath(schema + ".db");

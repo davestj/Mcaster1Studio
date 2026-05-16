@@ -1,6 +1,7 @@
 #include "Icy22EditorWidget.h"
 #include "MetadataModule.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -12,31 +13,6 @@
 #include <QFrame>
 #include <QFont>
 #include <QTime>
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Theme-aware palette
-// ─────────────────────────────────────────────────────────────────────────────
-namespace {
-// Returns palette values for .arg(%1) through .arg(%9) in applyTheme QSS template
-struct IcyPal {
-    QString bgDeep, textPrimary, bgPanel, border, textMuted,
-            accent, inputBg, accentPress, accentHover;
-};
-IcyPal icyPalette() {
-    using T = ThemeManager::Theme;
-    switch (ThemeManager::instance()->currentTheme()) {
-    case T::Light:
-        return { "#ffffff","#1a1814","#f5f3f0","#d8d4ce","#6b6560",
-                 "#1c5caa","#ffffff","#1e3a5f","#3b82f6" };
-    case T::Classic:
-        return { "#ede0cc","#2a1810","#f0e8d8","#bfb090","#806040",
-                 "#8b3a0a","#f5ead0","#6a2800","#c87030" };
-    default: // Dark
-        return { "#0c1a2e","#e2e8f0","#112240","#1e3a5f","#94a3b8",
-                 "#0ea5e9","#0a1628","#0284c7","#38bdf8" };
-    }
-}
-} // namespace
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Static factory helpers
@@ -603,7 +579,12 @@ QWidget* Icy22EditorWidget::buildContentTab()
 // ─────────────────────────────────────────────────────────────────────────────
 void Icy22EditorWidget::applyTheme()
 {
-    const auto p = icyPalette();
+    const auto tp = ThemePalette::forCurrentTheme();
+
+    // Derive accent press/hover from ThemePalette
+    const QString accentPress = tp.borderAccent.name();
+    const QString accentHover = tp.accentHover.name();
+
     const QString qss = QString(R"(
 /* ─── Root widget ───────────────────────────────────────────────────────── */
 Icy22EditorWidget {
@@ -624,7 +605,7 @@ QTabBar::tab {
     border-bottom: none;
     padding: 5px 14px;
     margin-right: 2px;
-    font-size: 11px;
+    font-size: 12px;
 }
 QTabBar::tab:selected {
     background-color: %1;
@@ -653,7 +634,7 @@ QLineEdit {
     border-radius: 3px;
     padding: 4px 6px;
     min-height: 26px;
-    font-size: 11px;
+    font-size: 12px;
     selection-background-color: %6;
     selection-color: #ffffff;
 }
@@ -672,7 +653,7 @@ QTextEdit {
     border: 1px solid %4;
     border-radius: 3px;
     padding: 4px 6px;
-    font-size: 11px;
+    font-size: 12px;
     selection-background-color: %6;
     selection-color: #ffffff;
 }
@@ -688,7 +669,7 @@ QComboBox {
     border-radius: 3px;
     padding: 4px 6px;
     min-height: 26px;
-    font-size: 11px;
+    font-size: 12px;
 }
 QComboBox:focus {
     border-color: %6;
@@ -713,7 +694,7 @@ QSpinBox {
     border-radius: 3px;
     padding: 4px 6px;
     min-height: 26px;
-    font-size: 11px;
+    font-size: 12px;
 }
 QSpinBox:focus {
     border-color: %6;
@@ -735,7 +716,7 @@ QTimeEdit {
     border-radius: 3px;
     padding: 4px 6px;
     min-height: 26px;
-    font-size: 11px;
+    font-size: 12px;
 }
 QTimeEdit:focus {
     border-color: %6;
@@ -749,7 +730,7 @@ QTimeEdit::up-button, QTimeEdit::down-button {
 /* ─── QCheckBox ────────────────────────────────────────────────────────── */
 QCheckBox {
     color: %2;
-    font-size: 11px;
+    font-size: 12px;
     spacing: 6px;
 }
 QCheckBox::indicator {
@@ -771,7 +752,7 @@ QPushButton {
     border: 1px solid %4;
     border-radius: 3px;
     padding: 4px 12px;
-    font-size: 11px;
+    font-size: 12px;
 }
 QPushButton:hover {
     background-color: %6;
@@ -804,7 +785,7 @@ QGroupBox {
     border: 1px solid %4;
     border-radius: 4px;
     margin-top: 8px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: bold;
     padding-top: 4px;
 }
@@ -819,7 +800,7 @@ QGroupBox::title {
 /* ─── QLabel ────────────────────────────────────────────────────────────── */
 QLabel {
     color: %5;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 /* ─── QFrame (separator) ────────────────────────────────────────────────── */
@@ -867,15 +848,15 @@ QScrollBar::sub-line:horizontal {
     width: 0px;
 }
 )")
-        .arg(p.bgDeep)           // %1
-        .arg(p.textPrimary)      // %2
-        .arg(p.bgPanel)          // %3
-        .arg(p.border)           // %4
-        .arg(p.textMuted)        // %5
-        .arg(p.accent)           // %6
-        .arg(p.inputBg)          // %7
-        .arg(p.accentPress)      // %8
-        .arg(p.accentHover);     // %9
+        .arg(tp.bg.name())           // %1
+        .arg(tp.text.name())         // %2
+        .arg(tp.panelBg.name())      // %3
+        .arg(tp.border.name())       // %4
+        .arg(tp.textMuted.name())    // %5
+        .arg(tp.accent.name())       // %6
+        .arg(tp.inputBg.name())      // %7
+        .arg(accentPress)            // %8
+        .arg(accentHover);           // %9
 
     setStyleSheet(qss);
 }

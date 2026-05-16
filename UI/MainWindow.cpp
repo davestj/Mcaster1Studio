@@ -7,6 +7,7 @@
 #include "PreferencesDialog.h"
 #include "DeviceSettingsDialog.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include "CustomSurfaceDialog.h"
 #include "VUMeterModule.h"
 #include "DeckModule.h"
@@ -125,6 +126,13 @@ MainWindow::MainWindow(QWidget* parent)
             qApp->setWindowIcon(appIcon);
         }
     }
+
+    // Register ThemePalette provider so Core/ can resolve colors without
+    // depending on UI/ThemeManager directly.
+    extern void themePaletteRegisterProvider(int (*fn)());
+    themePaletteRegisterProvider([]() -> int {
+        return static_cast<int>(ThemeManager::instance()->currentTheme());
+    });
 
     applyTheme();
 
@@ -556,8 +564,14 @@ void MainWindow::initModuleFactory() {
         return new M1::PodRemoteModule(p);
     };
     // AUX Deck — per-instance, each gets custom name + device routing
-    m_moduleFactory["com.mcaster1.auxdeck"] = [](QObject* p) -> M1::IModule* {
-        return new M1::AuxDeckModule(p);
+    m_moduleFactory["com.mcaster1.auxdeck"] = [this](QObject* p) -> M1::IModule* {
+        auto* aux = new M1::AuxDeckModule(p);
+        m_auxDecks.append(aux);
+        // Remove from list when destroyed
+        connect(aux, &QObject::destroyed, this, [this, aux]() {
+            m_auxDecks.removeAll(aux);
+        });
+        return aux;
     };
 }
 
@@ -720,6 +734,10 @@ void MainWindow::wireModuleConnections() {
         if (m_deckB) m_deckB->onAudioBlock(in, out);
         if (m_ptt)      m_ptt->onAudioBlock(in, out);
         if (m_cartwall) m_cartwall->onAudioBlock(in, out);
+        // AUX Decks: process all instances (additive mix, same as standalone decks)
+        for (auto* aux : m_auxDecks) {
+            if (aux) aux->onAudioBlock(in, out);
+        }
         if (m_effects)  m_effects->onAudioBlock(in, out);
         if (m_podcast) m_podcast->onAudioBlock(in, out);
         if (m_encoder) m_encoder->onAudioBlock(in, out);
@@ -733,6 +751,12 @@ void MainWindow::wireModuleConnections() {
         }
         if (m_deckB && m_deckB->cueMixFrames() > 0) {
             m_audio->writeCue(m_deckB->cueMix(), m_deckB->cueMixFrames());
+        }
+        // AUX Deck CUE bus
+        for (auto* aux : m_auxDecks) {
+            if (aux && aux->cueMixFrames() > 0) {
+                m_audio->writeCue(aux->cueMix(), aux->cueMixFrames());
+            }
         }
     });
 
@@ -827,13 +851,29 @@ void MainWindow::wireModuleConnections() {
                     m_metadata->onMetadataUpdate(meta);
             });
         }
-    } else if (m_playlist && m_deck) {
+    }
+
+    // Auto-create playlist module when a deck exists — it's melded into DeckPlayer.
+    // Must happen BEFORE wiring so requestLoadMedia gets connected.
+    if (m_deck && !m_playlist) {
+        m_playlist = new M1::PlaylistModule(this);
+        m_playlist->initialize();
+    }
+
+    if (m_playlist && m_deck) {
         qInfo() << "[MainWindow] Wiring PlaylistModule to COMBINED DeckModule";
         disconnect(m_playlist, &M1::IModule::requestLoadMedia, nullptr, nullptr);
         connect(m_playlist, &M1::IModule::requestLoadMedia,
                 this, [this](const M1::MediaItem& item, int deckIndex) {
             auto* player = (deckIndex == 1) ? m_deck->deckB() : m_deck->deckA();
-            if (player) player->loadFile(item.filePath);
+            if (!player) return;
+            player->loadFile(item.filePath);
+            // Auto-play when AutoDJ is active
+            if (m_playlist && m_playlist->autoDJ()) {
+                connect(player, &M1::DeckPlayer::loadingFinished,
+                        this, [player]() { player->play(); },
+                        Qt::SingleShotConnection);
+            }
         });
         disconnect(m_playlist, &M1::PlaylistModule::crossfaderAnimateTo, nullptr, nullptr);
         connect(m_playlist, &M1::PlaylistModule::crossfaderAnimateTo,
@@ -916,6 +956,47 @@ void MainWindow::wireModuleConnections() {
         });
     }
 
+    // ── Library → AUX Deck CUE playback ──────────────────────────────────────
+    if (auto* libMod = dynamic_cast<M1::MediaLibraryModule*>(m_library)) {
+        disconnect(libMod, &M1::MediaLibraryModule::requestPlayOnAuxCue, this, nullptr);
+        connect(libMod, &M1::MediaLibraryModule::requestPlayOnAuxCue,
+                this, [this](const M1::MediaItem& item) {
+            // Find the current surface
+            auto* sw = qobject_cast<SurfaceWidget*>(
+                m_surfaceBar->widget(m_surfaceBar->currentIndex()));
+            if (!sw) return;
+
+            // Find an existing AuxDeck on this surface
+            M1::IModule* auxMod = nullptr;
+            for (auto* mod : sw->modules()) {
+                if (mod->moduleId() == "com.mcaster1.auxdeck") {
+                    auxMod = mod;
+                    break;
+                }
+            }
+            // If no AuxDeck exists, create one
+            if (!auxMod) {
+                auto it = m_moduleFactory.find("com.mcaster1.auxdeck");
+                if (it != m_moduleFactory.end()) {
+                    auxMod = it.value()(this);
+                    if (auxMod) {
+                        auxMod->initialize();
+                        sw->addModule(auxMod);
+                    }
+                }
+            }
+            // Load the track and play on CUE
+            if (auxMod) {
+                QMetaObject::invokeMethod(auxMod, "loadAndPlayOnCue",
+                    Qt::QueuedConnection,
+                    Q_ARG(QString, item.filePath));
+                statusBar()->showMessage(
+                    QString("Playing \"%1\" on AUX Deck CUE")
+                        .arg(item.displayTitle()), 4000);
+            }
+        });
+    }
+
     // ── Playlist ← Library model (AutoDJ track selection) ─────────────────────
     if (m_playlist && m_library && m_library->model()) {
         m_playlist->connectLibrary(m_library->model());
@@ -963,6 +1044,14 @@ void MainWindow::wireModuleConnections() {
     // ── PTT strip embedded in DeckWidget ─────────────────────────────────────
     if (m_deck && m_deck->deckWidget() && m_ptt) {
         m_deck->deckWidget()->setPTTModule(m_ptt);
+    }
+
+    // ── Playlist/AutoDJ embedded in DeckWidget center column ─────────────────
+    // DO NOT REMOVE — AutoDJ is permanently melded into the DeckPlayer module.
+    // Playlist was auto-created earlier (before wiring block) so signals are connected.
+    // The playlist widget appears between the decks, below crossfader + PTT.
+    if (m_deck && m_deck->deckWidget() && m_playlist) {
+        m_deck->deckWidget()->setPlaylistModule(m_playlist);
     }
 
     // ── Deck empty-state loading requests ────────────────────────────────────
@@ -1636,7 +1725,8 @@ void MainWindow::loadSavedSurfaces() {
                     // Create additional sub-panels
                     const QString pname  = s.value(pbase + "/name",
                         QString("Sub-Surface %1").arg(pi + 1)).toString();
-                    const QColor  pcolor(s.value(pbase + "/color", "#0ea5e9").toString());
+                    const QColor  pcolor(s.value(pbase + "/color",
+                        ThemePalette::forCurrentTheme().accent.name()).toString());
                     sw->subTabBar()->addSubSurface(pname, pcolor);
                 }
 

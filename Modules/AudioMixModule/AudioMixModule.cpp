@@ -11,6 +11,7 @@
 ///   2026-03-09  Initial implementation
 
 #include "AudioMixModule.h"
+#include "ThemePalette.h"
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -53,15 +54,16 @@ protected:
     void paintEvent(QPaintEvent*) override {
         QPainter p(this);
         p.setRenderHint(QPainter::Antialiasing);
-        p.fillRect(rect(), QColor(20, 20, 30));
+        const auto pal = ThemePalette::forCurrentTheme();
+        p.fillRect(rect(), pal.bg);
         int h = height();
         int fillH = static_cast<int>(h * m_level);
         if (fillH <= 0) return;
         QRect bar(0, h - fillH, width(), fillH);
         QColor color;
-        if (m_level < 0.6f) color = QColor(34, 197, 94);       // green
-        else if (m_level < 0.85f) color = QColor(234, 179, 8);  // yellow
-        else color = QColor(239, 68, 68);                        // red
+        if (m_level < 0.6f) color = pal.vuGreen;
+        else if (m_level < 0.85f) color = pal.vuYellow;
+        else color = pal.vuRed;
         p.fillRect(bar, color);
     }
 private:

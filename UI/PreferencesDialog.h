@@ -149,4 +149,9 @@ private:
     // Venice widgets
     QLineEdit*  m_veniceApiKey     = nullptr;
     QComboBox*  m_veniceModel      = nullptr;
+
+    // AI Persona widgets
+    QComboBox*  m_personaCombo     = nullptr;
+    QTextEdit*  m_personaText      = nullptr;
+    QLabel*     m_personaCharCount = nullptr;
 };

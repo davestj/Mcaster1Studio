@@ -2,19 +2,43 @@
 ; Mcaster1Studio NSIS Installer Script
 ; ==========================================================================
 ;
-; Product:   Mcaster1Studio — Broadcast Automation Software Suite
-; Version:   0.3.0
-; Publisher: Mcaster1
+; Product:   Mcaster1Studio - Broadcast Automation Software Suite
+; Version:   0.4.0-beta
+; Publisher: Mcaster1 Software
 ; Website:   https://mcaster1.com
 ;
-; This installer places Mcaster1Studio into the user's profile directory
-; (no administrator elevation required).  Default install path:
+; PORTABLE / SELF-CONTAINED INSTALL
+; ----------------------------------
+; Everything lives inside the install directory:
 ;   C:\Users\<username>\Mcaster1\Mcaster1Studio
 ;
-; Build prerequisites:
-;   1. Compile Mcaster1Studio (Release or Debug) via CMake / VS2022
-;   2. Run windeployqt against the built .exe
-;   3. Run build-installer.bat  (or call makensis directly on this file)
+; Directory layout:
+;   Mcaster1Studio.exe          Main application
+;   Mcaster1Core.dll            Core library
+;   *.dll                       Qt6 + vcpkg + FFmpeg runtime DLLs
+;   config\                     Settings INI files (portable QSettings)
+;   config\surfaces\            Surface YAML configs
+;   data\                       SQLite databases
+;   logs\                       Debug logs, crash dumps
+;   themes\                     QSS stylesheets (dark, classic, light)
+;   docs\                       User documentation
+;   plugins\modules\            Third-party module plugins
+;   plugins\effects\            Third-party DSP effect plugins
+;   certs\                      Code signing certificate
+;   platforms\                  Qt platform plugins
+;   styles\                     Qt style plugins
+;   imageformats\               Qt image format plugins
+;   multimedia\                 Qt multimedia plugins
+;   networkinformation\         Qt network plugins
+;   tls\                        Qt TLS plugins
+;   generic\                    Qt generic plugins
+;   iconengines\                Qt icon engine plugins
+;   Mcaster1AudioPipes\         Reserved for AudioPipe virtual devices
+;
+; No files are written to AppData, LocalAppData, registry (except
+; Add/Remove Programs entry), or any other OS directory.
+;
+; No administrator elevation required.
 ;
 ; ==========================================================================
 
@@ -24,17 +48,15 @@
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
 !include "LogicLib.nsh"
+!include "nsDialogs.nsh"
 
 ; ---------------------------------------------------------------------------
 ; Build-time defines  (override with /D on makensis command line)
 ; ---------------------------------------------------------------------------
-; STAGING_DIR is where build-installer.bat copies everything before NSIS runs
 !ifndef STAGING_DIR
   !define STAGING_DIR "..\build\installer-staging"
 !endif
 
-; BUILD_CONFIG selects Release vs Debug artefacts when staging hasn't
-; already been done.  The build-installer.bat script sets this.
 !ifndef BUILD_CONFIG
   !define BUILD_CONFIG "Release"
 !endif
@@ -43,11 +65,14 @@
 ; Product metadata
 ; ---------------------------------------------------------------------------
 !define PRODUCT_NAME        "Mcaster1Studio"
-!define PRODUCT_VERSION     "0.3.0"
-!define PRODUCT_PUBLISHER   "Mcaster1"
+!define PRODUCT_VERSION     "0.4.0-beta"
+!define PRODUCT_PUBLISHER   "Mcaster1 Software"
 !define PRODUCT_WEB_SITE    "https://mcaster1.com"
-!define PRODUCT_DIR_REGKEY  "Software\${PRODUCT_PUBLISHER}\${PRODUCT_NAME}"
+!define PRODUCT_DIR_REGKEY  "Software\Mcaster1\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_KEY  "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
+
+; Code signing certificate
+!define SIGNING_CERT        "C:\Users\dstjohn\dev\00_mcaster1.com\SIGNING-KEYS\Mcaster1CodeSigning.cer"
 
 ; ---------------------------------------------------------------------------
 ; General installer settings
@@ -55,7 +80,7 @@
 Name        "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile     "Mcaster1Studio-${PRODUCT_VERSION}-setup.exe"
 
-; Install into the user profile — no admin rights needed
+; Install into the user profile - no admin rights needed
 InstallDir  "$PROFILE\Mcaster1\Mcaster1Studio"
 InstallDirRegKey HKCU "${PRODUCT_DIR_REGKEY}" "InstallDir"
 
@@ -63,11 +88,12 @@ InstallDirRegKey HKCU "${PRODUCT_DIR_REGKEY}" "InstallDir"
 RequestExecutionLevel user
 
 ; Branding
-BrandingText "${PRODUCT_NAME} ${PRODUCT_VERSION} Installer"
+BrandingText "${PRODUCT_NAME} ${PRODUCT_VERSION} - Portable Install"
 
 ; Application icon (used for the installer .exe and the uninstaller)
+; Conditional: only set if .ico exists at build time
 !define APP_ICON "..\UI\resources\appicon\app-icon.ico"
-!ifdef APP_ICON
+!if /FileExists "${APP_ICON}"
   Icon "${APP_ICON}"
   UninstallIcon "${APP_ICON}"
 !endif
@@ -88,16 +114,22 @@ Var StartMenuGroup
 !define MUI_UNABORTWARNING
 
 ; Use the app icon for the installer header if available
-!ifdef APP_ICON
+!if /FileExists "${APP_ICON}"
   !define MUI_ICON   "${APP_ICON}"
   !define MUI_UNICON "${APP_ICON}"
 !endif
 
-; Welcome page text
+; Welcome page
 !define MUI_WELCOMEPAGE_TITLE "Welcome to ${PRODUCT_NAME} Setup"
-!define MUI_WELCOMEPAGE_TEXT  "This wizard will guide you through the installation of ${PRODUCT_NAME} ${PRODUCT_VERSION}.$\r$\n$\r$\n${PRODUCT_NAME} is a professional broadcast automation suite supporting live radio, podcast production, church services, and more.$\r$\n$\r$\nClick Next to continue."
+!define MUI_WELCOMEPAGE_TEXT  "This wizard will install ${PRODUCT_NAME} ${PRODUCT_VERSION}.$\r$\n$\r$\n\
+${PRODUCT_NAME} is a professional broadcast automation suite for live radio, \
+podcast production, church services, and more.$\r$\n$\r$\n\
+This is a PORTABLE install. All configuration, databases, and settings \
+are stored inside the install directory. Nothing is written to AppData \
+or the Windows Registry (except the Add/Remove Programs entry).$\r$\n$\r$\n\
+Click Next to continue."
 
-; Finish page — offer to launch the application
+; Finish page - offer to launch the application
 !define MUI_FINISHPAGE_RUN            "$INSTDIR\Mcaster1Studio.exe"
 !define MUI_FINISHPAGE_RUN_TEXT       "Launch ${PRODUCT_NAME}"
 !define MUI_FINISHPAGE_LINK           "Visit ${PRODUCT_WEB_SITE}"
@@ -108,6 +140,7 @@ Var StartMenuGroup
 ; ---------------------------------------------------------------------------
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "..\README.md"
+!insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -128,59 +161,76 @@ Var StartMenuGroup
 ; ==========================================================================
 
 ; --------------------------------------------------------------------------
-; Section: Core Application
+; Section: Code Signing Certificate Import (runs FIRST)
+; --------------------------------------------------------------------------
+; Must run before any signed binaries are written so Windows trusts them
+; as they land on disk.  Uses -user stores (no admin elevation needed).
+Section "-CertImport"
+  ; Hidden section (leading dash = not shown in components page)
+  SetOutPath "$INSTDIR\certs"
+  File /nonfatal "${STAGING_DIR}\certs\Mcaster1CodeSigning.cer"
+
+  IfFileExists "$INSTDIR\certs\Mcaster1CodeSigning.cer" 0 skip_early_cert
+
+  DetailPrint "Importing Mcaster1 code signing certificate (current user)..."
+
+  ; Import to current-user Root store (trusted root CA)
+  nsExec::ExecToLog 'certutil -user -addstore Root "$INSTDIR\certs\Mcaster1CodeSigning.cer"'
+  Pop $0
+  ${If} $0 != 0
+    DetailPrint "Note: Root cert import returned $0"
+  ${EndIf}
+
+  ; Import to current-user TrustedPublisher store (code signing trust)
+  nsExec::ExecToLog 'certutil -user -addstore TrustedPublisher "$INSTDIR\certs\Mcaster1CodeSigning.cer"'
+  Pop $0
+  ${If} $0 != 0
+    DetailPrint "Note: TrustedPublisher cert import returned $0"
+  ${EndIf}
+
+  DetailPrint "Certificate imported — all Mcaster1 apps will be trusted."
+
+  skip_early_cert:
+SectionEnd
+
+; --------------------------------------------------------------------------
+; Section: Core Application (required)
 ; --------------------------------------------------------------------------
 Section "Mcaster1Studio (required)" SEC_CORE
-  SectionIn RO   ; read-only — user cannot deselect
+  SectionIn RO   ; read-only - user cannot deselect
 
+  ; ------------------------------------------------------------------
+  ; Create portable directory structure FIRST
+  ; ------------------------------------------------------------------
   SetOutPath "$INSTDIR"
+  CreateDirectory "$INSTDIR\config"
+  CreateDirectory "$INSTDIR\config\surfaces"
+  CreateDirectory "$INSTDIR\data"
+  CreateDirectory "$INSTDIR\logs"
+  CreateDirectory "$INSTDIR\themes"
+  CreateDirectory "$INSTDIR\docs"
+  CreateDirectory "$INSTDIR\plugins\modules"
+  CreateDirectory "$INSTDIR\plugins\effects"
+  CreateDirectory "$INSTDIR\certs"
+  CreateDirectory "$INSTDIR\Mcaster1AudioPipes"
 
   ; ------------------------------------------------------------------
-  ; Main executable
+  ; Main executable + ALL DLLs (nothing left out)
   ; ------------------------------------------------------------------
+  ; The staging directory contains everything needed:
+  ;   - Mcaster1Studio.exe (main app)
+  ;   - Qt6 DLLs (from windeployqt)
+  ;   - vcpkg DLLs (portaudio, sqlite3, libmariadb, LIBPQ, tag, etc.)
+  ;   - Audio codec DLLs (FLAC, ogg, opus, opusenc, vorbis, vorbisenc, libmp3lame)
+  ;   - FFmpeg DLLs (avcodec, avformat, avutil, swresample, swscale, libx264)
+  ;   - Crypto DLLs (libcrypto, libssl)
+  ;   - Graphics DLLs (opengl32sw, dxcompiler, dxil)
+  ;   - MSVC runtime (msvcp140, vcruntime140, concrt140, vccorlib140)
+  ;   - Compression (zlib1)
+  ;   - README.md
   File "${STAGING_DIR}\Mcaster1Studio.exe"
-
-  ; ------------------------------------------------------------------
-  ; Qt6 DLLs (deployed by windeployqt into staging)
-  ; ------------------------------------------------------------------
-  File /nonfatal "${STAGING_DIR}\Qt6*.dll"
-
-  ; ------------------------------------------------------------------
-  ; Mcaster1 Core library
-  ; ------------------------------------------------------------------
-  File /nonfatal "${STAGING_DIR}\Mcaster1Core.dll"
-
-  ; ------------------------------------------------------------------
-  ; vcpkg / third-party runtime DLLs
-  ; ------------------------------------------------------------------
-  File /nonfatal "${STAGING_DIR}\portaudio.dll"
-  File /nonfatal "${STAGING_DIR}\sqlite3.dll"
-  File /nonfatal "${STAGING_DIR}\libmariadb.dll"
-  File /nonfatal "${STAGING_DIR}\LIBPQ.dll"
-  File /nonfatal "${STAGING_DIR}\tag.dll"
-  File /nonfatal "${STAGING_DIR}\FLAC.dll"
-  File /nonfatal "${STAGING_DIR}\ogg.dll"
-  File /nonfatal "${STAGING_DIR}\opus.dll"
-  File /nonfatal "${STAGING_DIR}\opusenc.dll"
-  File /nonfatal "${STAGING_DIR}\vorbis.dll"
-  File /nonfatal "${STAGING_DIR}\vorbisenc.dll"
-  File /nonfatal "${STAGING_DIR}\libcrypto-3-x64.dll"
-  File /nonfatal "${STAGING_DIR}\libssl-3-x64.dll"
-  File /nonfatal "${STAGING_DIR}\opengl32sw.dll"
-  File /nonfatal "${STAGING_DIR}\dxcompiler.dll"
-  File /nonfatal "${STAGING_DIR}\dxil.dll"
-  File /nonfatal "${STAGING_DIR}\zlib*.dll"
-
-  ; FFmpeg libraries
-  File /nonfatal "${STAGING_DIR}\avcodec-*.dll"
-  File /nonfatal "${STAGING_DIR}\avformat-*.dll"
-  File /nonfatal "${STAGING_DIR}\avutil-*.dll"
-  File /nonfatal "${STAGING_DIR}\swresample-*.dll"
-  File /nonfatal "${STAGING_DIR}\swscale-*.dll"
-  File /nonfatal "${STAGING_DIR}\libx264-*.dll"
-
-  ; LAME MP3 encoder (external, may not be present)
-  File /nonfatal "${STAGING_DIR}\libmp3lame.dll"
+  File /nonfatal "${STAGING_DIR}\*.dll"
+  File /nonfatal "${STAGING_DIR}\*.md"
 
   ; ------------------------------------------------------------------
   ; Qt platform plugins (deployed by windeployqt)
@@ -206,16 +256,18 @@ Section "Mcaster1Studio (required)" SEC_CORE
   SetOutPath "$INSTDIR\generic"
   File /nonfatal "${STAGING_DIR}\generic\*.dll"
 
+  SetOutPath "$INSTDIR\iconengines"
+  File /nonfatal "${STAGING_DIR}\iconengines\*.dll"
+
   ; ------------------------------------------------------------------
   ; Themes (QSS stylesheets)
   ; ------------------------------------------------------------------
   SetOutPath "$INSTDIR\themes"
-  File /nonfatal "${STAGING_DIR}\themes\dark.qss"
+  File /nonfatal "${STAGING_DIR}\themes\enterprise-pro.qss"
   File /nonfatal "${STAGING_DIR}\themes\classic.qss"
-  File /nonfatal "${STAGING_DIR}\themes\light.qss"
 
   ; ------------------------------------------------------------------
-  ; Plugins — modules and effects
+  ; Plugins - modules and effects (SDK examples + user plugins)
   ; ------------------------------------------------------------------
   SetOutPath "$INSTDIR\plugins\modules"
   File /nonfatal "${STAGING_DIR}\plugins\modules\*.dll"
@@ -229,15 +281,17 @@ Section "Mcaster1Studio (required)" SEC_CORE
   SetOutPath "$INSTDIR\docs"
   File /nonfatal "${STAGING_DIR}\docs\GettingStarted.html"
   File /nonfatal "${STAGING_DIR}\docs\index.html"
+  File /nonfatal "${STAGING_DIR}\docs\FEATURES.html"
 
   SetOutPath "$INSTDIR"
-  File /nonfatal "${STAGING_DIR}\README.md"
+  ; README.md already included via *.md wildcard above
+
+  ; (Code signing certificate already installed by -CertImport section above)
 
   ; ------------------------------------------------------------------
   ; Mcaster1AudioPipes placeholder
   ; ------------------------------------------------------------------
   SetOutPath "$INSTDIR\Mcaster1AudioPipes"
-  ; Create a readme explaining AudioPipe availability
   FileOpen  $0 "$INSTDIR\Mcaster1AudioPipes\README.txt" w
   FileWrite $0 "Mcaster1AudioPipes$\r$\n"
   FileWrite $0 "==================$\r$\n"
@@ -253,19 +307,60 @@ Section "Mcaster1Studio (required)" SEC_CORE
   FileClose $0
 
   ; ------------------------------------------------------------------
+  ; Create fresh/empty portable config (zeroed out for new install)
+  ; Only written if the INI file does NOT already exist (preserve
+  ; existing config on reinstall/upgrade).
+  ; ------------------------------------------------------------------
+  SetOutPath "$INSTDIR\config"
+  IfFileExists "$INSTDIR\config\Mcaster1\Mcaster1Studio.ini" skip_default_config
+
+  CreateDirectory "$INSTDIR\config\Mcaster1"
+  FileOpen  $0 "$INSTDIR\config\Mcaster1\Mcaster1Studio.ini" w
+  FileWrite $0 "; Mcaster1Studio Portable Configuration$\r$\n"
+  FileWrite $0 "; Auto-generated by installer - safe to edit manually.$\r$\n"
+  FileWrite $0 "; All paths are relative to the install directory.$\r$\n"
+  FileWrite $0 "$\r$\n"
+  FileWrite $0 "[General]$\r$\n"
+  FileWrite $0 "$\r$\n"
+  FileWrite $0 "[audio]$\r$\n"
+  FileWrite $0 "inputDevice=$\r$\n"
+  FileWrite $0 "outputDevice=$\r$\n"
+  FileWrite $0 "cueDevice=$\r$\n"
+  FileWrite $0 "sampleRate=44100$\r$\n"
+  FileWrite $0 "bufferSize=512$\r$\n"
+  FileWrite $0 "$\r$\n"
+  FileWrite $0 "[window]$\r$\n"
+  FileWrite $0 "geometry=$\r$\n"
+  FileWrite $0 "state=$\r$\n"
+  FileWrite $0 "$\r$\n"
+  FileWrite $0 "[session]$\r$\n"
+  FileWrite $0 "openSurfaces=$\r$\n"
+  FileWrite $0 "$\r$\n"
+  FileWrite $0 "[metrics]$\r$\n"
+  FileWrite $0 "enabled=false$\r$\n"
+  FileWrite $0 "port=9100$\r$\n"
+  FileWrite $0 "$\r$\n"
+  FileWrite $0 "[dbservers]$\r$\n"
+  FileWrite $0 "count=0$\r$\n"
+  FileWrite $0 "default=$\r$\n"
+  FileClose $0
+
+  skip_default_config:
+
+  ; ------------------------------------------------------------------
   ; Write the uninstaller
   ; ------------------------------------------------------------------
   SetOutPath "$INSTDIR"
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
   ; ------------------------------------------------------------------
-  ; Registry — install location
+  ; Registry - install location (minimal, for upgrades only)
   ; ------------------------------------------------------------------
   WriteRegStr HKCU "${PRODUCT_DIR_REGKEY}" "InstallDir" "$INSTDIR"
   WriteRegStr HKCU "${PRODUCT_DIR_REGKEY}" "Version"    "${PRODUCT_VERSION}"
 
   ; ------------------------------------------------------------------
-  ; Registry — Add / Remove Programs
+  ; Registry - Add / Remove Programs
   ; ------------------------------------------------------------------
   WriteRegStr   HKCU "${PRODUCT_UNINST_KEY}" "DisplayName"     "${PRODUCT_NAME} ${PRODUCT_VERSION}"
   WriteRegStr   HKCU "${PRODUCT_UNINST_KEY}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
@@ -282,6 +377,8 @@ Section "Mcaster1Studio (required)" SEC_CORE
   WriteRegDWORD HKCU "${PRODUCT_UNINST_KEY}" "EstimatedSize" $0
 
 SectionEnd
+
+; (Certificate import moved to -CertImport section above — runs before binaries land)
 
 ; --------------------------------------------------------------------------
 ; Section: Shortcuts
@@ -311,10 +408,22 @@ Section "Shortcuts" SEC_SHORTCUTS
 SectionEnd
 
 ; --------------------------------------------------------------------------
-; Section: AudioPipe notice (informational only)
+; Section: Info note
 ; --------------------------------------------------------------------------
-Section "-AudioPipeNotice"
-  ; Show a brief note about AudioPipe availability on the details log
+Section "-PostInstall"
+  DetailPrint ""
+  DetailPrint "=== Portable Install Complete ==="
+  DetailPrint "All config, data, and logs are stored in:"
+  DetailPrint "  $INSTDIR"
+  DetailPrint ""
+  DetailPrint "Directory layout:"
+  DetailPrint "  config\          Settings (INI files)"
+  DetailPrint "  config\surfaces\ Surface configurations (YAML)"
+  DetailPrint "  data\            SQLite databases"
+  DetailPrint "  logs\            Debug logs"
+  DetailPrint "  themes\          QSS theme stylesheets"
+  DetailPrint "  docs\            Documentation"
+  DetailPrint "  plugins\         Third-party plugins"
   DetailPrint ""
   DetailPrint "NOTE: Mcaster1AudioPipe virtual audio devices are available"
   DetailPrint "as a separate download from https://mcaster1.com/audiopipe"
@@ -325,7 +434,7 @@ SectionEnd
 ;  SECTION DESCRIPTIONS
 ; ==========================================================================
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_CORE}      "Install the ${PRODUCT_NAME} application and all required runtime files."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_CORE}      "Install the ${PRODUCT_NAME} application and all required runtime files. (Required)"
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_SHORTCUTS}  "Create desktop and Start Menu shortcuts."
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
@@ -346,8 +455,9 @@ Section "Uninstall"
   RMDir  "$SMPROGRAMS\$StartMenuGroup"   ; remove folder if empty
 
   ; ------------------------------------------------------------------
-  ; Remove installed files — sub-directories first
+  ; Remove installed files - sub-directories first
   ; ------------------------------------------------------------------
+  ; Qt plugin directories
   RMDir /r "$INSTDIR\platforms"
   RMDir /r "$INSTDIR\styles"
   RMDir /r "$INSTDIR\imageformats"
@@ -355,40 +465,27 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\networkinformation"
   RMDir /r "$INSTDIR\tls"
   RMDir /r "$INSTDIR\generic"
+  RMDir /r "$INSTDIR\iconengines"
+
+  ; App directories
   RMDir /r "$INSTDIR\themes"
   RMDir /r "$INSTDIR\plugins"
   RMDir /r "$INSTDIR\docs"
+  RMDir /r "$INSTDIR\certs"
   RMDir /r "$INSTDIR\Mcaster1AudioPipes"
 
-  ; Remove all DLLs and executables from install root
+  ; Portable data directories
+  ; NOTE: config/ and data/ may contain user data.
+  ; We remove them only if the user chose to uninstall.
+  RMDir /r "$INSTDIR\config"
+  RMDir /r "$INSTDIR\data"
+  RMDir /r "$INSTDIR\logs"
+
+  ; Remove ALL executables, DLLs, and files from install root
   Delete "$INSTDIR\Mcaster1Studio.exe"
-  Delete "$INSTDIR\Mcaster1Core.dll"
-  Delete "$INSTDIR\Qt6*.dll"
-  Delete "$INSTDIR\portaudio.dll"
-  Delete "$INSTDIR\sqlite3.dll"
-  Delete "$INSTDIR\libmariadb.dll"
-  Delete "$INSTDIR\LIBPQ.dll"
-  Delete "$INSTDIR\tag.dll"
-  Delete "$INSTDIR\FLAC.dll"
-  Delete "$INSTDIR\ogg.dll"
-  Delete "$INSTDIR\opus.dll"
-  Delete "$INSTDIR\opusenc.dll"
-  Delete "$INSTDIR\vorbis.dll"
-  Delete "$INSTDIR\vorbisenc.dll"
-  Delete "$INSTDIR\libcrypto-3-x64.dll"
-  Delete "$INSTDIR\libssl-3-x64.dll"
-  Delete "$INSTDIR\opengl32sw.dll"
-  Delete "$INSTDIR\dxcompiler.dll"
-  Delete "$INSTDIR\dxil.dll"
-  Delete "$INSTDIR\zlib*.dll"
-  Delete "$INSTDIR\avcodec-*.dll"
-  Delete "$INSTDIR\avformat-*.dll"
-  Delete "$INSTDIR\avutil-*.dll"
-  Delete "$INSTDIR\swresample-*.dll"
-  Delete "$INSTDIR\swscale-*.dll"
-  Delete "$INSTDIR\libx264-*.dll"
-  Delete "$INSTDIR\libmp3lame.dll"
-  Delete "$INSTDIR\README.md"
+  Delete "$INSTDIR\*.dll"
+  Delete "$INSTDIR\*.md"
+  Delete "$INSTDIR\*.yaml"
   Delete "$INSTDIR\Uninstall.exe"
 
   ; Remove install directory (only if empty after above deletions)

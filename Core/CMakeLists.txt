@@ -25,10 +25,12 @@ set(CORE_HEADERS
     include/SurfaceThreadPool.h
     include/ThreadPoolManager.h
     include/PooledRunnable.h
+    include/ThemePalette.h
 )
 
 set(CORE_SOURCES
     src/ModuleRegistry.cpp
+    src/ThemePalette.cpp
     src/SurfaceManager.cpp
     src/EventBus.cpp
     src/IcyMetadata.cpp

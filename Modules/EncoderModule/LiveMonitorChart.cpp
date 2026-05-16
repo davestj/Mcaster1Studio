@@ -1,5 +1,6 @@
 #include "LiveMonitorChart.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QPainter>
 #include <QPainterPath>
 #include <QMouseEvent>
@@ -71,7 +72,7 @@ QColor LiveMonitorChart::lineColor() const
 {
     switch (ThemeManager::instance()->currentTheme()) {
         case ThemeManager::Theme::Classic: return m_classicColor;
-        case ThemeManager::Theme::Light:   return m_lightColor;
+        case ThemeManager::Theme::EnterprisePro:   return m_lightColor;
         default:                           return m_darkColor;
     }
 }
@@ -80,7 +81,7 @@ QColor LiveMonitorChart::bgColor() const
 {
     switch (ThemeManager::instance()->currentTheme()) {
         case ThemeManager::Theme::Classic: return QColor("#2a1e14");
-        case ThemeManager::Theme::Light:   return QColor("#f5f3f0");
+        case ThemeManager::Theme::EnterprisePro:   return QColor("#f5f3f0");
         default:                           return QColor("#0a1628");
     }
 }
@@ -89,8 +90,8 @@ QColor LiveMonitorChart::borderColor() const
 {
     switch (ThemeManager::instance()->currentTheme()) {
         case ThemeManager::Theme::Classic: return QColor("#5a4030");
-        case ThemeManager::Theme::Light:   return QColor("#d8d4ce");
-        default:                           return QColor("#1e3a5f");
+        case ThemeManager::Theme::EnterprisePro:   return QColor("#d8d4ce");
+        default:                           return ThemePalette::forCurrentTheme().border;
     }
 }
 
@@ -105,7 +106,7 @@ QColor LiveMonitorChart::textColor() const
 {
     switch (ThemeManager::instance()->currentTheme()) {
         case ThemeManager::Theme::Classic: return QColor("#a08870");
-        case ThemeManager::Theme::Light:   return QColor("#6b6560");
+        case ThemeManager::Theme::EnterprisePro:   return QColor("#6b6560");
         default:                           return QColor("#94a3b8");
     }
 }

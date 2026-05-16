@@ -3,6 +3,7 @@
 #include "EncoderSlot.h"
 #include "EncoderEventLog.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
@@ -135,17 +136,21 @@ void LiveMonitorWindow::buildUi()
     root->addLayout(topRow);
 
     // ── Charts ──────────────────────────────────────────────────────────────
-    m_listenersChart = new LiveMonitorChart(central);
-    m_listenersChart->configure("Listeners", "",
-                                 QColor("#0ea5e9"), QColor("#d4891e"), QColor("#1c5caa"), 120);
+    {
+        const auto tp = ThemePalette::forCurrentTheme();
 
-    m_bandwidthChart = new LiveMonitorChart(central);
-    m_bandwidthChart->configure("Bandwidth", "kbps",
-                                 QColor("#22c55e"), QColor("#6b8e23"), QColor("#16a34a"), 120);
+        m_listenersChart = new LiveMonitorChart(central);
+        m_listenersChart->configure("Listeners", "",
+                                     tp.info, tp.accent, tp.borderAccent, 120);
 
-    m_bitrateChart = new LiveMonitorChart(central);
-    m_bitrateChart->configure("Bitrate Stability", "kbps",
-                               QColor("#f59e0b"), QColor("#c87533"), QColor("#d97706"), 120);
+        m_bandwidthChart = new LiveMonitorChart(central);
+        m_bandwidthChart->configure("Bandwidth", "kbps",
+                                     tp.vuGreen, tp.success.darker(120), tp.success, 120);
+
+        m_bitrateChart = new LiveMonitorChart(central);
+        m_bitrateChart->configure("Bitrate Stability", "kbps",
+                                   tp.warning, tp.warning.darker(140), tp.vuYellow, 120);
+    }
 
     for (auto* chart : {m_listenersChart, m_bandwidthChart, m_bitrateChart}) {
         chart->setMinimumHeight(80);
@@ -162,7 +167,7 @@ void LiveMonitorWindow::buildUi()
     m_logTail->setObjectName("LiveMonitorLog");
     m_logTail->setReadOnly(true);
     m_logTail->setMaximumHeight(150);
-    QFont monoFont("Consolas", 9);
+    QFont monoFont("Consolas", 10);
     monoFont.setStyleHint(QFont::Monospace);
     m_logTail->setFont(monoFont);
     logLayout->addWidget(m_logTail);
@@ -175,20 +180,7 @@ void LiveMonitorWindow::buildUi()
 // ═════════════════════════════════════════════════════════════════════════════
 void LiveMonitorWindow::applyStyles()
 {
-    const bool isLight   = ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light;
-    const bool isClassic = ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Classic;
-
-    QString bg, text, accent, border, groupBg, logBg;
-    if (isLight) {
-        bg = "#f5f3f0"; text = "#1a1814"; accent = "#1c5caa";
-        border = "#d8d4ce"; groupBg = "#ffffff"; logBg = "#f5f3f0";
-    } else if (isClassic) {
-        bg = "#2a1e14"; text = "#f0e6d8"; accent = "#d4891e";
-        border = "#5a4030"; groupBg = "#3d2c1e"; logBg = "#2a1e14";
-    } else {
-        bg = "#0f172a"; text = "#e2e8f0"; accent = "#0ea5e9";
-        border = "#1e3a5f"; groupBg = "#0c1a2e"; logBg = "#0a1628";
-    }
+    const auto tp = ThemePalette::forCurrentTheme();
 
     setStyleSheet(QString(R"(
         #LiveMonitorWindow { background: %1; }
@@ -207,9 +199,10 @@ void LiveMonitorWindow::applyStyles()
         QLabel#LiveMonitorLed { font-size: 13px; font-weight: bold; }
         QTextEdit#LiveMonitorLog {
             background: %6; color: %2; border: 1px solid %4;
-            border-radius: 3px; font-size: 11px;
+            border-radius: 3px; font-size: 12px;
         }
-    )").arg(bg, text, accent, border, groupBg, logBg));
+    )").arg(tp.bg.name(), tp.text.name(), tp.accent.name(),
+            tp.border.name(), tp.panelBg.name(), tp.cardBg.name()));
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -237,9 +230,10 @@ void LiveMonitorWindow::onStatsReply(QNetworkReply* reply)
 {
     reply->deleteLater();
 
+    const auto tp = ThemePalette::forCurrentTheme();
     if (reply->error() != QNetworkReply::NoError) {
         m_serverLed->setText("\xe2\x9c\x97 " + reply->errorString());
-        m_serverLed->setStyleSheet("color: #ef4444;");
+        m_serverLed->setStyleSheet(QString("color: %1;").arg(tp.error.name()));
         return;
     }
 
@@ -248,7 +242,7 @@ void LiveMonitorWindow::onStatsReply(QNetworkReply* reply)
 
     // Update server stats labels
     m_serverLed->setText("\xe2\x97\x8f Connected");
-    m_serverLed->setStyleSheet("color: #22c55e;");
+    m_serverLed->setStyleSheet(QString("color: %1;").arg(tp.success.name()));
     m_mountListeners->setText("Listeners: " + QString::number(m_lastListeners));
     m_listenerPeak->setText("Peak: " + QString::number(m_lastListenerPeak));
     m_bandwidth->setText("Bandwidth: " + formatBandwidth(m_lastBandwidthBps));
@@ -334,13 +328,14 @@ void LiveMonitorWindow::updateLocalStats()
         }
         return "?";
     };
-    static const auto stColor = [](S s) -> QString {
+    const auto stColor = [](S s) -> QString {
+        const auto tp = ThemePalette::forCurrentTheme();
         switch (s) {
-            case S::Streaming:    return "color: #22c55e;";
+            case S::Streaming:    return QString("color: %1;").arg(tp.success.name());
             case S::Connecting:
-            case S::Reconnecting: return "color: #f59e0b;";
-            case S::Error:        return "color: #ef4444;";
-            default:              return "color: #94a3b8;";
+            case S::Reconnecting: return QString("color: %1;").arg(tp.warning.name());
+            case S::Error:        return QString("color: %1;").arg(tp.error.name());
+            default:              return QString("color: %1;").arg(tp.textMuted.name());
         }
     };
 
@@ -395,13 +390,14 @@ void LiveMonitorWindow::appendLogEntry(const QString& formatted)
     }
 
     // Color-code by content
+    const auto tp = ThemePalette::forCurrentTheme();
     QString color;
-    if (formatted.contains("[ERR"))       color = "#ef4444";
-    else if (formatted.contains("[WARN")) color = "#f59e0b";
-    else if (formatted.contains("[ICY"))  color = "#22c55e";
-    else if (formatted.contains("[AUTH")) color = "#0ea5e9";
-    else if (formatted.contains("[CONN")) color = "#38bdf8";
-    else                                  color = "#94a3b8";
+    if (formatted.contains("[ERR"))       color = tp.error.name();
+    else if (formatted.contains("[WARN")) color = tp.warning.name();
+    else if (formatted.contains("[ICY"))  color = tp.success.name();
+    else if (formatted.contains("[AUTH")) color = tp.info.name();
+    else if (formatted.contains("[CONN")) color = tp.accent.name();
+    else                                  color = tp.textMuted.name();
 
     m_logTail->append(QString("<span style='color:%1'>%2</span>")
                       .arg(color, formatted.toHtmlEscaped()));

@@ -6,6 +6,7 @@
 #include "SwitchCasterModule.h"
 #include "TranscribeRecModule.h"
 #include "AudioMixModule.h"
+#include "ThemePalette.h"
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -56,19 +57,20 @@ protected:
         p.setRenderHint(QPainter::Antialiasing);
 
         // Background
+        const auto pal = ThemePalette::forCurrentTheme();
         p.setPen(Qt::NoPen);
-        p.setBrush(QColor(0x1e, 0x29, 0x3b));
+        p.setBrush(pal.panelBg);
         p.drawRoundedRect(rect(), 4, 4);
 
         // Fill
         if (m_fraction > 0.0) {
             QColor fillColor;
             if (m_fraction < 0.75)
-                fillColor = QColor(0x22, 0xc5, 0x5e); // green
+                fillColor = pal.success;
             else if (m_fraction < 0.90)
-                fillColor = QColor(0xf5, 0x9e, 0x0b); // amber
+                fillColor = pal.warning;
             else
-                fillColor = QColor(0xef, 0x44, 0x44); // red
+                fillColor = pal.error;
 
             const int w = static_cast<int>(width() * std::clamp(m_fraction, 0.0, 1.0));
             p.setBrush(fillColor);
@@ -381,13 +383,14 @@ private slots:
                 : QString::fromUtf8("\u221E"); // infinity
             m_table->setItem(i, 3, new QTableWidgetItem(durStr));
 
+            const auto pal = ThemePalette::forCurrentTheme();
             QString statusStr;
             QColor  statusColor;
             switch (status) {
-            case M1::SegmentStatus::Done:    statusStr = "Done";    statusColor = QColor(0x22, 0xc5, 0x5e); break;
-            case M1::SegmentStatus::Live:    statusStr = "LIVE";    statusColor = QColor(0xef, 0x44, 0x44); break;
-            case M1::SegmentStatus::Skipped: statusStr = "Skipped"; statusColor = QColor(0x94, 0xa3, 0xb8); break;
-            default:                         statusStr = "Pending"; statusColor = QColor(0x64, 0x74, 0x8b); break;
+            case M1::SegmentStatus::Done:    statusStr = "Done";    statusColor = pal.success; break;
+            case M1::SegmentStatus::Live:    statusStr = "LIVE";    statusColor = pal.error; break;
+            case M1::SegmentStatus::Skipped: statusStr = "Skipped"; statusColor = pal.textMuted; break;
+            default:                         statusStr = "Pending"; statusColor = pal.textDisabled; break;
             }
             auto* statusItem = new QTableWidgetItem(statusStr);
             statusItem->setForeground(statusColor);
@@ -398,7 +401,7 @@ private slots:
             if (status == M1::SegmentStatus::Live) {
                 for (int c = 0; c < 5; ++c) {
                     if (auto* item = m_table->item(i, c))
-                        item->setBackground(QColor(0x1e, 0x29, 0x3b));
+                        item->setBackground(pal.panelBg);
                 }
             }
         }
@@ -864,20 +867,21 @@ QString ServiceRunnerModule::segmentTypeName(SegmentType type) {
 }
 
 QString ServiceRunnerModule::segmentTypeColor(SegmentType type) {
+    const auto pal = ThemePalette::forCurrentTheme();
     switch (type) {
-    case SegmentType::Welcome:       return "#22c55e"; // green
-    case SegmentType::Worship:       return "#8b5cf6"; // violet
-    case SegmentType::Prayer:        return "#0ea5e9"; // sky
-    case SegmentType::Scripture:     return "#f59e0b"; // amber
-    case SegmentType::Sermon:        return "#ec4899"; // pink
-    case SegmentType::Offering:      return "#14b8a6"; // teal
-    case SegmentType::Announcement:  return "#f97316"; // orange
-    case SegmentType::Communion:     return "#a78bfa"; // purple
-    case SegmentType::MediaPlayback: return "#06b6d4"; // cyan
-    case SegmentType::Closing:       return "#64748b"; // slate
-    case SegmentType::Custom:        return "#94a3b8"; // gray
+    case SegmentType::Welcome:       return pal.success.name();
+    case SegmentType::Worship:       return pal.accent.name();
+    case SegmentType::Prayer:        return pal.info.name();
+    case SegmentType::Scripture:     return pal.warning.name();
+    case SegmentType::Sermon:        return pal.error.name();
+    case SegmentType::Offering:      return pal.success.darker(110).name();
+    case SegmentType::Announcement:  return pal.warning.lighter(110).name();
+    case SegmentType::Communion:     return pal.accent.lighter(120).name();
+    case SegmentType::MediaPlayback: return pal.info.lighter(110).name();
+    case SegmentType::Closing:       return pal.textDisabled.name();
+    case SegmentType::Custom:        return pal.textMuted.name();
     }
-    return "#94a3b8";
+    return pal.textMuted.name();
 }
 
 // ─── Private slots ─────────────────────────────────────────────────────────

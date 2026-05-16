@@ -274,7 +274,7 @@ public:
         // Note about STT
         auto* sttLabel = new QLabel("Speech-to-text: not yet available (v2 feature)");
         sttLabel->setObjectName("TranscribeRecSttLabel");
-        sttLabel->setStyleSheet("color: #888; font-style: italic; font-size: 11px;");
+        sttLabel->setStyleSheet("color: #888; font-style: italic; font-size: 12px;");
         lay->addWidget(sttLabel);
 
         connect(addBtn, &QPushButton::clicked, this, [this]() {

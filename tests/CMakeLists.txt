@@ -227,6 +227,8 @@ target_link_libraries(TestAuxDeck PRIVATE
     Mcaster1Audio
     AuxDeckModule
     DeckModule
+    PlaylistModule
+    MediaLibraryModule
     PTTModule
     Qt6::Core
     Qt6::Gui

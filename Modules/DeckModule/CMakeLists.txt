@@ -31,6 +31,7 @@ target_include_directories(DeckModule PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/UI
     ${CMAKE_SOURCE_DIR}/Modules/PTTModule
+    ${CMAKE_SOURCE_DIR}/Modules/PlaylistModule
 )
 
 target_link_libraries(DeckModule

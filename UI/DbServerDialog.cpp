@@ -1,4 +1,5 @@
 #include "DbServerDialog.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -148,11 +149,14 @@ void DbServerDialog::onBackendChanged(int index) {
 void DbServerDialog::onTestConnection() {
     M1::DbServerEntry e = entry();
     const QString err = M1::DbServerRegistry::testConnection(e);
+    auto p = ThemePalette::forCurrentTheme();
     if (err.isEmpty()) {
-        m_statusLabel->setStyleSheet("color: #22c55e; font-weight: bold;");
+        m_statusLabel->setStyleSheet(
+            QString("color: %1; font-weight: bold;").arg(p.success.name()));
         m_statusLabel->setText("Connection OK");
     } else {
-        m_statusLabel->setStyleSheet("color: #ef4444; font-weight: bold;");
+        m_statusLabel->setStyleSheet(
+            QString("color: %1; font-weight: bold;").arg(p.error.name()));
         m_statusLabel->setText(err);
     }
 }

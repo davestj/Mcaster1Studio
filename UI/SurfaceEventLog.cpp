@@ -1,4 +1,5 @@
 #include "SurfaceEventLog.h"
+#include "ThemePalette.h"
 #include <QDialog>
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -35,15 +36,16 @@ void SurfaceEventLog::appendEvent(const QString& category, const QString& messag
             QString("[%1] %2  %3").arg(timeStr, entry.category.leftJustified(8), entry.message),
             m_listWidget);
 
-        // Colour-code by category
+        // Colour-code by category using theme palette
+        auto pal = ThemePalette::forCurrentTheme();
         if (category == "ERROR")
-            item->setForeground(QColor("#ef4444"));
+            item->setForeground(pal.error);
         else if (category == "SCHED")
-            item->setForeground(QColor("#f59e0b"));
+            item->setForeground(pal.warning);
         else if (category == "DECK")
-            item->setForeground(QColor("#38bdf8"));
+            item->setForeground(pal.info);
         else if (category == "ENCODER")
-            item->setForeground(QColor("#22c55e"));
+            item->setForeground(pal.success);
 
         m_listWidget->scrollToBottom();
     }
@@ -103,7 +105,7 @@ void SurfaceEventLog::buildDialog(QWidget* parentWidget) {
     // Event list
     m_listWidget = new QListWidget(m_dialog);
     m_listWidget->setObjectName("EventLogList");
-    m_listWidget->setFont(QFont("Consolas", 9));
+    m_listWidget->setFont(QFont("Consolas", 12));
     m_listWidget->setAlternatingRowColors(true);
     m_listWidget->setSelectionMode(QAbstractItemView::SingleSelection);
     layout->addWidget(m_listWidget, 1);
@@ -115,14 +117,15 @@ void SurfaceEventLog::buildDialog(QWidget* parentWidget) {
                  e.category.leftJustified(8),
                  e.message);
         auto* item = new QListWidgetItem(text, m_listWidget);
+        auto pal = ThemePalette::forCurrentTheme();
         if (e.category == "ERROR")
-            item->setForeground(QColor("#ef4444"));
+            item->setForeground(pal.error);
         else if (e.category == "SCHED")
-            item->setForeground(QColor("#f59e0b"));
+            item->setForeground(pal.warning);
         else if (e.category == "DECK")
-            item->setForeground(QColor("#38bdf8"));
+            item->setForeground(pal.info);
         else if (e.category == "ENCODER")
-            item->setForeground(QColor("#22c55e"));
+            item->setForeground(pal.success);
     }
     m_listWidget->scrollToBottom();
 }

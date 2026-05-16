@@ -8,6 +8,7 @@ add_library(FxCompressorLimiter STATIC
 target_include_directories(FxCompressorLimiter PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/Core/include
+    ${CMAKE_SOURCE_DIR}/UI
 )
 
 target_link_libraries(FxCompressorLimiter PUBLIC

@@ -216,7 +216,8 @@ public:
                 QColor c = QColorDialog::getColor(target, this, "Select Color");
                 if (c.isValid()) {
                     target = c;
-                    btn->setStyleSheet(QString("background-color: %1;").arg(c.name()));
+                    btn->setStyleSheet(QString("background-color: %1; border: 1px solid %2;")
+                        .arg(c.name(), c.darker(130).name()));
                     applyToModule();
                 }
             });
@@ -269,11 +270,14 @@ public:
         m_editAccent = t.accentColor;
 
         m_bgColorBtn->setStyleSheet(
-            QString("background-color: %1;").arg(t.backgroundColor.name()));
+            QString("background-color: %1; border: 1px solid %2;")
+                .arg(t.backgroundColor.name(), t.backgroundColor.darker(130).name()));
         m_textColorBtn->setStyleSheet(
-            QString("background-color: %1;").arg(t.textColor.name()));
+            QString("background-color: %1; border: 1px solid %2;")
+                .arg(t.textColor.name(), t.textColor.darker(130).name()));
         m_accentColorBtn->setStyleSheet(
-            QString("background-color: %1;").arg(t.accentColor.name()));
+            QString("background-color: %1; border: 1px solid %2;")
+                .arg(t.accentColor.name(), t.accentColor.darker(130).name()));
 
         m_fontCombo->setCurrentText(t.fontFamily);
         m_titleSize->setValue(t.titleFontSize);

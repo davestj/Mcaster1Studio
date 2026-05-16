@@ -12,6 +12,10 @@ class ScanWorker;
 class LibraryModel;
 class LibraryWidget;
 class MusicBrainzLookup;
+class AlbumArtCache;
+class AiTrackIntel;
+class PersonaManager;
+class SqliteManager;
 
 /// MediaLibraryModule — Phase 3 media library and audio file scanner.
 ///
@@ -20,6 +24,8 @@ class MusicBrainzLookup;
 ///   - ScanWorker       — background TagLib directory scanner
 ///   - LibraryModel     — in-memory QAbstractTableModel
 ///   - MusicBrainzLookup — async MB enrichment
+///   - AlbumArtCache    — 3-tier album art cache
+///   - AiTrackIntel     — AI-powered artist lookup
 ///
 /// The widget (LibraryWidget) is created on first call to createWidget().
 /// Drag-to-deck works by emitting requestLoadMedia(item, deckIndex).
@@ -52,8 +58,13 @@ public:
     // No RT audio processing
     void onAudioBlock(AudioBuffer& /*in*/, AudioBuffer& /*out*/) override {}
 
-    IDatabase*    db()    const { return m_db; }
-    LibraryModel* model() const { return m_model; }
+    IDatabase*      db()             const { return m_db; }
+    LibraryModel*   model()          const { return m_model; }
+    AlbumArtCache*  albumArtCache()  const { return m_artCache; }
+    PersonaManager* personaManager() const { return m_personas; }
+
+signals:
+    void requestPlayOnAuxCue(const M1::MediaItem& item);
 
 public slots:
     void startScan(const QStringList& dirs);
@@ -65,15 +76,21 @@ public slots:
 private slots:
     void onItemScanned(const M1::MediaItem& item);
     void onMbLookupComplete(const M1::MediaItem& enriched);
+    void onAiProfileReady(const QString& artistName, const QString& profileText,
+                          const QString& discographyJson, const QString& aiBackend,
+                          const QString& aiModel);
 
 private:
     void createDatabase();   ///< Factory: reads QSettings, creates SQLite or MySQL backend
 
-    IDatabase*         m_db      = nullptr;
-    ScanWorker*        m_scanner = nullptr;
-    LibraryModel*      m_model   = nullptr;
-    LibraryWidget*     m_widget  = nullptr;
-    MusicBrainzLookup* m_mb      = nullptr;
+    IDatabase*         m_db       = nullptr;
+    ScanWorker*        m_scanner  = nullptr;
+    LibraryModel*      m_model    = nullptr;
+    LibraryWidget*     m_widget   = nullptr;
+    MusicBrainzLookup* m_mb       = nullptr;
+    AlbumArtCache*     m_artCache = nullptr;
+    AiTrackIntel*      m_aiIntel   = nullptr;
+    PersonaManager*    m_personas  = nullptr;
     QStringList        m_scanDirs;
 
     // IThreadPoolAware

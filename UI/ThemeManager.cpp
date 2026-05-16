@@ -19,9 +19,8 @@ void ThemeManager::applyTheme(Theme t) {
 
     const QString resourcePath = [t]() -> QString {
         switch (t) {
-        case Theme::Classic: return ":/themes/classic.qss";
-        case Theme::Light:   return ":/themes/light.qss";
-        default:             return ":/themes/dark.qss";
+        case Theme::Classic:       return ":/themes/classic.qss";
+        default:                   return ":/themes/enterprise-pro.qss";
         }
     }();
 
@@ -37,7 +36,7 @@ void ThemeManager::applyTheme(Theme t) {
 }
 
 void ThemeManager::loadFromSettings(QSettings& s) {
-    const QString name = s.value("UI/theme", "dark").toString();
+    const QString name = s.value("UI/theme", "enterprise-pro").toString();
     applyTheme(themeFromName(name));
 }
 
@@ -47,15 +46,14 @@ void ThemeManager::saveToSettings(QSettings& s) const {
 
 QString ThemeManager::themeName(Theme t) {
     switch (t) {
-    case Theme::Classic: return "classic";
-    case Theme::Light:   return "light";
-    default:             return "dark";
+    case Theme::Classic:       return "classic";
+    default:                   return "enterprise-pro";
     }
 }
 
 ThemeManager::Theme ThemeManager::themeFromName(const QString& name) {
     const QString lower = name.toLower();
-    if (lower == "classic") return Theme::Classic;
-    if (lower == "light")   return Theme::Light;
-    return Theme::Dark;
+    if (lower == "classic")        return Theme::Classic;
+    // Migration: old "dark" and "light" both map to EnterprisePro
+    return Theme::EnterprisePro;
 }

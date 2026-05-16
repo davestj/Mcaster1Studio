@@ -1,7 +1,11 @@
 #include "DeckWidget.h"
 #include "DeckPlayer.h"
 #include "CrossfaderWidget.h"
+#include "PlaylistWidget.h"
+#include "PlaylistModule.h"
 #include "PTTModule.h"
+#include "ThemePalette.h"
+#include "ThemeManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMediaDevices>
@@ -34,47 +38,44 @@
 #include <algorithm>
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Light sandy/tan color palette — SAM4 reference style
+// ThemePalette-based color helpers
 // ─────────────────────────────────────────────────────────────────────────────
 namespace {
-    const QColor kBgSandy(242, 237, 230);      // panel background
-    const QColor kHdrTop(28,  88,  168);       // header gradient (Windows blue)
-    const QColor kHdrBot(20,  65,  130);
-    const QColor kBtnFace(225, 218, 208);      // button normal face
-    const QColor kBtnBorder(150, 138, 124);    // button border
-    const QColor kBtnHover(212, 205, 196);
-    const QColor kText(26, 24, 20);            // primary text
-    const QColor kMuted(108, 100, 90);         // muted/caption text
-    const QColor kBadgeA(28,  88,  168);       // Deck A blue
-    const QColor kBadgeB(120, 40,  180);       // Deck B purple
-    const QColor kAccent(28,  88,  168);
-    const QColor kGreen(30,  120,  55);        // darker green for light bg
-    const QColor kRed(185,  30,   30);
-    const QColor kAmber(165,  95,  10);
-    const QColor kDivider(190, 180, 166);
-
-    // Compact shared button QSS helper
-    QString flatBtnQss(const QString& normalBg, const QString& borderColor,
-                       const QString& textColor = "#1a1814",
+    // Compact shared button QSS helper — derives all colors from the palette
+    QString flatBtnQss(const ThemePalette& tp,
                        const QString& checkedBg = "",
                        const QString& checkedTxt = "")
     {
         const QString chk = !checkedBg.isEmpty()
             ? QString("QPushButton:checked { background:%1; color:%2; border-color:%3; }")
-                  .arg(checkedBg, checkedTxt.isEmpty() ? "#ffffff" : checkedTxt, borderColor)
+                  .arg(checkedBg, checkedTxt.isEmpty() ? "#ffffff" : checkedTxt, tp.border.name())
             : QString();
         return QString(
             "QPushButton {"
-            "  background:%1; color:%3; border:1px solid %2;"
+            "  background:%1; color:%2; border:1px solid %3;"
             "  border-radius:2px; font-size:12px; font-weight:700;"
             "  padding:1px 4px;"
             "}"
             "QPushButton:hover { background:%4; border-color:%5; }"
             "QPushButton:pressed { background:%6; }"
             "%7"
-        ).arg(normalBg, borderColor, textColor,
-              kBtnHover.name(), kAccent.name(),
-              kBtnFace.darker(115).name(), chk);
+        ).arg(tp.cardBg.name(), tp.text.name(), tp.border.name(),
+              tp.cardBg.darker(105).name(), tp.accent.name(),
+              tp.cardBg.darker(115).name(), chk);
+    }
+
+    // Context menu QSS from palette
+    QString menuQss(const ThemePalette& tp)
+    {
+        return QString(
+            "QMenu { background:%1; border:1px solid %2;"
+            "  font-size:14px; color:%3; }"
+            "QMenu::item { padding:5px 18px; }"
+            "QMenu::item:selected { background:%4; color:#ffffff; }"
+            "QMenu::item:disabled { color:%5; }"
+            "QMenu::separator { height:1px; background:%2; margin:3px 6px; }"
+        ).arg(tp.cardBg.name(), tp.border.name(), tp.text.name(),
+              tp.accent.name(), tp.textDisabled.name());
     }
 }
 
@@ -282,27 +283,31 @@ QIcon DeckPanel::svgIcon(const QString& path, int sz) {
 static QPushButton* makeFlatBtn(const QString& text, QWidget* parent,
                                  bool checkable = false, int minW = 32, int minH = 26)
 {
+    const auto tp = ThemePalette::forCurrentTheme();
     auto* b = new QPushButton(text, parent);
     b->setCheckable(checkable);
     b->setMinimumSize(minW, minH);
     b->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    b->setStyleSheet(
+    b->setStyleSheet(QString(
         "QPushButton {"
-        "  background:#e1dbd2; color:#1a1814;"
-        "  border:1px solid #9e9282; border-radius:3px;"
+        "  background:%1; color:%2;"
+        "  border:1px solid %3; border-radius:3px;"
         "  font-size:14px; font-weight:700; padding:2px 5px;"
         "}"
-        "QPushButton:hover { background:#d4cec5; border-color:#1c58a8; }"
-        "QPushButton:pressed { background:#cbc4bb; }"
-        "QPushButton:checked { background:#1c58a8; color:#ffffff; border-color:#1c58a8; }"
-        "QPushButton:disabled { background:#e8e4de; color:#aaa49a; }"
-    );
+        "QPushButton:hover { background:%4; border-color:%5; }"
+        "QPushButton:pressed { background:%6; }"
+        "QPushButton:checked { background:%5; color:#ffffff; border-color:%5; }"
+        "QPushButton:disabled { background:%7; color:%8; }"
+    ).arg(tp.cardBg.name(), tp.text.name(), tp.border.name(),
+          tp.cardBg.darker(105).name(), tp.accent.name(),
+          tp.cardBg.darker(110).name(), tp.bg.name(), tp.textDisabled.name()));
     return b;
 }
 
 // Transport button — raised, icon-sized, SVG-ready
 // Pass an empty text when using setIcon() afterwards.
 static QPushButton* makeTransBtn(const QString& text, const QColor& tint, QWidget* parent) {
+    const auto tp = ThemePalette::forCurrentTheme();
     auto* b = new QPushButton(text, parent);
     b->setCheckable(false);
     b->setMinimumSize(40, 34);
@@ -311,33 +316,37 @@ static QPushButton* makeTransBtn(const QString& text, const QColor& tint, QWidge
     b->setStyleSheet(QString(
         "QPushButton {"
         "  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,"
-        "    stop:0 #eae4dc, stop:1 #d8d1c8);"
-        "  color:%1; border:1px solid #a09080; border-radius:4px;"
+        "    stop:0 %4, stop:1 %5);"
+        "  color:%1; border:1px solid %6; border-radius:4px;"
         "  font-size:14px; font-weight:900; padding:2px;"
         "}"
-        "QPushButton:hover { background:#ddd7ce; border-color:%1; }"
-        "QPushButton:pressed { background:#cec8be; }"
+        "QPushButton:hover { background:%7; border-color:%1; }"
+        "QPushButton:pressed { background:%8; }"
         "QPushButton:checked { background:%2; color:#ffffff; border-color:%3; }"
-        "QPushButton:disabled { color:#bbb4aa; }"
-    ).arg(tc, tint.darker(120).name(), tint.name()));
+        "QPushButton:disabled { color:%9; }"
+    ).arg(tc, tint.darker(120).name(), tint.name(),
+          tp.cardBg.lighter(105).name(), tp.cardBg.name(),
+          tp.border.name(), tp.cardBg.darker(103).name(),
+          tp.cardBg.darker(108).name(), tp.textDisabled.name()));
     return b;
 }
 
 // Hot cue pad — minimum 12px font, larger hit target
 static QPushButton* makeHotBtn(const QString& label, const QColor& col, QWidget* parent) {
+    const auto tp = ThemePalette::forCurrentTheme();
     auto* b = new QPushButton(label, parent);
     b->setMinimumSize(36, 28);
     b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     const QString hex = col.name();
     b->setStyleSheet(QString(
         "QPushButton {"
-        "  background:#ece6de; color:%1;"
+        "  background:%2; color:%1;"
         "  border:1px solid %1; border-radius:3px;"
         "  font-size:14px; font-weight:900; padding:2px 4px;"
         "}"
         "QPushButton:hover { background:%1; color:#fff; }"
-        "QPushButton:pressed { background:#d8d2c8; }"
-    ).arg(hex));
+        "QPushButton:pressed { background:%3; }"
+    ).arg(hex, tp.cardBg.lighter(102).name(), tp.cardBg.darker(105).name()));
     return b;
 }
 
@@ -373,61 +382,71 @@ DeckPanel::DeckPanel(M1::DeckPlayer* player, int deckIndex, QWidget* parent)
     m_pollTimer->setInterval(50);
     connect(m_pollTimer, &QTimer::timeout, this, &DeckPanel::onPollTimer);
     m_pollTimer->start();
+
+    // Repaint on theme change (paintEvent uses ThemePalette::forCurrentTheme())
+    connect(ThemeManager::instance(), &ThemeManager::themeChanged,
+            this, [this]() { update(); });
 }
 
 void DeckPanel::setupUi() {
+    const auto    tp        = ThemePalette::forCurrentTheme();
     const bool    isA       = (m_deckIndex == 0);
-    const QColor  badge     = isA ? kBadgeA : kBadgeB;
+    const QColor  badge     = isA ? tp.deckA : tp.deckB;
     const QString deckLtr   = isA ? "A" : "B";
 
     auto* root = new QVBoxLayout(this);
     root->setContentsMargins(0, 0, 0, 0);
     root->setSpacing(0);
 
-    // ── Blue header bar ───────────────────────────────────────────
+    // ── Header bar ───────────────────────────────────────────
     auto* header = new QWidget(this);
     header->setObjectName("DeckHeader");
     header->setFixedHeight(34);
-    header->setStyleSheet(
+    header->setStyleSheet(QString(
         "QWidget#DeckHeader {"
         "  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,"
-        "    stop:0 #e0d8ce, stop:1 #cec6ba);"
-        "  border-bottom: 1px solid #b0a898;"
+        "    stop:0 %1, stop:1 %2);"
+        "  border-bottom: 1px solid %3;"
         "}"
-    );
+    ).arg(tp.cardBg.lighter(103).name(), tp.cardBg.darker(102).name(),
+          tp.border.name()));
 
     auto* hdrLay = new QHBoxLayout(header);
     hdrLay->setContentsMargins(6, 0, 6, 0);
     hdrLay->setSpacing(5);
 
-    auto* deckBadge = new QLabel("● DECK " + deckLtr, header);
+    auto* deckBadge = new QLabel(QString::fromUtf8("● DECK ") + deckLtr, header);
     deckBadge->setObjectName("DeckBadge");
-    deckBadge->setStyleSheet(
-        "QLabel#DeckBadge { color:#1a1814; font-size:14px; font-weight:900;"
-        "  font-family:'Consolas','Courier New',monospace; }");
+    deckBadge->setStyleSheet(QString(
+        "QLabel#DeckBadge { color:%1; font-size:14px; font-weight:900;"
+        "  font-family:'Consolas','Courier New',monospace; }")
+        .arg(tp.text.name()));
     deckBadge->setToolTip(QString("Deck %1 — audio player").arg(deckLtr));
 
     m_artistLabel = new QLabel("", header);
     m_artistLabel->setObjectName("DeckArtistLabel");
-    m_artistLabel->setStyleSheet(
-        "QLabel#DeckArtistLabel { color:#3a3530; font-size:16px; font-weight:700; }");
+    m_artistLabel->setStyleSheet(QString(
+        "QLabel#DeckArtistLabel { color:%1; font-size:16px; font-weight:700; }")
+        .arg(tp.textMuted.darker(110).name()));
     m_artistLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_artistLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    m_titleLabel = new QLabel("— no track —", header);
+    m_titleLabel = new QLabel(QString::fromUtf8("— no track —"), header);
     m_titleLabel->setObjectName("DeckTitleLabel");
-    m_titleLabel->setStyleSheet(
-        "QLabel#DeckTitleLabel { color:#1a1814; font-size:16px; font-weight:700;"
-        "  font-family:'Consolas','Courier New',monospace; }");
+    m_titleLabel->setStyleSheet(QString(
+        "QLabel#DeckTitleLabel { color:%1; font-size:16px; font-weight:700;"
+        "  font-family:'Consolas','Courier New',monospace; }")
+        .arg(tp.text.name()));
     m_titleLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     m_titleLabel->setTextFormat(Qt::PlainText);
 
     m_stateLabel = new QLabel("STOP", header);
     m_stateLabel->setObjectName("DeckStateLabel");
-    m_stateLabel->setStyleSheet(
-        "QLabel#DeckStateLabel { color:#1c5caa; font-size:14px; font-weight:900;"
-        "  font-family:'Consolas','Courier New',monospace; padding:0 4px; }");
+    m_stateLabel->setStyleSheet(QString(
+        "QLabel#DeckStateLabel { color:%1; font-size:14px; font-weight:900;"
+        "  font-family:'Consolas','Courier New',monospace; padding:0 4px; }")
+        .arg(tp.accent.name()));
     m_stateLabel->setAlignment(Qt::AlignCenter);
     m_stateLabel->setToolTip("Current deck state");
 
@@ -448,13 +467,13 @@ void DeckPanel::setupUi() {
     m_artLabel->setFixedSize(64, 64);
     m_artLabel->setAlignment(Qt::AlignCenter);
     m_artLabel->setToolTip("Album artwork — auto-fetched when track loads");
-    m_artLabel->setStyleSheet(
-        "QLabel { background:#f5f0eb; border:1px solid #d8cfc7; border-radius:3px; }"
-    );
+    m_artLabel->setStyleSheet(QString(
+        "QLabel { background:%1; border:1px solid %2; border-radius:3px; }"
+    ).arg(tp.bg.name(), tp.border.name()));
     {
         // Placeholder: sandy bg + vinyl record SVG + deck letter overlay
         QPixmap art(128, 128);
-        art.fill(QColor("#f5f0eb"));
+        art.fill(tp.bg);
         {
             QPainter pa(&art);
             pa.setRenderHint(QPainter::Antialiasing);
@@ -474,15 +493,15 @@ void DeckPanel::setupUi() {
     statsGrid->setHorizontalSpacing(3);
     statsGrid->setVerticalSpacing(1);
 
-    const QString captionQss =
-        "QLabel { color:#6b6258; font-size:14px;"
-        "  font-family:'Consolas','Courier New',monospace; }";
-    const QString valueQss =
-        "QLabel { color:#1a1814; font-size:14px; font-weight:700;"
-        "  font-family:'Consolas','Courier New',monospace; }";
-    const QString bpmValQss =
-        "QLabel { color:#1c5caa; font-size:14px; font-weight:700;"
-        "  font-family:'Consolas','Courier New',monospace; }";
+    const QString captionQss = QString(
+        "QLabel { color:%1; font-size:14px;"
+        "  font-family:'Consolas','Courier New',monospace; }").arg(tp.textMuted.name());
+    const QString valueQss = QString(
+        "QLabel { color:%1; font-size:14px; font-weight:700;"
+        "  font-family:'Consolas','Courier New',monospace; }").arg(tp.text.name());
+    const QString bpmValQss = QString(
+        "QLabel { color:%1; font-size:14px; font-weight:700;"
+        "  font-family:'Consolas','Courier New',monospace; }").arg(tp.accent.name());
 
     auto mkCap = [&](const QString& t) {
         auto* l = new QLabel(t, this);
@@ -522,13 +541,14 @@ void DeckPanel::setupUi() {
     m_bpmPlusBtn  = new QPushButton("+", this);
     for (auto* b : {m_bpmMinusBtn, m_bpmPlusBtn}) {
         b->setFixedSize(22, 22);
-        b->setStyleSheet(
-            "QPushButton { background:#e1dbd2; color:#1c5caa;"
-            "  border:1px solid #9e9282; border-radius:3px;"
+        b->setStyleSheet(QString(
+            "QPushButton { background:%1; color:%2;"
+            "  border:1px solid %3; border-radius:3px;"
             "  font-size:14px; font-weight:900; }"
-            "QPushButton:hover { border-color:#1c5caa; }"
-            "QPushButton:pressed { background:#cbc4bb; }"
-        );
+            "QPushButton:hover { border-color:%2; }"
+            "QPushButton:pressed { background:%4; }"
+        ).arg(tp.cardBg.name(), tp.accent.name(), tp.border.name(),
+              tp.cardBg.darker(110).name()));
     }
     m_bpmMinusBtn->setToolTip("Decrease playback speed by 2% (pitch/tempo down)");
     m_bpmPlusBtn->setToolTip("Increase playback speed by 2% (pitch/tempo up)");
@@ -550,7 +570,7 @@ void DeckPanel::setupUi() {
     // Vertical divider
     auto* vdiv = new QFrame(this);
     vdiv->setFrameShape(QFrame::VLine);
-    vdiv->setStyleSheet("QFrame { color:#c0b8ae; }");
+    vdiv->setStyleSheet(QString("QFrame { color:%1; }").arg(tp.border.name()));
     statsGrid->addWidget(vdiv, 0, 2, 3, 1);
 
     // Right sub-columns: kbps / kHz / Stereo
@@ -579,8 +599,9 @@ void DeckPanel::setupUi() {
     volCol->setContentsMargins(2, 0, 2, 0);
 
     auto* volCap = new QLabel("VOL", this);
-    volCap->setStyleSheet("QLabel { color:#6b6258; font-size:14px; font-weight:700;"
-                           "  font-family:'Consolas','Courier New',monospace; }");
+    volCap->setStyleSheet(QString("QLabel { color:%1; font-size:14px; font-weight:700;"
+                           "  font-family:'Consolas','Courier New',monospace; }")
+                           .arg(tp.textMuted.name()));
     volCap->setAlignment(Qt::AlignCenter);
     volCap->setToolTip("Volume / Pitch fader — switch mode with V/P buttons");
 
@@ -601,29 +622,32 @@ void DeckPanel::setupUi() {
     m_fader->setValue(100);
     m_fader->setMinimumHeight(65);
     m_fader->setToolTip("Volume / Pitch fader — use V/P buttons to switch mode");
-    m_fader->setStyleSheet(
+    m_fader->setStyleSheet(QString(
         "QSlider::groove:vertical {"
         "  background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
-        "    stop:0 #c8c2b8, stop:0.5 #d8d2c8, stop:1 #c8c2b8);"
-        "  width:7px; border-radius:3px; border:1px solid #a09080;"
+        "    stop:0 %1, stop:0.5 %2, stop:1 %1);"
+        "  width:7px; border-radius:3px; border:1px solid %3;"
         "}"
         "QSlider::handle:vertical {"
         "  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,"
-        "    stop:0 #e8e2d8, stop:0.5 #d5cfc5, stop:1 #c8c2b8);"
-        "  border:1px solid #8a8070; width:20px; height:12px;"
+        "    stop:0 %4, stop:0.5 %2, stop:1 %1);"
+        "  border:1px solid %5; width:20px; height:12px;"
         "  margin:0 -7px; border-radius:3px;"
         "}"
         "QSlider::sub-page:vertical {"
         "  background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
-        "    stop:0 #8ab0d8, stop:1 #6090c0);"
+        "    stop:0 %6, stop:1 %7);"
         "  border-radius:3px;"
         "}"
-    );
+    ).arg(tp.border.name(), tp.cardBg.name(), tp.border.darker(110).name(),
+          tp.cardBg.lighter(105).name(), tp.border.darker(120).name(),
+          tp.accent.lighter(140).name(), tp.accent.lighter(120).name()));
     connect(m_fader, &QSlider::valueChanged, this, &DeckPanel::onVolumeChanged);
 
     m_faderLabel = new QLabel("100%", this);
-    m_faderLabel->setStyleSheet("QLabel { color:#1c5caa; font-size:14px; font-weight:700;"
-                                  "  font-family:'Consolas','Courier New',monospace; }");
+    m_faderLabel->setStyleSheet(QString("QLabel { color:%1; font-size:14px; font-weight:700;"
+                                  "  font-family:'Consolas','Courier New',monospace; }")
+                                  .arg(tp.accent.name()));
     m_faderLabel->setAlignment(Qt::AlignCenter);
     m_faderLabel->setToolTip("Current volume / pitch level");
 
@@ -633,18 +657,18 @@ void DeckPanel::setupUi() {
     m_muteBtn->setToolTip("Mute — silences this deck's output");
     m_airBtn->setToolTip("AIR — route this deck to the on-air (broadcast) output");
     m_cueOutBtn->setToolTip("CUE — route this deck to the headphone monitor / cue output");
-    m_airBtn->setStyleSheet(
-        "QPushButton { background:#e1dbd2; color:#1a8a40;"
-        "  border:1px solid #9e9282; border-radius:3px; font-size:14px; font-weight:700; padding:2px 4px; }"
-        "QPushButton:checked { background:#1a8a40; color:#fff; border-color:#1a8a40; }"
-        "QPushButton:hover { border-color:#1a8a40; }"
-    );
-    m_cueOutBtn->setStyleSheet(
-        "QPushButton { background:#e1dbd2; color:#1c5caa;"
-        "  border:1px solid #9e9282; border-radius:3px; font-size:14px; font-weight:700; padding:2px 4px; }"
-        "QPushButton:checked { background:#1c5caa; color:#fff; border-color:#1c5caa; }"
-        "QPushButton:hover { border-color:#1c5caa; }"
-    );
+    m_airBtn->setStyleSheet(QString(
+        "QPushButton { background:%1; color:%2;"
+        "  border:1px solid %3; border-radius:3px; font-size:14px; font-weight:700; padding:2px 4px; }"
+        "QPushButton:checked { background:%2; color:#fff; border-color:%2; }"
+        "QPushButton:hover { border-color:%2; }"
+    ).arg(tp.cardBg.name(), tp.success.name(), tp.border.name()));
+    m_cueOutBtn->setStyleSheet(QString(
+        "QPushButton { background:%1; color:%2;"
+        "  border:1px solid %3; border-radius:3px; font-size:14px; font-weight:700; padding:2px 4px; }"
+        "QPushButton:checked { background:%2; color:#fff; border-color:%2; }"
+        "QPushButton:hover { border-color:%2; }"
+    ).arg(tp.cardBg.name(), tp.accent.name(), tp.border.name()));
 
     m_airBtn->setChecked(true);   // AIR on by default
     connect(m_airBtn, &QPushButton::toggled, this, [this](bool on) {
@@ -681,25 +705,28 @@ void DeckPanel::setupUi() {
     m_seekSlider->setValue(0);
     m_seekSlider->setFixedHeight(14);
     m_seekSlider->setToolTip("Seek — drag to scrub forward or backward in the track");
-    m_seekSlider->setStyleSheet(
+    m_seekSlider->setStyleSheet(QString(
         "QSlider::groove:horizontal {"
-        "  background:#c8c2b8; height:5px; border-radius:2px;"
-        "  border:1px solid #a09080;"
+        "  background:%1; height:5px; border-radius:2px;"
+        "  border:1px solid %2;"
         "}"
         "QSlider::handle:horizontal {"
         "  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,"
-        "    stop:0 #e8e0d5, stop:1 #cec8be);"
-        "  border:1px solid #8a8070; width:10px; height:14px;"
+        "    stop:0 %3, stop:1 %4);"
+        "  border:1px solid %5; width:10px; height:14px;"
         "  margin:-5px 0; border-radius:2px;"
         "}"
         "QSlider::sub-page:horizontal {"
-        "  background:#1c5caa; border-radius:2px;"
+        "  background:%6; border-radius:2px;"
         "}"
-    );
+    ).arg(tp.border.name(), tp.border.darker(110).name(),
+          tp.cardBg.lighter(105).name(), tp.cardBg.darker(103).name(),
+          tp.border.darker(120).name(), tp.accent.name()));
     connect(m_seekSlider, &QSlider::sliderMoved, this, &DeckPanel::onSeekMoved);
 
     auto* seekWidget = new QWidget(this);
-    seekWidget->setStyleSheet("QWidget { background:#dcd6ce; }");
+    seekWidget->setStyleSheet(QString("QWidget { background:%1; }")
+        .arg(tp.cardBg.darker(103).name()));
     auto* seekLay = new QHBoxLayout(seekWidget);
     seekLay->setContentsMargins(5, 2, 5, 2);
     seekLay->addWidget(m_seekSlider);
@@ -708,18 +735,19 @@ void DeckPanel::setupUi() {
     // ── Transport row ────────────────────────────────────────────
     auto* transWidget = new QWidget(this);
     transWidget->setObjectName("DeckTransport");
-    transWidget->setStyleSheet(
+    transWidget->setStyleSheet(QString(
         "QWidget#DeckTransport {"
         "  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,"
-        "    stop:0 #e0d8ce, stop:1 #d4ccc2);"
-        "  border-top:1px solid #c0b8ae; border-bottom:1px solid #c0b8ae;"
+        "    stop:0 %1, stop:1 %2);"
+        "  border-top:1px solid %3; border-bottom:1px solid %3;"
         "}"
-    );
+    ).arg(tp.cardBg.lighter(103).name(), tp.cardBg.darker(102).name(),
+          tp.border.name()));
     auto* transLay = new QHBoxLayout(transWidget);
     transLay->setContentsMargins(4, 3, 4, 3);
     transLay->setSpacing(3);
 
-    m_playBtn = makeTransBtn("", kGreen, this);
+    m_playBtn = makeTransBtn("", tp.success, this);
     m_playBtn->setCheckable(true);
     m_playBtn->setToolTip("Play / Pause — starts or pauses deck playback (Space)");
     m_playBtn->setIcon(svgIcon(":/resources/icons/play.svg", 22));
@@ -731,13 +759,13 @@ void DeckPanel::setupUi() {
     connect(m_playBtn, &QPushButton::customContextMenuRequested,
             this, [this](const QPoint&) { onPlayBtnEmptyMenu(); });
 
-    m_stopBtn = makeTransBtn("", kRed, this);
+    m_stopBtn = makeTransBtn("", tp.error, this);
     m_stopBtn->setToolTip("Stop — stops playback and returns to cue point");
     m_stopBtn->setIcon(svgIcon(":/resources/icons/stop.svg", 22));
     m_stopBtn->setIconSize(QSize(26, 26));
     connect(m_stopBtn, &QPushButton::clicked, m_player, &M1::DeckPlayer::stop);
 
-    m_nextBtn = makeTransBtn("", kAccent, this);
+    m_nextBtn = makeTransBtn("", tp.accent, this);
     m_nextBtn->setToolTip("Eject — unloads current track from this deck");
     m_nextBtn->setIcon(svgIcon(":/resources/icons/eject.svg", 22));
     m_nextBtn->setIconSize(QSize(26, 26));
@@ -749,7 +777,7 @@ void DeckPanel::setupUi() {
 
     auto* div1 = new QFrame(this);
     div1->setFrameShape(QFrame::VLine);
-    div1->setStyleSheet("QFrame { color:#b0a898; }");
+    div1->setStyleSheet(QString("QFrame { color:%1; }").arg(tp.border.name()));
     transLay->addWidget(div1);
 
     m_cueBtn = makeFlatBtn("", this);
@@ -788,12 +816,12 @@ void DeckPanel::setupUi() {
     transLay->addWidget(m_eqBtn);
     transLay->addStretch(1);
 
-    // Hot cue pads
-    static const QColor kHotColors[4] = {
-        QColor(185, 30,  30),   // red
-        QColor(30,  120, 55),   // green
-        QColor(28,  88,  168),  // blue
-        QColor(165, 95,  10),   // amber
+    // Hot cue pads — use semantic palette colors
+    const QColor kHotColors[4] = {
+        tp.error,      // red
+        tp.success,    // green
+        tp.accent,     // blue / gold
+        tp.warning,    // amber
     };
     for (int i = 0; i < 4; ++i) {
         m_hotBtns[i] = makeHotBtn(QString("H%1").arg(i + 1), kHotColors[i], this);
@@ -811,23 +839,26 @@ void DeckPanel::setupUi() {
     // ── EQ panel (hidden by default, toggled by EQ button) ────────
     m_eqPanel = new QWidget(this);
     m_eqPanel->setObjectName("DeckEqPanel");
-    m_eqPanel->setStyleSheet(
+    m_eqPanel->setStyleSheet(QString(
         "QWidget#DeckEqPanel {"
         "  background:qlineargradient(x1:0,y1:0,x2:0,y2:1,"
-        "    stop:0 #ddd6ca, stop:1 #cfc8be);"
-        "  border-top:1px solid #c0b8ae; border-bottom:1px solid #c0b8ae;"
+        "    stop:0 %1, stop:1 %2);"
+        "  border-top:1px solid %3; border-bottom:1px solid %3;"
         "}"
-        "QLabel { color:#3a3530; font-size:14px; font-weight:700; }"
+        "QLabel { color:%4; font-size:14px; font-weight:700; }"
         "QSlider::groove:vertical {"
-        "  background:#b8b0a4; width:5px; border-radius:2px; border:none;"
+        "  background:%5; width:5px; border-radius:2px; border:none;"
         "}"
         "QSlider::handle:vertical {"
-        "  background:#e8e2d8; border:1px solid #968880;"
+        "  background:%6; border:1px solid %7;"
         "  width:12px; height:8px; margin:-1px -4px; border-radius:2px;"
         "}"
-        "QSlider::sub-page:vertical { background:#968880; border-radius:2px; }"
-        "QSlider::add-page:vertical { background:#1c5caa; border-radius:2px; }"
-    );
+        "QSlider::sub-page:vertical { background:%7; border-radius:2px; }"
+        "QSlider::add-page:vertical { background:%8; border-radius:2px; }"
+    ).arg(tp.cardBg.darker(102).name(), tp.cardBg.darker(106).name(),
+          tp.border.name(), tp.text.darker(110).name(),
+          tp.border.darker(105).name(), tp.cardBg.lighter(105).name(),
+          tp.border.darker(115).name(), tp.accent.name()));
     m_eqPanel->setVisible(false);
     m_eqPanel->setFixedHeight(72);
 
@@ -876,12 +907,13 @@ void DeckPanel::setupUi() {
         auto* resetBtn = new QPushButton("RST", m_eqPanel);
         resetBtn->setFixedSize(36, 26);
         resetBtn->setToolTip("Reset all EQ bands to 0 dB");
-        resetBtn->setStyleSheet(
-            "QPushButton { background:#e1dbd2; color:#1a1814; border:1px solid #968880;"
+        resetBtn->setStyleSheet(QString(
+            "QPushButton { background:%1; color:%2; border:1px solid %3;"
             "  border-radius:3px; font-size:14px; font-weight:700; }"
-            "QPushButton:hover { background:#d4cec5; }"
-            "QPushButton:pressed { background:#c8c2b8; }"
-        );
+            "QPushButton:hover { background:%4; }"
+            "QPushButton:pressed { background:%5; }"
+        ).arg(tp.cardBg.name(), tp.text.name(), tp.border.darker(115).name(),
+              tp.cardBg.darker(105).name(), tp.border.name()));
         connect(resetBtn, &QPushButton::clicked, this, [this]() {
             for (int b = 0; b < 3; ++b)
                 m_eqSlider[b]->setValue(0);
@@ -903,44 +935,52 @@ void DeckPanel::setupUi() {
 
 // ─── Browser tabs setup ──────────────────────────────────────────────────────
 void DeckPanel::setupBrowserTabs() {
-    const QString listQss =
+    const auto tp = ThemePalette::forCurrentTheme();
+    const QString listQss = QString(
         "QListWidget, QTableWidget {"
         "  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,"
-        "    stop:0 #e8e3db, stop:1 #dfd9d1);"
-        "  border: none; color: #3a3530; font-size:14px;"
+        "    stop:0 %1, stop:1 %2);"
+        "  border: none; color: %3; font-size:14px;"
         "}"
         "QListWidget::item, QTableWidget::item {"
-        "  padding: 2px 6px; border-bottom: 1px solid #d4cec6;"
+        "  padding: 2px 6px; border-bottom: 1px solid %4;"
         "}"
         "QListWidget::item:selected, QTableWidget::item:selected {"
-        "  background: #1c5caa; color: #ffffff;"
+        "  background: %5; color: #ffffff;"
         "}"
         "QListWidget::item:hover, QTableWidget::item:hover {"
-        "  background: #d4cec6;"
+        "  background: %4;"
         "}"
         "QHeaderView::section {"
-        "  background: #e1dcd4; color: #3a3530; font-size:12px;"
-        "  font-weight:700; border: none; border-bottom: 1px solid #c0b8ae;"
+        "  background: %6; color: %3; font-size:12px;"
+        "  font-weight:700; border: none; border-bottom: 1px solid %7;"
         "  padding: 3px 6px;"
         "}"
-        "QScrollBar:vertical { background:#d8d2ca; width:6px; border:none; }"
-        "QScrollBar::handle:vertical { background:#a09080; border-radius:3px; min-height:16px; }"
-        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height:0px; }";
+        "QScrollBar:vertical { background:%8; width:6px; border:none; }"
+        "QScrollBar::handle:vertical { background:%9; border-radius:3px; min-height:16px; }"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height:0px; }"
+    ).arg(tp.cardBg.lighter(103).name(), tp.cardBg.name(),
+          tp.text.darker(110).name(), tp.border.lighter(105).name(),
+          tp.accent.name(), tp.cardBg.lighter(102).name(),
+          tp.border.name(), tp.cardBg.darker(103).name(),
+          tp.border.darker(110).name());
 
     m_browserTabs = new QTabWidget(this);
     m_browserTabs->setObjectName("DeckBrowserTabs");
     m_browserTabs->setMinimumHeight(60);
     m_browserTabs->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    m_browserTabs->setStyleSheet(
-        "QTabWidget::pane { border: none; border-top: 1px solid #c0b8ae; }"
+    m_browserTabs->setStyleSheet(QString(
+        "QTabWidget::pane { border: none; border-top: 1px solid %1; }"
         "QTabBar::tab {"
-        "  background: #e1dcd4; color: #3a3530; font-size:12px; font-weight:700;"
-        "  border: 1px solid #c0b8ae; border-bottom: none;"
+        "  background: %2; color: %3; font-size:12px; font-weight:700;"
+        "  border: 1px solid %1; border-bottom: none;"
         "  padding: 4px 10px; margin-right: 1px;"
         "}"
-        "QTabBar::tab:selected { background: #f0ebe3; color: #1c5caa; }"
-        "QTabBar::tab:hover { background: #ede8e0; }"
-    );
+        "QTabBar::tab:selected { background: %4; color: %5; }"
+        "QTabBar::tab:hover { background: %6; }"
+    ).arg(tp.border.name(), tp.cardBg.lighter(102).name(),
+          tp.text.darker(110).name(), tp.cardBg.lighter(106).name(),
+          tp.accent.name(), tp.cardBg.lighter(104).name()));
 
     // ── Tab 0: History ────────────────────────────────────────────────
     m_historyList = new QListWidget;
@@ -955,7 +995,7 @@ void DeckPanel::setupBrowserTabs() {
             "  Drop audio here \xC2\xB7 click \xe2\x96\xb6 to load",
             m_historyList);
         hint->setFlags(Qt::NoItemFlags);
-        hint->setForeground(QColor("#a09888"));
+        hint->setForeground(tp.textDisabled);
     }
     m_browserTabs->addTab(m_historyList, "History");
 
@@ -1026,14 +1066,9 @@ void DeckPanel::showBrowserContextMenu(const QPoint& pos, QListWidget* list) {
     auto mi = item->data(Qt::UserRole).value<M1::MediaItem>();
     if (mi.filePath.isEmpty()) return;
 
+    const auto tp = ThemePalette::forCurrentTheme();
     QMenu menu(this);
-    menu.setStyleSheet(
-        "QMenu { background:#f0ebe3; border:1px solid #c0b8ae;"
-        "  font-size:14px; color:#1a1814; }"
-        "QMenu::item { padding:5px 18px; }"
-        "QMenu::item:selected { background:#1c5caa; color:#ffffff; }"
-        "QMenu::separator { height:1px; background:#c0b8ae; margin:3px 6px; }"
-    );
+    menu.setStyleSheet(menuQss(tp));
 
     menu.addAction("Load to Deck A", [this, mi]() {
         emit loadToDeckRequested(mi.filePath, 0);
@@ -1063,14 +1098,9 @@ void DeckPanel::showLibraryContextMenu(const QPoint& pos) {
     auto mi = cellItem->data(Qt::UserRole).value<M1::MediaItem>();
     if (mi.filePath.isEmpty()) return;
 
+    const auto tp = ThemePalette::forCurrentTheme();
     QMenu menu(this);
-    menu.setStyleSheet(
-        "QMenu { background:#f0ebe3; border:1px solid #c0b8ae;"
-        "  font-size:14px; color:#1a1814; }"
-        "QMenu::item { padding:5px 18px; }"
-        "QMenu::item:selected { background:#1c5caa; color:#ffffff; }"
-        "QMenu::separator { height:1px; background:#c0b8ae; margin:3px 6px; }"
-    );
+    menu.setStyleSheet(menuQss(tp));
 
     menu.addAction("Load to Deck A", [this, mi]() {
         emit loadToDeckRequested(mi.filePath, 0);
@@ -1129,47 +1159,46 @@ void DeckPanel::setQueueItems(const QList<M1::MediaItem>& items) {
     populateListFromItems(m_queueList, items);
 }
 
-// ─── paintEvent — sandy background ───────────────────────────────────────────
+// ─── paintEvent — themed background ──────────────────────────────────────────
 void DeckPanel::paintEvent(QPaintEvent* e) {
+    const auto tp = ThemePalette::forCurrentTheme();
     QPainter p(this);
     QLinearGradient bg(0, 0, 0, height());
-    bg.setColorAt(0.0, QColor(245, 240, 233));
-    bg.setColorAt(1.0, QColor(232, 226, 218));
+    bg.setColorAt(0.0, tp.panelBg);
+    bg.setColorAt(1.0, tp.cardBg);
     p.fillRect(rect(), bg);
     // Subtle border
-    p.setPen(QPen(QColor(190, 180, 166), 1));
+    p.setPen(QPen(tp.border, 1));
     p.drawRect(rect().adjusted(0, 0, -1, -1));
     QWidget::paintEvent(e);
 }
 
 // ─── Slots ────────────────────────────────────────────────────────────────────
 void DeckPanel::onStateChanged(M1::DeckPlayer::State state) {
+    const auto tp = ThemePalette::forCurrentTheme();
+    const QString baseLblQss = "QLabel { color:%1; font-size:14px; font-weight:900;"
+                               "  font-family:'Consolas','Courier New',monospace; }";
     updateTransportButtons(state);
     switch (state) {
     case M1::DeckPlayer::State::Empty:
         m_stateLabel->setText("EMPTY");
-        m_stateLabel->setStyleSheet("QLabel { color:#b0a898; font-size:14px; font-weight:900;"
-            "  font-family:'Consolas','Courier New',monospace; }");
+        m_stateLabel->setStyleSheet(baseLblQss.arg(tp.textDisabled.name()));
         break;
     case M1::DeckPlayer::State::Loading:
         m_stateLabel->setText("LOADING");
-        m_stateLabel->setStyleSheet("QLabel { color:#f8c060; font-size:14px; font-weight:900;"
-            "  font-family:'Consolas','Courier New',monospace; }");
+        m_stateLabel->setStyleSheet(baseLblQss.arg(tp.warning.name()));
         break;
     case M1::DeckPlayer::State::Ready:
         m_stateLabel->setText("CUE");
-        m_stateLabel->setStyleSheet("QLabel { color:#90c8f0; font-size:14px; font-weight:900;"
-            "  font-family:'Consolas','Courier New',monospace; }");
+        m_stateLabel->setStyleSheet(baseLblQss.arg(tp.info.name()));
         break;
     case M1::DeckPlayer::State::Playing:
-        m_stateLabel->setText("▶ PLAY");
-        m_stateLabel->setStyleSheet("QLabel { color:#80f0a0; font-size:14px; font-weight:900;"
-            "  font-family:'Consolas','Courier New',monospace; }");
+        m_stateLabel->setText(QString::fromUtf8("▶ PLAY"));
+        m_stateLabel->setStyleSheet(baseLblQss.arg(tp.success.name()));
         break;
     case M1::DeckPlayer::State::Paused:
-        m_stateLabel->setText("⏸ PAUSE");
-        m_stateLabel->setStyleSheet("QLabel { color:#d0c8c0; font-size:14px; font-weight:900;"
-            "  font-family:'Consolas','Courier New',monospace; }");
+        m_stateLabel->setText(QString::fromUtf8("⏸ PAUSE"));
+        m_stateLabel->setStyleSheet(baseLblQss.arg(tp.textMuted.name()));
         break;
     }
 }
@@ -1252,10 +1281,13 @@ void DeckPanel::onTagsLoaded() {
             && m_historyList->item(0)->flags() == Qt::NoItemFlags)
         m_historyList->clear();
 
-    m_historyList->insertItem(0, entry);
-    m_historyList->item(0)->setForeground(QColor("#1c5caa"));   // highlight newest
-    if (m_historyList->count() > 1)
-        m_historyList->item(1)->setForeground(QColor("#3a3530")); // de-emphasise previous
+    {
+        const auto tp = ThemePalette::forCurrentTheme();
+        m_historyList->insertItem(0, entry);
+        m_historyList->item(0)->setForeground(tp.accent);   // highlight newest
+        if (m_historyList->count() > 1)
+            m_historyList->item(1)->setForeground(tp.text); // de-emphasise previous
+    }
 
     // Cap at 50 entries
     while (m_historyList->count() > 50)
@@ -1370,21 +1402,16 @@ void DeckPanel::onArtworkImageReply(QNetworkReply* reply) {
     }
     cropped.setDevicePixelRatio(2.0);
     m_artLabel->setPixmap(cropped);
-    m_artLabel->setStyleSheet("QLabel { border:1px solid #a09080; }");
+    m_artLabel->setStyleSheet(QString("QLabel { border:1px solid %1; }")
+        .arg(ThemePalette::forCurrentTheme().border.darker(110).name()));
 }
 
 // ─── Smart play menu ─────────────────────────────────────────────────────────
 void DeckPanel::onPlayBtnEmptyMenu()
 {
+    const auto tp = ThemePalette::forCurrentTheme();
     QMenu menu(this);
-    menu.setStyleSheet(
-        "QMenu { background:#f0ebe3; border:1px solid #c0b8ae;"
-        "  font-size:12px; color:#1a1814; }"
-        "QMenu::item { padding:5px 18px; }"
-        "QMenu::item:selected { background:#1c5caa; color:#ffffff; }"
-        "QMenu::item:disabled { color:#a09888; }"
-        "QMenu::separator { height:1px; background:#c0b8ae; margin:3px 6px; }"
-    );
+    menu.setStyleSheet(menuQss(tp));
 
     const QString deckLtr = (m_deckIndex == 0) ? "A" : "B";
     auto* hdr = menu.addAction("Load track onto Deck " + deckLtr);
@@ -1530,28 +1557,38 @@ DeckWidget::DeckWidget(M1::DeckPlayer* deckA, M1::DeckPlayer* deckB, QWidget* pa
                 this,  &DeckWidget::editTagsRequested);
     }
 
-    // ── PTT panel — always visible below crossfader, sandy theme ─────────
+    // ── PTT panel — always visible below crossfader, themed ─────────
+    const auto tp = ThemePalette::forCurrentTheme();
     m_pttPanel = new QWidget(this);
     m_pttPanel->setObjectName("PttPanel");
     m_pttPanel->setFixedHeight(44);
-    m_pttPanel->setStyleSheet(
-        "QWidget#PttPanel { background:#ede8e0; border-top:1px solid #c0b8ae; }"
-        "QPushButton { background:#e1dcd4; color:#1a1814; border:1px solid #96897c;"
+    m_pttPanel->setStyleSheet(QString(
+        "QWidget#PttPanel { background:%1; border-top:1px solid %2; }"
+        "QPushButton { background:%3; color:%4; border:1px solid %5;"
         "  border-radius:2px; font-size:12px; font-weight:700; padding:2px 6px; }"
-        "QPushButton:checked { background:#dc2626; border-color:#991b1b; color:#fff; }"
-        "QPushButton:hover { background:#d4cec6; }"
-        "QPushButton:disabled { background:#ede8e0; color:#b0a898; border-color:#c8c0b4; }"
-        "QLabel { color:#3a3530; font-size:12px; }"
-        "QLabel:disabled { color:#b0a898; }"
-        "QComboBox { background:#e8e2da; color:#1a1814; border:1px solid #96897c;"
+        "QPushButton:checked { background:%6; border-color:%7; color:#fff; }"
+        "QPushButton:hover { background:%8; }"
+        "QPushButton:disabled { background:%1; color:%9; border-color:%2; }"
+        "QLabel { color:%4; font-size:12px; }"
+        "QLabel:disabled { color:%9; }"
+    ).arg(tp.bg.name(), tp.border.name(),
+          tp.cardBg.lighter(102).name(), tp.text.name(),
+          tp.border.darker(110).name(), tp.error.name(),
+          tp.error.darker(130).name(), tp.cardBg.darker(105).name(),
+          tp.textDisabled.name())
+    + QString(
+        "QComboBox { background:%1; color:%2; border:1px solid %3;"
         "  border-radius:2px; font-size:12px; padding:1px 4px; }"
-        "QComboBox:disabled { background:#ede8e0; color:#b0a898; border-color:#c8c0b4; }"
+        "QComboBox:disabled { background:%4; color:%5; border-color:%6; }"
         "QComboBox::drop-down { border:none; width:14px; }"
-        "QProgressBar { border:1px solid #96897c; border-radius:2px;"
-        "  background:#d8d0c5; max-height:7px; }"
+        "QProgressBar { border:1px solid %3; border-radius:2px;"
+        "  background:%7; max-height:7px; }"
         "QProgressBar::chunk { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,"
-        "  stop:0 #22c55e,stop:0.7 #f59e0b,stop:0.9 #ef4444); border-radius:2px; }"
-    );
+        "  stop:0 %8,stop:0.7 %9,stop:0.9 " + tp.error.name() + "); border-radius:2px; }"
+    ).arg(tp.cardBg.name(), tp.text.name(), tp.border.darker(110).name(),
+          tp.bg.name(), tp.textDisabled.name(), tp.border.name(),
+          tp.cardBg.darker(105).name(),
+          tp.success.name(), tp.warning.name()));
 
     auto* panelLay = new QHBoxLayout(m_pttPanel);
     panelLay->setContentsMargins(6, 4, 6, 4);
@@ -1559,7 +1596,8 @@ DeckWidget::DeckWidget(M1::DeckPlayer* deckA, M1::DeckPlayer* deckB, QWidget* pa
 
     m_pttLed = new QLabel(m_pttPanel);
     m_pttLed->setFixedSize(10, 10);
-    m_pttLed->setStyleSheet("background:#b8b0a4; border-radius:5px;");
+    m_pttLed->setStyleSheet(QString("background:%1; border-radius:5px;")
+        .arg(tp.textDisabled.name()));
     panelLay->addWidget(m_pttLed);
 
     m_pttBtn = new QPushButton("PTT", m_pttPanel);
@@ -1582,17 +1620,17 @@ DeckWidget::DeckWidget(M1::DeckPlayer* deckA, M1::DeckPlayer* deckB, QWidget* pa
     m_pttMeter->setFixedWidth(80);
     panelLay->addWidget(m_pttMeter);
 
-    // ── Center column: crossfader+PTT centered vertically ────────────────
-    auto* centerCol = new QVBoxLayout;
-    centerCol->setContentsMargins(0, 0, 0, 0);
-    centerCol->setSpacing(0);
-    centerCol->addStretch(1);
-    centerCol->addWidget(m_crossfader, 0);   // natural height — no internal stretch
-    centerCol->addWidget(m_pttPanel, 0);     // 44px flush below crossfader
-    centerCol->addStretch(1);
+    // ── Center column: crossfader top-aligned, PTT below, playlist fills rest ──
+    m_centerCol = new QVBoxLayout;
+    m_centerCol->setContentsMargins(0, 0, 0, 0);
+    m_centerCol->setSpacing(2);
+    m_centerCol->addWidget(m_crossfader, 0);   // top-aligned with deck tops
+    m_centerCol->addWidget(m_pttPanel, 0);     // flush below crossfader
+    // Playlist widget will be inserted here by setPlaylistModule()
+    m_centerCol->addStretch(1);                // fallback stretch if no playlist
 
     root->addWidget(m_panelA, 5);
-    root->addLayout(centerCol, 2);
+    root->addLayout(m_centerCol, 2);
     root->addWidget(m_panelB, 5);
 }
 
@@ -1638,9 +1676,10 @@ void DeckWidget::setPTTModule(M1::PTTModule* ptt) {
     // Sync button state with module state
     connect(ptt, &M1::PTTModule::stateChanged, this,
             [this](M1::PTTModule::State st) {
+                const auto pal = ThemePalette::forCurrentTheme();
                 const QString ledColor =
-                    (st == M1::PTTModule::State::Live)  ? "#dc2626" :
-                    (st == M1::PTTModule::State::Armed) ? "#d97706" : "#b8b0a4";
+                    (st == M1::PTTModule::State::Live)  ? pal.error.name() :
+                    (st == M1::PTTModule::State::Armed) ? pal.warning.name() : pal.textDisabled.name();
                 m_pttLed->setStyleSheet(
                     QString("background:%1; border-radius:5px;").arg(ledColor));
                 m_pttBtn->blockSignals(true);
@@ -1659,6 +1698,25 @@ void DeckWidget::setPTTModule(M1::PTTModule* ptt) {
 
     // Arm the module
     ptt->setState(M1::PTTModule::State::Armed);
+}
+
+// ── DO NOT REMOVE — Playlist/AutoDJ is permanently embedded in DeckPlayer ──
+// The AutoDJ module lives in the center column between the decks, below the
+// crossfader and PTT. It is auto-created by MainWindow whenever a deck exists.
+// NEVER remove, disable, or refactor this code without explicit permission.
+void DeckWidget::setPlaylistModule(M1::PlaylistModule* playlist) {
+    if (!playlist || m_playlistWidget) return;  // already set
+
+    m_playlistWidget = new PlaylistWidget(playlist, this);
+
+    // Insert into center column: after PTT (index 2), before the stretch
+    // Remove the fallback stretch first, add playlist expanding, then re-add stretch
+    auto* stretchItem = m_centerCol->itemAt(m_centerCol->count() - 1);
+    if (stretchItem && stretchItem->spacerItem()) {
+        m_centerCol->removeItem(stretchItem);
+        delete stretchItem;
+    }
+    m_centerCol->addWidget(m_playlistWidget, 1);  // stretch factor 1 — fills remaining space
 }
 
 float DeckWidget::crossfaderValue() const { return m_crossfader->value(); }

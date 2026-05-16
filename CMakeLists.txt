@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(Mcaster1Studio
-    VERSION 0.3.0
+    VERSION 0.4.0
     DESCRIPTION "Mcaster1Studio - Broadcast Automation Software Suite"
     HOMEPAGE_URL "https://mcaster1.com"
     LANGUAGES CXX
@@ -91,6 +91,19 @@ configure_file(
 
 # Global include for generated headers
 include_directories("${CMAKE_BINARY_DIR}/generated")
+
+# ─── Code Signing (Mcaster1 shared certificate) ─────────────────────────────
+# Must be set before add_subdirectory(UI) so UI/CMakeLists.txt can use them.
+set(M1_SIGNING_PFX "C:/Users/dstjohn/dev/00_mcaster1.com/SIGNING-KEYS/Mcaster1CodeSigning.pfx")
+set(M1_SIGNING_CER "C:/Users/dstjohn/dev/00_mcaster1.com/SIGNING-KEYS/Mcaster1CodeSigning.cer")
+if(WIN32 AND EXISTS "${M1_SIGNING_PFX}")
+    find_program(SIGNTOOL_EXE signtool
+        PATHS "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64"
+              "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64"
+              "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22000.0/x64"
+              "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64"
+    )
+endif()
 
 # Sub-projects
 add_subdirectory(Core)
@@ -224,6 +237,13 @@ set_target_properties(TestThreadPool PROPERTIES FOLDER "Tests")
 
 # Install targets (Phase 12)
 # install(TARGETS Mcaster1Studio DESTINATION bin)
+
+# Code signing status
+if(WIN32 AND SIGNTOOL_EXE AND EXISTS "${M1_SIGNING_PFX}")
+    message(STATUS "  Code signing : ENABLED (signtool found)")
+elseif(WIN32)
+    message(STATUS "  Code signing : DISABLED")
+endif()
 
 message(STATUS "")
 message(STATUS "=== Mcaster1Studio v${PROJECT_VERSION} Configuration ===")

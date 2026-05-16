@@ -2,6 +2,7 @@
 #include "QueueModule.h"
 #include "MediaItem.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFileDialog>
@@ -111,19 +112,19 @@ QueueWidget::QueueWidget(QueueModule* module, QWidget* parent)
 
     // Apply theme-adaptive styling
     auto applyTheme = [this]() {
-        const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
-        const QString bg     = isLight ? "#ffffff" : "#0c1a2e";
-        const QString text   = isLight ? "#000000" : "#c8d8f0";
-        const QString border = isLight ? "#d8d4ce" : "#1e3a5f";
-        const QString rowDiv = isLight ? "#ede8e0" : "#111e2e";
-        const QString selBg  = isLight ? "#1c5caa" : "#1e3a5f";
-        const QString selTx  = isLight ? "#ffffff" : "#00d8ff";
-        const QString hovBg  = isLight ? "#dbeafe" : "#162840";
-        const QString btnBg  = isLight ? "#e8e4de" : "#12263d";
-        const QString btnTx  = isLight ? "#1a1814" : "#8ab4d8";
-        const QString btnHov = isLight ? "#ddd8d0" : "#1e3a5f";
-        const QString btnHT  = isLight ? "#1e3a5f" : "#c8d8f0";
-        const QString stC    = isLight ? "#1c5caa" : "#5a8ab0";
+        const auto tp = ThemePalette::forCurrentTheme();
+        const QString bg     = tp.panelBg.name();
+        const QString text   = tp.text.name();
+        const QString border = tp.border.name();
+        const QString rowDiv = tp.cardBg.name();
+        const QString selBg  = tp.border.name();
+        const QString selTx  = tp.info.name();
+        const QString hovBg  = tp.inputBg.name();
+        const QString btnBg  = tp.cardBg.name();
+        const QString btnTx  = tp.textMuted.name();
+        const QString btnHov = tp.border.name();
+        const QString btnHT  = tp.text.name();
+        const QString stC    = tp.textMuted.name();
 
         setStyleSheet(QString("QueueWidget { background-color: %1; }").arg(bg));
 
@@ -156,7 +157,7 @@ QueueWidget::QueueWidget(QueueModule* module, QWidget* parent)
         m_clearBtn->setStyleSheet(btnStyle);
 
         m_statusBar->setStyleSheet(QString(
-            "QLabel { color: %1; font-size: 11px; background: transparent; }"
+            "QLabel { color: %1; font-size: 12px; background: transparent; }"
         ).arg(stC));
     };
 
@@ -197,7 +198,7 @@ void QueueWidget::buildRow(const M1::MediaItem& item, int index, bool isCurrent)
     auto* listItem = new QListWidgetItem(
         (isCurrent ? "\u25b6 " : "   ") + text, m_listWidget);
 
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro);
 
     if (isCurrent) {
         listItem->setBackground(isLight ? QColor(0x1c, 0x5c, 0xaa) : QColor(0x1e, 0x3a, 0x5f));
@@ -241,12 +242,12 @@ void QueueWidget::showContextMenu(const QPoint& pos) {
     auto* item = m_listWidget->itemAt(pos);
     const int idx = item ? item->data(Qt::UserRole).toInt() : -1;
 
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
-    const QString menuBg   = isLight ? "#ffffff"  : "#12263d";
-    const QString menuText = isLight ? "#1a1814"  : "#c8d8f0";
-    const QString menuBord = isLight ? "#d8d4ce"  : "#1e3a5f";
-    const QString menuHov  = isLight ? "#dbeafe"  : "#1e3a5f";
-    const QString menuHovT = isLight ? "#1c5caa"  : "#00d8ff";
+    const auto tp2 = ThemePalette::forCurrentTheme();
+    const QString menuBg   = tp2.cardBg.name();
+    const QString menuText = tp2.text.name();
+    const QString menuBord = tp2.border.name();
+    const QString menuHov  = tp2.border.name();
+    const QString menuHovT = tp2.info.name();
 
     QMenu menu(this);
     menu.setStyleSheet(QString(R"(

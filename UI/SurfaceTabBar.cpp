@@ -2,6 +2,7 @@
 #include "SurfaceWidget.h"
 #include "ModuleRegistry.h"
 #include "MonitorManager.h"
+#include "ThemePalette.h"
 #include <QToolButton>
 #include <QTabBar>
 #include <QInputDialog>
@@ -23,14 +24,18 @@ SurfaceTabBar::SurfaceTabBar(QWidget* parent)
     addBtn->setText("+");
     addBtn->setToolTip("Open a surface");
     addBtn->setObjectName("SurfaceAddBtn");
-    addBtn->setStyleSheet(
-        "QToolButton{"
-        "  background:#0c1a2e; color:#38bdf8;"
-        "  border:1px solid #1e3a5f; border-radius:4px;"
-        "  font-size:16px; font-weight:900; padding:0 8px;"
-        "  min-width:28px; min-height:26px;"
-        "}"
-        "QToolButton:hover{ background:#1e3a5f; }");
+    {
+        auto tp = ThemePalette::forCurrentTheme();
+        addBtn->setStyleSheet(QString(
+            "QToolButton{"
+            "  background:%1; color:%2;"
+            "  border:1px solid %3; border-radius:4px;"
+            "  font-size:16px; font-weight:900; padding:0 8px;"
+            "  min-width:28px; min-height:26px;"
+            "}"
+            "QToolButton:hover{ background:%3; }")
+            .arg(tp.panelBg.name(), tp.info.name(), tp.border.name()));
+    }
     connect(addBtn, &QToolButton::clicked, this, &SurfaceTabBar::addSurfaceRequested);
     setCornerWidget(addBtn, Qt::TopRightCorner);
 
@@ -133,9 +138,10 @@ void SurfaceTabBar::onTabBarContextMenu(const QPoint& pos) {
         QColor      color;
         QStringList moduleIds;
     };
-    static const QList<SubTemplate> kTemplates = {
+    const auto tp = ThemePalette::forCurrentTheme();
+    const QList<SubTemplate> kTemplates = {
         { "Broadcast",
-          QColor("#0ea5e9"),
+          tp.accent,
           {"com.mcaster1.deck.a","com.mcaster1.deck.b",
            "com.mcaster1.encoder","com.mcaster1.vumeter"} },
         { "DJ Mix",
@@ -154,7 +160,7 @@ void SurfaceTabBar::onTabBarContextMenu(const QPoint& pos) {
           {"com.mcaster1.ptt","com.mcaster1.podcast",
            "com.mcaster1.encoder","com.mcaster1.video","com.mcaster1.library"} },
         { "Social Stream",
-          QColor("#38bdf8"),
+          tp.info,
           {"com.mcaster1.encoder","com.mcaster1.metadata",
            "com.mcaster1.monitor","com.mcaster1.video"} },
         { "Monitor Wall",
@@ -171,9 +177,10 @@ void SurfaceTabBar::onTabBarContextMenu(const QPoint& pos) {
         QString name = QInputDialog::getText(this, "New Sub Surface",
             "Sub surface name:", QLineEdit::Normal, "New Sub Surface", &ok);
         if (!ok || name.trimmed().isEmpty()) return;
-        const QColor color = QColorDialog::getColor(QColor("#0ea5e9"), this, "Sub Surface Color");
+        const QColor defAccent = ThemePalette::forCurrentTheme().accent;
+        const QColor color = QColorDialog::getColor(defAccent, this, "Sub Surface Color");
         emit createSubSurfaceRequested(sw, name.trimmed(),
-                                       color.isValid() ? color : QColor("#0ea5e9"),
+                                       color.isValid() ? color : defAccent,
                                        {});
     });
 

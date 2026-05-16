@@ -1,4 +1,5 @@
 #include "WeatherWidget.h"
+#include "ThemePalette.h"
 #include <QPainter>
 #include <QPainterPath>
 #include <QLinearGradient>
@@ -168,17 +169,18 @@ static void showForecastDlg(const QList<WxForecastDay>& days,
     dlg.setModal(true);
     dlg.setMinimumWidth(320);
 
-    // Dark styled
-    dlg.setStyleSheet(
-        "QDialog { background:#111318; color:#e0e0e0; }"
-        "QLabel  { color:#e0e0e0; }"
-        "QLabel.dayName  { color:#a0b0c0; font-size:9px; font-weight:bold; }"
-        "QLabel.temp     { color:#f0b429; font-size:14px; font-weight:bold; }"
-        "QLabel.cond     { color:#8090a0; font-size:8px; }"
-        "QPushButton { background:#1e2530; border:1px solid #2a3240;"
-        "  border-radius:3px; color:#c0d0e0; padding:4px 16px; }"
-        "QPushButton:hover { background:#243040; }"
-    );
+    const auto fpal = ThemePalette::forCurrentTheme();
+    dlg.setStyleSheet(QString(
+        "QDialog { background:%1; color:%2; }"
+        "QLabel  { color:%2; }"
+        "QLabel.dayName  { color:%3; font-size:12px; font-weight:bold; }"
+        "QLabel.temp     { color:%4; font-size:14px; font-weight:bold; }"
+        "QLabel.cond     { color:%3; font-size:12px; }"
+        "QPushButton { background:%5; border:1px solid %6;"
+        "  border-radius:3px; color:%2; padding:4px 16px; }"
+        "QPushButton:hover { background:%6; }"
+    ).arg(fpal.bg.name(), fpal.text.name(), fpal.textMuted.name(),
+          fpal.warning.name(), fpal.panelBg.name(), fpal.border.name()));
 
     auto* root = new QVBoxLayout(&dlg);
     root->setContentsMargins(12, 12, 12, 12);
@@ -187,7 +189,8 @@ static void showForecastDlg(const QList<WxForecastDay>& days,
     // Title row
     auto* title = new QLabel(QString("%1-Day Forecast").arg(days.size()), &dlg);
     title->setAlignment(Qt::AlignCenter);
-    title->setStyleSheet("font-size:11px; font-weight:bold; color:#c0d0e0; padding-bottom:4px;");
+    title->setStyleSheet(QString("font-size:12px; font-weight:bold; color:%1; padding-bottom:4px;")
+        .arg(fpal.text.name()));
     root->addWidget(title);
 
     // Horizontal card strip
@@ -198,10 +201,10 @@ static void showForecastDlg(const QList<WxForecastDay>& days,
         // Card frame
         auto* card = new QFrame(&dlg);
         card->setObjectName("FxCard");
-        card->setStyleSheet(
-            "QFrame#FxCard { background:#1a1f28; border:1px solid #2a3040;"
-            "  border-radius:5px; }"
-        );
+        card->setStyleSheet(QString(
+            "QFrame#FxCard { background:%1; border:1px solid %2;"
+            "  border-radius:5px; }")
+            .arg(fpal.cardBg.name(), fpal.border.name()));
         auto* cl = new QVBoxLayout(card);
         cl->setContentsMargins(8, 8, 8, 8);
         cl->setSpacing(4);
@@ -210,7 +213,8 @@ static void showForecastDlg(const QList<WxForecastDay>& days,
         // Day name
         auto* dn = new QLabel(d.dayName, card);
         dn->setAlignment(Qt::AlignCenter);
-        dn->setStyleSheet("font-size:10px; font-weight:bold; color:#9aacbe;");
+        dn->setStyleSheet(QString("font-size:12px; font-weight:bold; color:%1;")
+            .arg(fpal.textMuted.name()));
         cl->addWidget(dn);
 
         // Icon
@@ -226,19 +230,22 @@ static void showForecastDlg(const QList<WxForecastDay>& days,
         const QString lo = useFahrenheit ? (d.minF + deg + "F") : (d.minC + deg + "C");
         auto* hiLbl = new QLabel(hi, card);
         hiLbl->setAlignment(Qt::AlignCenter);
-        hiLbl->setStyleSheet("font-size:13px; font-weight:bold; color:#f0b429;");
+        hiLbl->setStyleSheet(QString("font-size:13px; font-weight:bold; color:%1;")
+            .arg(fpal.warning.name()));
         cl->addWidget(hiLbl);
 
         auto* loLbl = new QLabel(lo, card);
         loLbl->setAlignment(Qt::AlignCenter);
-        loLbl->setStyleSheet("font-size:10px; color:#6080a0;");
+        loLbl->setStyleSheet(QString("font-size:12px; color:%1;")
+            .arg(fpal.textMuted.name()));
         cl->addWidget(loLbl);
 
         // Condition
         auto* condLbl = new QLabel(d.condition, card);
         condLbl->setAlignment(Qt::AlignCenter);
         condLbl->setWordWrap(true);
-        condLbl->setStyleSheet("font-size:8px; color:#7090a8;");
+        condLbl->setStyleSheet(QString("font-size:12px; color:%1;")
+            .arg(fpal.textMuted.name()));
         cl->addWidget(condLbl);
 
         strip->addWidget(card, 1);
@@ -401,27 +408,29 @@ void WeatherWidget::paintEvent(QPaintEvent*) {
     p.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
     const int w = width(), h = height();
 
+    const auto pal = ThemePalette::forCurrentTheme();
+
     // ── 3D raised outer border ────────────────────────────────────────────
-    p.setPen(QColor(68, 72, 84));
+    p.setPen(pal.border.lighter(120));
     p.drawLine(0, 0, w-2, 0);
     p.drawLine(0, 0, 0, h-2);
-    p.setPen(QColor(0, 0, 0));
+    p.setPen(pal.bg.darker(150));
     p.drawLine(0, h-1, w-1, h-1);
     p.drawLine(w-1, 0, w-1, h-1);
 
-    // ── Dark gradient background ──────────────────────────────────────────
+    // ── Gradient background ──────────────────────────────────────────────
     {
         QLinearGradient bg(0, 1, 0, h-1);
-        bg.setColorAt(0.0, QColor(14, 18, 24));
-        bg.setColorAt(1.0, QColor(7,  10, 15));
+        bg.setColorAt(0.0, pal.panelBg);
+        bg.setColorAt(1.0, pal.bg);
         p.fillRect(1, 1, w-2, h-2, bg);
     }
 
     // ── Inner recessed ring ───────────────────────────────────────────────
-    p.setPen(QColor(0, 0, 0));
+    p.setPen(pal.bg.darker(120));
     p.drawLine(1, 1, w-3, 1);
     p.drawLine(1, 1, 1, h-3);
-    p.setPen(QColor(28, 34, 44));
+    p.setPen(pal.border);
     p.drawLine(1, h-2, w-2, h-2);
     p.drawLine(w-2, 1, w-2, h-2);
 
@@ -445,7 +454,7 @@ void WeatherWidget::paintEvent(QPaintEvent*) {
         // No data — guidance
         QFont f("Segoe UI", 9);
         p.setFont(f);
-        p.setPen(QColor(80, 95, 110));
+        p.setPen(pal.textMuted);
         p.drawText(QRect(textX, 0, textW, h),
                    Qt::AlignVCenter | Qt::AlignLeft,
                    "Right-click to configure location");
@@ -466,7 +475,7 @@ void WeatherWidget::paintEvent(QPaintEvent*) {
     {
         QFont cityFont("Segoe UI", 9, QFont::Bold);
         p.setFont(cityFont);
-        p.setPen(QColor(165, 185, 205));
+        p.setPen(pal.textMuted);
         p.drawText(QRect(textX, 4, textW - 2, halfH - 4),
                    Qt::AlignLeft | Qt::AlignVCenter, m_city);
 
@@ -474,11 +483,11 @@ void WeatherWidget::paintEvent(QPaintEvent*) {
         tempFont.setStyleHint(QFont::Monospace);
         p.setFont(tempFont);
         // Shadow
-        p.setPen(QColor(30, 18, 0));
+        p.setPen(pal.bg.darker(120));
         p.drawText(QRect(textX+1, 5, textW-1, halfH-4),
                    Qt::AlignRight | Qt::AlignVCenter, temp);
         // Main
-        p.setPen(QColor(242, 168, 12));
+        p.setPen(pal.warning);
         p.drawText(QRect(textX, 4, textW, halfH-4),
                    Qt::AlignRight | Qt::AlignVCenter, temp);
     }
@@ -487,13 +496,13 @@ void WeatherWidget::paintEvent(QPaintEvent*) {
     {
         QFont condFont("Segoe UI", 8);
         p.setFont(condFont);
-        p.setPen(QColor(100, 125, 150));
+        p.setPen(pal.textMuted);
         p.drawText(QRect(textX, halfH, textW, halfH - 4),
                    Qt::AlignLeft | Qt::AlignVCenter, m_condition);
 
         QFont feelsFont("Segoe UI", 8);
         p.setFont(feelsFont);
-        p.setPen(QColor(140, 90, 5));
+        p.setPen(pal.warning.darker(150));
         p.drawText(QRect(textX, halfH, textW, halfH - 4),
                    Qt::AlignRight | Qt::AlignVCenter, feels);
     }

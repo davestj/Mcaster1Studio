@@ -162,9 +162,8 @@ target_link_libraries(Mcaster1Studio PRIVATE
 qt_add_resources(Mcaster1Studio "appresources"
     PREFIX "/"
     FILES
-        themes/dark.qss
+        themes/enterprise-pro.qss
         themes/classic.qss
-        themes/light.qss
 )
 
 qt_add_resources(Mcaster1Studio "icons"
@@ -276,6 +275,28 @@ if(WIN32)
                 "$<TARGET_FILE:Mcaster1Studio>"
             COMMENT "Running windeployqt..."
             VERBATIM
+        )
+    endif()
+endif()
+
+# ─── Code Signing (post-build) ──────────────────────────────────────────────
+# Signs Mcaster1Studio.exe + copies .cer for installer staging.
+# Variables M1_SIGNING_PFX, M1_SIGNING_CER, SIGNTOOL_EXE set in root CMakeLists.
+if(WIN32 AND SIGNTOOL_EXE AND EXISTS "${M1_SIGNING_PFX}")
+    add_custom_command(TARGET Mcaster1Studio POST_BUILD
+        COMMAND ${SIGNTOOL_EXE} sign /fd SHA256
+            /f "${M1_SIGNING_PFX}"
+            /p "Mcaster1Dev2026!"
+            "$<TARGET_FILE:Mcaster1Studio>"
+        COMMENT "Signing Mcaster1Studio.exe with Mcaster1 cert"
+    )
+    if(EXISTS "${M1_SIGNING_CER}")
+        add_custom_command(TARGET Mcaster1Studio POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Mcaster1Studio>/certs"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${M1_SIGNING_CER}"
+                "$<TARGET_FILE_DIR:Mcaster1Studio>/certs/Mcaster1CodeSigning.cer"
+            COMMENT "Copying Mcaster1 signing cert to build output"
         )
     endif()
 endif()

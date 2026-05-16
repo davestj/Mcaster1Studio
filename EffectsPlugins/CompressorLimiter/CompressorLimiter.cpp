@@ -13,6 +13,8 @@
 #include <QTimer>
 #include <QSettings>
 #include <QSizePolicy>
+#include "ThemePalette.h"
+#include "ThemeManager.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -20,14 +22,8 @@
 
 namespace M1 {
 
-// ─── Colour palette ──────────────────────────────────────────────────────────
-static constexpr char kPanelBg[]  = "#0c1a2e";
-static constexpr char kBorder[]   = "#1e3a5f";
-static constexpr char kText[]     = "#e2e8f0";
-static constexpr char kAccent[]   = "#0ea5e9";
-static constexpr char kGreen[]    = "#22c55e";
-static constexpr char kAmber[]    = "#f59e0b";
-static constexpr char kRed[]      = "#ef4444";
+// ─── Colour helper ───────────────────────────────────────────────────────────
+static QString col(const QColor& c) { return c.name(); }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constructor
@@ -231,10 +227,6 @@ void CompressorLimiter::process(AudioBuffer& inOut)
 QWidget* CompressorLimiter::createPanel(QWidget* parent)
 {
     auto* panel = new QWidget(parent);
-    panel->setStyleSheet(QString(
-        "QWidget { background: %1; }"
-        "QLabel  { color: %2; background: transparent; }"
-    ).arg(kPanelBg).arg(kText));
     panel->setMinimumHeight(120);
 
     auto* mainH = new QHBoxLayout(panel);
@@ -246,21 +238,20 @@ QWidget* CompressorLimiter::createPanel(QWidget* parent)
                          int minVal, int maxVal, int curVal)
         -> std::pair<QDial*, QLabel*>
     {
-        auto* col    = new QWidget(panel);
-        col->setStyleSheet("background: transparent;");
-        auto* colV   = new QVBoxLayout(col);
+        auto* knobCol = new QWidget(panel);
+        knobCol->setStyleSheet("background: transparent;");
+        auto* colV    = new QVBoxLayout(knobCol);
         colV->setContentsMargins(0, 0, 0, 0);
         colV->setSpacing(3);
 
         // Parameter name
-        auto* nameLbl = new QLabel(label, col);
+        auto* nameLbl = new QLabel(label, knobCol);
+        nameLbl->setObjectName("compKnobName");
         nameLbl->setAlignment(Qt::AlignHCenter);
-        nameLbl->setStyleSheet(QString(
-            "QLabel { color: %1; font: 9pt; background: transparent; }"
-        ).arg(kText));
 
         // Rotary knob
-        auto* dial = new QDial(col);
+        auto* dial = new QDial(knobCol);
+        dial->setObjectName("compDial");
         dial->setRange(minVal, maxVal);
         dial->setValue(curVal);
         dial->setFixedSize(56, 56);
@@ -268,22 +259,17 @@ QWidget* CompressorLimiter::createPanel(QWidget* parent)
         dial->setWrapping(false);
         dial->setToolTip(tooltip);
         dial->setCursor(Qt::PointingHandCursor);
-        dial->setStyleSheet(QString(
-            "QDial { background: %1; border: 2px solid %2; border-radius: 28px; }"
-        ).arg(kPanelBg).arg(kBorder));
 
         // Value readout
-        auto* valLbl = new QLabel(QString::number(curVal), col);
+        auto* valLbl = new QLabel(QString::number(curVal), knobCol);
+        valLbl->setObjectName("compKnobValue");
         valLbl->setAlignment(Qt::AlignHCenter);
-        valLbl->setStyleSheet(QString(
-            "QLabel { color: %1; font: bold 9pt; background: transparent; }"
-        ).arg(kAccent));
 
         colV->addWidget(nameLbl, 0, Qt::AlignHCenter);
         colV->addWidget(dial, 0, Qt::AlignHCenter);
         colV->addWidget(valLbl, 0, Qt::AlignHCenter);
 
-        mainH->addWidget(col);
+        mainH->addWidget(knobCol);
         return {dial, valLbl};
     };
 
@@ -360,9 +346,9 @@ QWidget* CompressorLimiter::createPanel(QWidget* parent)
 
     // ── Separator ─────────────────────────────────────────────────────────
     auto* sep = new QFrame(panel);
+    sep->setObjectName("compSeparator");
     sep->setFrameShape(QFrame::VLine);
     sep->setFixedWidth(2);
-    sep->setStyleSheet(QString("QFrame { background: %1; border: none; }").arg(kBorder));
     mainH->addWidget(sep);
 
     // ── Limiter toggle ────────────────────────────────────────────────────
@@ -373,20 +359,14 @@ QWidget* CompressorLimiter::createPanel(QWidget* parent)
     limiterV->setSpacing(4);
 
     auto* limLbl = new QLabel("Limiter", limiterCol);
+    limLbl->setObjectName("compLimiterLabel");
     limLbl->setAlignment(Qt::AlignHCenter);
-    limLbl->setStyleSheet(QString(
-        "QLabel { color: %1; font: 9pt; background: transparent; }"
-    ).arg(kText));
 
     auto* limCheck = new QCheckBox(limiterCol);
+    limCheck->setObjectName("compLimiterCheck");
     limCheck->setChecked(m_limiterEnabled.load(std::memory_order_relaxed));
     limCheck->setToolTip("Enable brickwall limiter at -0.3 dBFS");
     limCheck->setCursor(Qt::PointingHandCursor);
-    limCheck->setStyleSheet(QString(
-        "QCheckBox::indicator { width: 22px; height: 22px; border: 2px solid %1; "
-        "border-radius: 4px; background: %2; }"
-        "QCheckBox::indicator:checked { background: %3; border-color: #0c7ec4; }"
-    ).arg(kBorder).arg(kPanelBg).arg(kAccent));
 
     limiterV->addWidget(limLbl, 0, Qt::AlignHCenter);
     limiterV->addWidget(limCheck, 0, Qt::AlignHCenter);
@@ -404,12 +384,11 @@ QWidget* CompressorLimiter::createPanel(QWidget* parent)
     grV->setSpacing(3);
 
     auto* grLbl = new QLabel("GR", grCol);
+    grLbl->setObjectName("compGrLabel");
     grLbl->setAlignment(Qt::AlignHCenter);
-    grLbl->setStyleSheet(QString(
-        "QLabel { color: %1; font: bold 9pt; background: transparent; }"
-    ).arg(kText));
 
     auto* grBar = new QProgressBar(grCol);
+    grBar->setObjectName("compGrBar");
     grBar->setOrientation(Qt::Vertical);
     grBar->setRange(0, 200);
     grBar->setValue(0);
@@ -417,22 +396,85 @@ QWidget* CompressorLimiter::createPanel(QWidget* parent)
     grBar->setFixedWidth(22);
     grBar->setMinimumHeight(60);
     grBar->setToolTip("Gain reduction meter");
-    grBar->setStyleSheet(QString(
-        "QProgressBar { background: %1; border: 1px solid %2; border-radius: 3px; }"
-        "QProgressBar::chunk { background: qlineargradient(x1:0, y1:0, x2:0, y2:1,"
-        " stop:0 %3, stop:0.5 %4, stop:1 %5); border-radius: 2px; }"
-    ).arg(kPanelBg).arg(kBorder).arg(kRed).arg(kAmber).arg(kGreen));
 
     auto* grValLbl = new QLabel("0 dB", grCol);
+    grValLbl->setObjectName("compGrValue");
     grValLbl->setAlignment(Qt::AlignHCenter);
-    grValLbl->setStyleSheet(QString(
-        "QLabel { color: %1; font: bold 9pt; background: transparent; }"
-    ).arg(kAccent));
 
     grV->addWidget(grLbl, 0, Qt::AlignHCenter);
     grV->addWidget(grBar, 1, Qt::AlignHCenter);
     grV->addWidget(grValLbl, 0, Qt::AlignHCenter);
     mainH->addWidget(grCol);
+
+    // ── Apply theme styles ────────────────────────────────────────────────
+    auto applyTheme = [panel, sep, limCheck, grBar]() {
+        const auto p = ThemePalette::forCurrentTheme();
+        panel->setStyleSheet(QString(
+            "QWidget { background: %1; }"
+            "QLabel  { color: %2; background: transparent; }"
+        ).arg(col(p.panelBg), col(p.text)));
+
+        // Knob name labels
+        for (auto* lbl : panel->findChildren<QLabel*>("compKnobName"))
+            lbl->setStyleSheet(QString(
+                "QLabel { color: %1; font: 9pt; background: transparent; }"
+            ).arg(col(p.text)));
+
+        // Knob value labels
+        for (auto* lbl : panel->findChildren<QLabel*>("compKnobValue"))
+            lbl->setStyleSheet(QString(
+                "QLabel { color: %1; font: bold 9pt; background: transparent; }"
+            ).arg(col(p.accent)));
+
+        // Dials
+        for (auto* dial : panel->findChildren<QDial*>("compDial"))
+            dial->setStyleSheet(QString(
+                "QDial { background: %1; border: 2px solid %2; border-radius: 28px; }"
+            ).arg(col(p.panelBg), col(p.border)));
+
+        // Separator
+        sep->setStyleSheet(QString(
+            "QFrame { background: %1; border: none; }"
+        ).arg(col(p.border)));
+
+        // Limiter label
+        for (auto* lbl : panel->findChildren<QLabel*>("compLimiterLabel"))
+            lbl->setStyleSheet(QString(
+                "QLabel { color: %1; font: 9pt; background: transparent; }"
+            ).arg(col(p.text)));
+
+        // Limiter checkbox
+        limCheck->setStyleSheet(QString(
+            "QCheckBox::indicator { width: 22px; height: 22px; border: 2px solid %1; "
+            "border-radius: 4px; background: %2; }"
+            "QCheckBox::indicator:checked { background: %3; border-color: %4; }"
+        ).arg(col(p.border), col(p.panelBg), col(p.accent), col(p.borderAccent)));
+
+        // GR label
+        for (auto* lbl : panel->findChildren<QLabel*>("compGrLabel"))
+            lbl->setStyleSheet(QString(
+                "QLabel { color: %1; font: bold 9pt; background: transparent; }"
+            ).arg(col(p.text)));
+
+        // GR bar
+        grBar->setStyleSheet(QString(
+            "QProgressBar { background: %1; border: 1px solid %2; border-radius: 3px; }"
+            "QProgressBar::chunk { background: qlineargradient(x1:0, y1:0, x2:0, y2:1,"
+            " stop:0 %3, stop:0.5 %4, stop:1 %5); border-radius: 2px; }"
+        ).arg(col(p.panelBg), col(p.border),
+              col(p.vuRed), col(p.vuYellow), col(p.vuGreen)));
+
+        // GR value label
+        for (auto* lbl : panel->findChildren<QLabel*>("compGrValue"))
+            lbl->setStyleSheet(QString(
+                "QLabel { color: %1; font: bold 9pt; background: transparent; }"
+            ).arg(col(p.accent)));
+    };
+
+    applyTheme();
+
+    QObject::connect(ThemeManager::instance(), &ThemeManager::themeChanged,
+                     panel, [applyTheme]() { applyTheme(); });
 
     // ── Meter timer (20 Hz refresh) ──────────────────────────────────────
     auto* meterTimer = new QTimer(panel);

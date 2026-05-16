@@ -4,6 +4,7 @@
 #include "DeckBModule.h"
 #include "DeckPlayer.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include "IPlugin.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -35,18 +36,19 @@ struct CfColors {
 CfColors cfColors() {
     using T = ThemeManager::Theme;
     switch (ThemeManager::instance()->currentTheme()) {
-    case T::Light:
-        return { "#f0f0f0","#ffffff","#cccccc","#1a1a1a","#888888","#1c5caa",
-                 "#d0d0d0","qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #ffffff,stop:1 #d8d8d8)",
-                 "#999999","#1c5caa","#d0d0d0" };
     case T::Classic:
         return { "#e8e0d0","#f0e8d8","#bfb090","#2a1810","#806040","#8b3a0a",
                  "#c8c2b8","qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #e8e2d8,stop:1 #cec8be)",
                  "#8a8070","#8b3a0a","#c8c2b8" };
-    default: // Dark
-        return { "#1e2128","#252830","#3a3f4b","#e0e4ec","#8890a0","#1c5caa",
-                 "#2a2e38","qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #4a5060,stop:1 #353a48)",
-                 "#5a6070","#1c5caa","#2a2e38" };
+    default: { // EnterprisePro (via ThemePalette)
+        auto p = ThemePalette::forCurrentTheme();
+        return { p.bg.name(), p.panelBg.name(), p.border.name(),
+                 p.text.name(), p.textMuted.name(), p.accent.name(),
+                 p.border.name(),
+                 QString("qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 %1,stop:1 %2)")
+                     .arg(p.panelBg.name(), p.cardBg.name()),
+                 p.border.darker(120).name(), p.accent.name(), p.border.name() };
+    }
     }
 }
 
@@ -328,8 +330,9 @@ void CrossfaderPanel::refreshTheme() {
         b->setStyleSheet(cfBtnQss(c));
 
     // Fade A / B buttons
-    m_fadeBABtn->setStyleSheet(cfBtnQss(c, "#22aa55"));
-    m_fadeABBtn->setStyleSheet(cfBtnQss(c, "#22aa55"));
+    auto tp = ThemePalette::forCurrentTheme();
+    m_fadeBABtn->setStyleSheet(cfBtnQss(c, tp.success.name()));
+    m_fadeABBtn->setStyleSheet(cfBtnQss(c, tp.success.name()));
 
     // AUTO CROSSFADE — amber/gold accent
     m_autoBtn->setStyleSheet(QString(
@@ -337,12 +340,13 @@ void CrossfaderPanel::refreshTheme() {
         "  background:%1; color:%2; border:2px solid %3; border-radius:4px;"
         "  font-size:13px; font-weight:900; letter-spacing:1px;"
         "}"
-        "QPushButton:hover  { background:%4; border-color:#d97706; }"
+        "QPushButton:hover  { background:%4; border-color:%6; }"
         "QPushButton:pressed{ background:%5; }"
-        "QPushButton:checked{ background:#d97706; color:#ffffff; border-color:#b45309; }"
+        "QPushButton:checked{ background:%6; color:#ffffff; border-color:%7; }"
     ).arg(c.panel, c.textPrimary, c.border,
           QColor(c.panel).lighter(115).name(),
-          QColor(c.panel).darker(115).name()));
+          QColor(c.panel).darker(115).name(),
+          tp.warning.name(), tp.warning.darker(130).name()));
 
     // Fade duration spinbox
     m_durSpin->setStyleSheet(QString(

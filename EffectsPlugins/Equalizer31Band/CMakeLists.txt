@@ -8,6 +8,7 @@ add_library(FxEqualizer31Band STATIC
 target_include_directories(FxEqualizer31Band PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/Core/include
+    ${CMAKE_SOURCE_DIR}/UI
 )
 
 target_link_libraries(FxEqualizer31Band PUBLIC

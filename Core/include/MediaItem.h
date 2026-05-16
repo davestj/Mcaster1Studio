@@ -41,6 +41,13 @@ struct MediaItem {
     QString   tags;                 ///< Comma-separated custom tags
     bool      explicit_    = false; ///< Explicit content flag
 
+    // AutoDJ
+    int       autoDjWeight    = 50;  ///< 0-100: 0=never, 50=normal, 100=always-prefer
+    int       autoDjSkipCount = 0;   ///< Times user skipped this track in AutoDJ
+
+    // Album art
+    bool      hasArt         = false; ///< Embedded artwork detected during scan
+
     // Timestamps
     QDateTime dateAdded;
     QDateTime dateModified;

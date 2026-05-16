@@ -10,8 +10,14 @@
 #include "LibraryModel.h"
 #include "LibraryWidget.h"
 #include "MusicBrainzLookup.h"
+#include "AlbumArtCache.h"
+#include "AiTrackIntel.h"
+#include "PersonaManager.h"
+#include "ScanProgressDialog.h"
 #include "IPlugin.h"
 #include <QSettings>
+#include <QCoreApplication>
+#include <QDir>
 #include <QDebug>
 
 namespace M1 {
@@ -22,8 +28,26 @@ MediaLibraryModule::MediaLibraryModule(QObject* parent)
     , m_model(new LibraryModel(this))
     , m_mb(new MusicBrainzLookup(this))
 {
+    // Create album art cache in portable location
+    const QString cacheDir = QCoreApplication::applicationDirPath() + "/cache/artwork";
+    QDir().mkpath(cacheDir);
+    m_artCache = new AlbumArtCache(cacheDir, this);
+
+    // Create AI track intel engine
+    m_aiIntel = new AiTrackIntel(this);
+
+    // Set album art cache on scanner for pre-caching during scan
+    m_scanner->setAlbumArtCache(m_artCache);
+
     registerDrivers();
     createDatabase();
+
+    // Create PersonaManager and seed presets (if DB is SQLite)
+    auto* sqliteMgr = dynamic_cast<SqliteManager*>(m_db);
+    if (sqliteMgr) {
+        m_personas = new PersonaManager(sqliteMgr, this);
+        m_personas->seedPresets();
+    }
 }
 
 // ─── Driver registration ─────────────────────────────────────────────────────
@@ -196,6 +220,15 @@ void MediaLibraryModule::initialize() {
     connect(m_mb, &MusicBrainzLookup::lookupFailed, this, [this](const QString& err) {
         emit moduleError("MusicBrainz: " + err);
     });
+
+    // AI Track Intel signals
+    connect(m_aiIntel, &AiTrackIntel::profileReady,
+            this, &MediaLibraryModule::onAiProfileReady);
+    connect(m_aiIntel, &AiTrackIntel::lookupFailed, this,
+            [this](const QString& artist, const QString& err) {
+        emit moduleError(QString("AI Lookup (%1): %2").arg(artist, err));
+    });
+
     qInfo() << "[MediaLibraryModule] Initialized.";
 }
 
@@ -211,15 +244,27 @@ QWidget* MediaLibraryModule::createWidget(QWidget* parent) {
     m_widget = new LibraryWidget(m_model, m_db, m_scanner, parent);
     connect(m_widget, &QObject::destroyed, this, [this]() { m_widget = nullptr; });
 
-    // Library → Module signals
+    // Pass new components to widget
+    m_widget->setAlbumArtCache(m_artCache);
+    m_widget->setAiTrackIntel(m_aiIntel);
+
+    // If DB is SQLite, wire up category panel and FTS5 search
+    auto* sqliteMgr = dynamic_cast<SqliteManager*>(m_db);
+    if (sqliteMgr) {
+        m_widget->setCategoryDatabase(sqliteMgr);
+    }
+
+    // Library -> Module signals
     connect(m_widget, &LibraryWidget::scanDirectoryRequested,
             this, &MediaLibraryModule::startScan);
     connect(m_widget, &LibraryWidget::requestLoadMedia,
             this, &IModule::requestLoadMedia);
+    connect(m_widget, &LibraryWidget::requestPlayOnAuxCue,
+            this, &MediaLibraryModule::requestPlayOnAuxCue);
     connect(m_widget, &LibraryWidget::mbLookupRequested,
             m_mb, &MusicBrainzLookup::lookup);
 
-    // Scanner → Widget progress
+    // Scanner -> Widget progress
     connect(m_scanner, &ScanWorker::scanStarted,
             m_widget, &LibraryWidget::onScanStarted);
     connect(m_scanner, &ScanWorker::itemScanned,
@@ -235,22 +280,39 @@ QWidget* MediaLibraryModule::createWidget(QWidget* parent) {
 // ─── Scan ─────────────────────────────────────────────────────────────────────
 void MediaLibraryModule::startScan(const QStringList& dirs) {
     m_scanDirs = dirs;
+
+    // Show ScanProgressDialog if widget exists
+    if (m_widget) {
+        auto* dlg = new ScanProgressDialog(m_widget);
+        dlg->setAttribute(Qt::WA_DeleteOnClose);
+        dlg->setWindowTitle("Scanning Media Library");
+
+        // Wire scanner signals to dialog
+        connect(m_scanner, &ScanWorker::scanStarted,  dlg, &ScanProgressDialog::onScanStarted);
+        connect(m_scanner, &ScanWorker::scanProgress,  dlg, &ScanProgressDialog::onScanProgress);
+        connect(m_scanner, &ScanWorker::scanFinished,  dlg, &ScanProgressDialog::onScanFinished);
+        connect(dlg, &ScanProgressDialog::cancelRequested, m_scanner, &ScanWorker::cancel);
+
+        dlg->show();
+    }
+
     m_scanner->startScan(dirs);
-    emit statusChanged(QString("Scanning %1 director%2…")
+    emit statusChanged(QString("Scanning %1 director%2\u2026")
         .arg(dirs.size())
         .arg(dirs.size() == 1 ? "y" : "ies"));
 }
 
 // ─── Slots ────────────────────────────────────────────────────────────────────
 void MediaLibraryModule::onItemScanned(const M1::MediaItem& item) {
-    // Persist to DB if available; in-memory model is always updated
+    // Only add to DB + model if this path isn't already in the library.
+    // loadAll() at startup already populated the model, so re-scanning
+    // the same directory must NOT create duplicate rows.
     if (m_db->isConnected() && !m_db->pathExists(item.filePath)) {
         MediaItem mutable_item = item;
         m_db->insertItem(mutable_item);
         m_model->addItem(mutable_item);  // use the ID-assigned copy
-    } else {
-        m_model->addItem(item);
     }
+    // If path already exists, skip entirely — no duplicates
 }
 
 void MediaLibraryModule::onMbLookupComplete(const M1::MediaItem& enriched) {
@@ -259,6 +321,22 @@ void MediaLibraryModule::onMbLookupComplete(const M1::MediaItem& enriched) {
         m_db->updateItem(enriched);
     emit statusChanged(
         QString("MusicBrainz: Updated '%1'").arg(enriched.title));
+}
+
+void MediaLibraryModule::onAiProfileReady(const QString& artistName,
+                                          const QString& profileText,
+                                          const QString& discographyJson,
+                                          const QString& aiBackend,
+                                          const QString& aiModel)
+{
+    // Save to DB via SqliteManager if available
+    auto* sqliteMgr = dynamic_cast<SqliteManager*>(m_db);
+    if (sqliteMgr) {
+        sqliteMgr->saveArtistIntel(artistName, profileText,
+                                   discographyJson, aiBackend, aiModel);
+    }
+    emit statusChanged(
+        QString("AI Intel: Saved profile for '%1'").arg(artistName));
 }
 
 // ─── State persistence ────────────────────────────────────────────────────────
@@ -273,9 +351,14 @@ void MediaLibraryModule::loadState(QSettings& s) {
     m_scanDirs = s.value("scanDirs").toStringList();
     s.endGroup();
 
-    // Re-scan previously scanned directories on load
-    if (!m_scanDirs.isEmpty())
-        startScan(m_scanDirs);
+    // Re-scan on startup — but silently (no progress dialog).
+    // The dialog is only shown for user-initiated scans via the Scan button.
+    if (!m_scanDirs.isEmpty()) {
+        m_scanner->startScan(m_scanDirs);
+        emit statusChanged(QString("Scanning %1 director%2\u2026")
+            .arg(m_scanDirs.size())
+            .arg(m_scanDirs.size() == 1 ? "y" : "ies"));
+    }
 }
 
 } // namespace M1

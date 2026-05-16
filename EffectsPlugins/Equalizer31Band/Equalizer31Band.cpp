@@ -11,6 +11,8 @@
 #include <QSettings>
 #include <QScrollArea>
 #include <QSizePolicy>
+#include "ThemePalette.h"
+#include "ThemeManager.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -29,11 +31,8 @@ static constexpr const char* kFreqLabels[Equalizer31Band::kBands] = {
     "20k"
 };
 
-// ─── Colour palette ──────────────────────────────────────────────────────────
-static constexpr char kPanelBg[] = "#0c1a2e";
-static constexpr char kBorder[]  = "#1e3a5f";
-static constexpr char kText[]    = "#e2e8f0";
-static constexpr char kAccent[]  = "#0ea5e9";
+// ─── Colour helper ───────────────────────────────────────────────────────────
+static QString col(const QColor& c) { return c.name(); }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constructor
@@ -176,7 +175,6 @@ void Equalizer31Band::process(AudioBuffer& inOut)
 QWidget* Equalizer31Band::createPanel(QWidget* parent)
 {
     auto* panel = new QWidget(parent);
-    panel->setStyleSheet(QString("QWidget { background: %1; }").arg(kPanelBg));
     panel->setMinimumHeight(160);
 
     auto* outerV = new QVBoxLayout(panel);
@@ -190,40 +188,29 @@ QWidget* Equalizer31Band::createPanel(QWidget* parent)
 
     // dB scale labels
     auto* scaleLbl = new QLabel("+12        0       -12 dB", panel);
-    scaleLbl->setStyleSheet(QString(
-        "QLabel { color: %1; font: 9pt; background: transparent; }"
-    ).arg(kText));
+    scaleLbl->setObjectName("eqScaleLabel");
     topRow->addWidget(scaleLbl);
     topRow->addStretch(1);
 
-    // Flat button — resets all bands to 0
+    // Flat button -- resets all bands to 0
     auto* flatBtn = new QPushButton("Flat", panel);
+    flatBtn->setObjectName("eqFlatBtn");
     flatBtn->setFixedHeight(26);
     flatBtn->setCursor(Qt::PointingHandCursor);
     flatBtn->setToolTip("Reset all bands to 0 dB (flat response)");
-    flatBtn->setStyleSheet(QString(
-        "QPushButton { background: %1; color: %2; font: bold 9pt; "
-        "border: 1px solid %3; border-radius: 4px; padding: 2px 12px; }"
-        "QPushButton:hover { background: %3; color: white; }"
-    ).arg(kPanelBg).arg(kAccent).arg(kBorder));
     topRow->addWidget(flatBtn);
 
     outerV->addLayout(topRow);
 
     // ── Scroll area for the band sliders ────────────────────────────────
     auto* scroll = new QScrollArea(panel);
+    scroll->setObjectName("eqScroll");
     scroll->setWidgetResizable(true);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scroll->setStyleSheet(QString(
-        "QScrollArea { border: none; background: %1; }"
-        "QScrollBar:horizontal { background: %2; height: 8px; border-radius: 4px; }"
-        "QScrollBar::handle:horizontal { background: %3; border-radius: 3px; min-width: 30px; }"
-        "QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }"
-    ).arg(kPanelBg).arg(kBorder).arg(kAccent));
 
     auto* sliderContainer = new QWidget();
-    sliderContainer->setStyleSheet(QString("background: %1;").arg(kPanelBg));
+    sliderContainer->setObjectName("eqSliderContainer");
     auto* hLayout = new QHBoxLayout(sliderContainer);
     hLayout->setContentsMargins(4, 2, 4, 2);
     hLayout->setSpacing(1);
@@ -232,24 +219,23 @@ QWidget* Equalizer31Band::createPanel(QWidget* parent)
     QList<QSlider*> allSliders;
 
     for (int b = 0; b < kBands; ++b) {
-        auto* col = new QWidget(sliderContainer);
-        col->setStyleSheet("background: transparent;");
-        auto* colV = new QVBoxLayout(col);
+        auto* bandCol = new QWidget(sliderContainer);
+        bandCol->setStyleSheet("background: transparent;");
+        auto* colV = new QVBoxLayout(bandCol);
         colV->setContentsMargins(0, 0, 0, 0);
         colV->setSpacing(2);
 
         // dB value label (top)
         const int curGain = static_cast<int>(bandGain(b));
         auto* dbLabel = new QLabel(curGain == 0 ? "0" :
-            (curGain > 0 ? QString("+%1").arg(curGain) : QString::number(curGain)), col);
+            (curGain > 0 ? QString("+%1").arg(curGain) : QString::number(curGain)), bandCol);
+        dbLabel->setObjectName("eqDbLabel");
         dbLabel->setAlignment(Qt::AlignHCenter);
         dbLabel->setFixedWidth(32);
-        dbLabel->setStyleSheet(QString(
-            "QLabel { color: %1; font: bold 8pt; background: transparent; }"
-        ).arg(kAccent));
 
         // Vertical slider: -12 to +12
-        auto* slider = new QSlider(Qt::Vertical, col);
+        auto* slider = new QSlider(Qt::Vertical, bandCol);
+        slider->setObjectName("eqSlider");
         slider->setRange(-12, 12);
         slider->setValue(curGain);
         slider->setSingleStep(1);
@@ -259,29 +245,20 @@ QWidget* Equalizer31Band::createPanel(QWidget* parent)
         slider->setMinimumHeight(100);
         slider->setCursor(Qt::PointingHandCursor);
         slider->setToolTip(QString("%1 Hz").arg(kFreqLabels[b]));
-        slider->setStyleSheet(QString(
-            "QSlider::groove:vertical { background: %1; width: 4px; border-radius: 2px; }"
-            "QSlider::handle:vertical { background: %2; height: 14px; width: 20px; "
-            "margin: -8px; border-radius: 3px; border: 1px solid %3; }"
-            "QSlider::sub-page:vertical { background: %1; border-radius: 2px; }"
-            "QSlider::add-page:vertical { background: %4; border-radius: 2px; }"
-        ).arg(kBorder).arg(kAccent).arg("#0c7ec4").arg(kBorder));
 
         allSliders.append(slider);
 
         // Frequency label (bottom)
-        auto* freqLabel = new QLabel(kFreqLabels[b], col);
+        auto* freqLabel = new QLabel(kFreqLabels[b], bandCol);
+        freqLabel->setObjectName("eqFreqLabel");
         freqLabel->setAlignment(Qt::AlignHCenter);
         freqLabel->setFixedWidth(32);
-        freqLabel->setStyleSheet(QString(
-            "QLabel { color: %1; font: 7pt; background: transparent; }"
-        ).arg(kText));
 
         colV->addWidget(dbLabel, 0, Qt::AlignHCenter);
         colV->addWidget(slider, 1, Qt::AlignHCenter);
         colV->addWidget(freqLabel, 0, Qt::AlignHCenter);
 
-        hLayout->addWidget(col);
+        hLayout->addWidget(bandCol);
 
         // Wire up slider
         const int capturedBand = b;
@@ -304,6 +281,62 @@ QWidget* Equalizer31Band::createPanel(QWidget* parent)
 
     scroll->setWidget(sliderContainer);
     outerV->addWidget(scroll, 1);
+
+    // ── Apply theme styles ────────────────────────────────────────────────
+    auto applyTheme = [panel, scaleLbl, flatBtn, scroll, sliderContainer]() {
+        const auto p = ThemePalette::forCurrentTheme();
+        panel->setStyleSheet(QString("QWidget { background: %1; }").arg(col(p.panelBg)));
+
+        // Scale label
+        scaleLbl->setStyleSheet(QString(
+            "QLabel { color: %1; font: 9pt; background: transparent; }"
+        ).arg(col(p.text)));
+
+        // Flat button
+        flatBtn->setStyleSheet(QString(
+            "QPushButton { background: %1; color: %2; font: bold 9pt; "
+            "border: 1px solid %3; border-radius: 4px; padding: 2px 12px; }"
+            "QPushButton:hover { background: %3; color: white; }"
+        ).arg(col(p.panelBg), col(p.accent), col(p.border)));
+
+        // Scroll area
+        scroll->setStyleSheet(QString(
+            "QScrollArea { border: none; background: %1; }"
+            "QScrollBar:horizontal { background: %2; height: 8px; border-radius: 4px; }"
+            "QScrollBar::handle:horizontal { background: %3; border-radius: 3px; min-width: 30px; }"
+            "QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }"
+        ).arg(col(p.panelBg), col(p.border), col(p.accent)));
+
+        // Slider container
+        sliderContainer->setStyleSheet(QString("background: %1;").arg(col(p.panelBg)));
+
+        // dB value labels
+        for (auto* lbl : panel->findChildren<QLabel*>("eqDbLabel"))
+            lbl->setStyleSheet(QString(
+                "QLabel { color: %1; font: bold 9pt; background: transparent; }"
+            ).arg(col(p.accent)));
+
+        // Band sliders
+        for (auto* s : panel->findChildren<QSlider*>("eqSlider"))
+            s->setStyleSheet(QString(
+                "QSlider::groove:vertical { background: %1; width: 4px; border-radius: 2px; }"
+                "QSlider::handle:vertical { background: %2; height: 14px; width: 20px; "
+                "margin: -8px; border-radius: 3px; border: 1px solid %3; }"
+                "QSlider::sub-page:vertical { background: %1; border-radius: 2px; }"
+                "QSlider::add-page:vertical { background: %4; border-radius: 2px; }"
+            ).arg(col(p.border), col(p.accent), col(p.borderAccent), col(p.border)));
+
+        // Frequency labels
+        for (auto* lbl : panel->findChildren<QLabel*>("eqFreqLabel"))
+            lbl->setStyleSheet(QString(
+                "QLabel { color: %1; font: 9pt; background: transparent; }"
+            ).arg(col(p.text)));
+    };
+
+    applyTheme();
+
+    QObject::connect(ThemeManager::instance(), &ThemeManager::themeChanged,
+                     panel, [applyTheme]() { applyTheme(); });
 
     return panel;
 }

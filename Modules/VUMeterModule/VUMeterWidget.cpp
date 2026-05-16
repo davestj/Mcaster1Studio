@@ -89,7 +89,7 @@ void VUMeterWidget::paintEvent(QPaintEvent*) {
     p.setRenderHint(QPainter::Antialiasing, false);
 
     // Background — dark for Dark/Classic themes; sandy for Light
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro);
     p.fillRect(rect(), isLight ? QColor(0xf0, 0xeb, 0xe3) : QColor(0x12, 0x12, 0x14));
 
     if (m_compact) {
@@ -106,7 +106,7 @@ void VUMeterWidget::paintCompact(QPainter& p) {
     const int barH = (height() - margin * 2 - 4) / 2;  // 4px gap between bars
     const int barX = margin + vuLabelW;
     const int barW = width() - barX - margin;
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro);
 
     // "VU" label top-left
     p.setPen(isLight ? QColor(0x1c, 0x5c, 0xaa) : QColor(0x55, 0x77, 0x99));
@@ -172,7 +172,7 @@ void VUMeterWidget::paintFull(QPainter& p) {
     drawBar(p, rightRect, linearToDb(m_dispR), m_peakR, "R");
 
     // Scale markings on left edge
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro);
     const QColor scaleColor = isLight ? QColor(0x6b, 0x65, 0x60) : QColor(0x88, 0x88, 0x88);
     p.setPen(scaleColor);
     p.setFont(QFont("Consolas", 7));

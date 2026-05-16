@@ -71,8 +71,8 @@ private:
     static constexpr int kRingFrames = 1 << 18;  // 262144 frames ≈ 5.5 s @ 48 kHz
     static constexpr int kRingMask   = kRingFrames - 1;
     std::vector<float> m_ring;                     // size = kRingFrames * 2
-    std::atomic<int>   m_ringW{0};
-    std::atomic<int>   m_ringR{0};
+    std::atomic<int64_t> m_ringW{0};
+    std::atomic<int64_t> m_ringR{0};
 
     void ringWrite(const float* stereoData, int frames);
 };

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mcaster1Studio &mdash; AI Integration Features</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#0c1a2e; --raised:#1e3a5f;
+    --blue:#0ea5e9; --cyan:#38bdf8; --green:#22c55e;
+    --red:#ef4444; --amber:#f59e0b; --purple:#a78bfa;
+    --text:#e2e8f0; --muted:#64748b; --border:#1e3a5f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Inter,Arial,sans-serif;
+       font-size:14px;line-height:1.6;padding:24px 32px;max-width:1300px;margin:0 auto}
+  h1{color:var(--cyan);font-size:2rem;margin-bottom:4px;letter-spacing:-0.5px}
+  h2{color:var(--cyan);font-size:1.15rem;margin:36px 0 10px;
+     border-bottom:1px solid var(--border);padding-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+  h3{color:var(--blue);font-size:1rem;margin:18px 0 6px}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:28px}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{color:var(--cyan)}
+
+  .badge{display:inline-block;border-radius:12px;padding:2px 10px;
+         font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+  .done  {background:#14532d;color:#4ade80;border:1px solid #16a34a}
+  .wip   {background:#1e3a5f;color:#38bdf8;border:1px solid #0ea5e9}
+  .pend  {background:#1c1917;color:#78716c;border:1px solid #44403c}
+  .new   {background:#4a1d96;color:#c4b5fd;border:1px solid #7c3aed}
+
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0 20px}
+  th{background:var(--raised);color:var(--cyan);padding:7px 12px;text-align:left;
+     font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;
+     border-bottom:1px solid var(--blue)}
+  td{padding:7px 12px;border-bottom:1px solid #0d1a2e;color:var(--text);vertical-align:top}
+  tr:hover td{background:#0a1422}
+
+  code{background:#060d18;border:1px solid #1e293b;border-radius:3px;
+       padding:1px 5px;font-family:"Consolas","Courier New",monospace;
+       font-size:.84em;color:var(--cyan)}
+
+  .box{background:var(--panel);border:1px solid var(--border);
+       border-left:3px solid var(--blue);border-radius:4px;
+       padding:10px 14px;margin:10px 0;font-size:.88rem;color:#94a3b8}
+  .box.g{border-left-color:var(--green)}
+  .box.a{border-left-color:var(--amber)}
+  .box.r{border-left-color:var(--red)}
+  .box.p{border-left-color:var(--purple)}
+
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media(max-width:900px){.cols2,.cols3{grid-template-columns:1fr}}
+
+  ul{margin:6px 0 10px 20px;color:#94a3b8;font-size:.88rem;line-height:1.7}
+  ul li strong{color:var(--text)}
+
+  .feature-card{background:var(--panel);border:1px solid var(--border);
+    border-radius:6px;padding:14px 16px;margin-bottom:12px}
+  .feature-card h3{margin-top:0;color:var(--cyan)}
+  .feature-card ul{margin-top:6px}
+
+  .stat-row{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+        padding:16px 20px;text-align:center;flex:1;min-width:120px}
+  .stat .num{font-size:2rem;font-weight:800;color:var(--cyan);display:block}
+  .stat .lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:2px}
+
+  footer{margin-top:56px;color:var(--muted);font-size:.8rem;
+         border-top:1px solid var(--border);padding-top:12px}
+</style>
+</head>
+<body>
+
+<h1>Mcaster1Studio &mdash; AI Integration</h1>
+<p class="sub">Features &amp; Status &mdash; v0.4.0-beta &mdash; Last updated: 2026-03-18</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Overview</h2>
+<div class="box p">
+  Mcaster1Studio integrates AI capabilities across the broadcast workflow &mdash; from music recommendations
+  and playlist generation to artist research and on-air persona management. The AI system is
+  <strong>provider-agnostic</strong>, supporting six backends, and operates through a persona framework that
+  tailors AI behavior to the station&rsquo;s format, time of day, and surface context.
+</div>
+
+<div class="stat-row">
+  <div class="stat"><span class="num">~35%</span><span class="lbl">AI Features Complete</span></div>
+  <div class="stat"><span class="num">6</span><span class="lbl">AI Providers</span></div>
+  <div class="stat"><span class="num">15</span><span class="lbl">Preset Personas</span></div>
+  <div class="stat"><span class="num">8</span><span class="lbl">Research Buttons</span></div>
+  <div class="stat"><span class="num">5</span><span class="lbl">SQL Dialects</span></div>
+</div>
+
+<div class="box a">
+  <strong>Status:</strong> Core infrastructure (provider abstraction, persona system, artist intel, category AI tools)
+  is functional and in active testing/QA. Streaming token support, advanced AuxDeck routing, and some
+  animated UI elements are upcoming.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>AI Providers</h2>
+<p style="color:var(--muted);font-size:.88rem;margin-bottom:10px">
+  Configure your preferred provider and API key in <strong>Preferences &gt; AI</strong>.
+  All providers use a common request/response abstraction &mdash; switching providers does not affect feature behavior.
+</p>
+<table>
+  <tr><th>Provider</th><th>Type</th><th>Notes</th><th>Status</th></tr>
+  <tr>
+    <td><strong>Ollama</strong></td>
+    <td>Local / self-hosted</td>
+    <td>No API key required; runs on local hardware</td>
+    <td><span class="badge wip">Testing</span></td>
+  </tr>
+  <tr>
+    <td><strong>Claude</strong></td>
+    <td>Cloud (Anthropic)</td>
+    <td>API key required; supports Claude 3+ models</td>
+    <td><span class="badge wip">Testing</span></td>
+  </tr>
+  <tr>
+    <td><strong>ChatGPT</strong></td>
+    <td>Cloud (OpenAI)</td>
+    <td>API key required; supports GPT-4o and later</td>
+    <td><span class="badge wip">Testing</span></td>
+  </tr>
+  <tr>
+    <td><strong>Grok</strong></td>
+    <td>Cloud (xAI)</td>
+    <td>API key required</td>
+    <td><span class="badge wip">Testing</span></td>
+  </tr>
+  <tr>
+    <td><strong>Gemini</strong></td>
+    <td>Cloud (Google)</td>
+    <td>API key required; supports Gemini 1.5+</td>
+    <td><span class="badge wip">Testing</span></td>
+  </tr>
+  <tr>
+    <td><strong>Venice</strong></td>
+    <td>Cloud (Venice.ai)</td>
+    <td>API key required; privacy-focused provider</td>
+    <td><span class="badge wip">Testing</span></td>
+  </tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>AI Persona System</h2>
+<div class="box">
+  15 preset AI personas ship with Mcaster1Studio, covering the full range of broadcast formats.
+  Personas use a <strong>3-tier resolution</strong> model: daypart schedule &gt; surface-level persona &gt; global default.
+  Each persona has a customizable system prompt (500 char max) and can be assigned per-category via right-click.
+</div>
+
+<div class="cols3">
+<div class="feature-card">
+  <h3>Radio DJ Personas (7) <span class="badge done">Done</span></h3>
+  <ul>
+    <li><strong>Top 40 / CHR</strong> &mdash; High energy, trend-focused</li>
+    <li><strong>Classic Rock</strong> &mdash; Storytelling, deep cuts</li>
+    <li><strong>Country</strong> &mdash; Warm, community-focused</li>
+    <li><strong>Urban / Hip-Hop</strong> &mdash; Culture-forward, slang-aware</li>
+    <li><strong>Jazz / Blues</strong> &mdash; Sophisticated, smooth delivery</li>
+    <li><strong>EDM / Dance</strong> &mdash; Festival energy, BPM-aware</li>
+    <li><strong>Adult Contemporary</strong> &mdash; Polished, relatable</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Podcast Personas (3) <span class="badge done">Done</span></h3>
+  <ul>
+    <li><strong>Interview Host</strong> &mdash; Conversational, guest-focused</li>
+    <li><strong>Solo Narrator</strong> &mdash; Storytelling, pacing-aware</li>
+    <li><strong>Panel Moderator</strong> &mdash; Multi-voice balance</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Specialty Personas (5) <span class="badge done">Done</span></h3>
+  <ul>
+    <li><strong>Sports Broadcaster</strong> &mdash; Stats-driven, play-by-play</li>
+    <li><strong>TV News Anchor</strong> &mdash; Authoritative, concise</li>
+    <li><strong>Church / Worship</strong> &mdash; Reverent, scripture-aware</li>
+    <li><strong>Social Media Host</strong> &mdash; Casual, engagement-focused</li>
+    <li><strong>Producer</strong> &mdash; Technical, workflow-oriented</li>
+  </ul>
+</div>
+</div>
+
+<h3>Persona Infrastructure</h3>
+<table>
+  <tr><th>Component</th><th>Detail</th></tr>
+  <tr><td><strong>PersonaManager</strong></td><td>Singleton with 3-tier resolution (daypart &gt; surface &gt; global) and caching</td></tr>
+  <tr><td><strong>Database tables</strong></td><td><code>ai_personas</code> + <code>daypart_schedule</code> in all 5 SQL dialects</td></tr>
+  <tr><td><strong>Preferences &gt; AI</strong></td><td>Persona combo selector + editable system prompt (500 char max)</td></tr>
+  <tr><td><strong>Per-category assignment</strong></td><td>Right-click any library category to assign a governing persona</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Artist Intel Dialog</h2>
+<div class="box g">
+  A full-window research dialog accessible via right-click on any track in the Media Library.
+  Combines AI-generated research with manual notes, persistent per-tab JSON storage, and
+  direct integration with the library track list via AI Intel badges.
+</div>
+
+<div class="cols2">
+<div class="feature-card">
+  <h3>Tabs <span class="badge done">Done</span></h3>
+  <ul>
+    <li><strong>Overview</strong> &mdash; Summary bio, genre, active years, notable works</li>
+    <li><strong>Discography</strong> &mdash; Albums, singles, compilations with release dates</li>
+    <li><strong>Images</strong> &mdash; Artist photos and album artwork (cache-backed)</li>
+    <li><strong>DJ Script</strong> &mdash; Ready-to-read on-air talking points</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>8 AI Research Buttons <span class="badge done">Done</span></h3>
+  <ul>
+    <li><strong>Touring History</strong> &mdash; Concert tours, notable venues</li>
+    <li><strong>Musical Influences</strong> &mdash; Influence tree (in/out)</li>
+    <li><strong>Awards &amp; Charts</strong> &mdash; Grammys, Billboard, certifications</li>
+    <li><strong>Broadcaster Script</strong> &mdash; Pre-written DJ patter</li>
+    <li><strong>Fan Base &amp; Impact</strong> &mdash; Cultural significance, demographics</li>
+    <li><strong>Full Timeline</strong> &mdash; Chronological career events</li>
+    <li><strong>Gear &amp; Equipment</strong> &mdash; Instruments, studios, tools</li>
+    <li><strong>Discovery</strong> &mdash; Early career breaks, origin story</li>
+  </ul>
+</div>
+</div>
+
+<div class="feature-card">
+  <h3>Interaction Features</h3>
+  <ul>
+    <li><strong>Multi-turn &ldquo;Ask AI&rdquo; chat</strong> with full conversation context maintained</li>
+    <li><strong>Save/load per-tab</strong> as JSON &mdash; overview and research tabs persist independently</li>
+    <li><strong>Right-click tab</strong> context menu: Refresh Report, Save Individual Report as HTML</li>
+    <li><strong>Auto-retry on busy</strong> &mdash; 5-second delay with user-friendly error messages</li>
+    <li><strong>Save confirmation dialog</strong> showing database path, table name, and record ID</li>
+    <li><strong>AI Intel badges</strong> appear in the library track list (<code>ColIntel</code> column) after saving research</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>AI DJ Agent Browser</h2>
+<div class="box">
+  An interactive conversational recommendation engine accessible from the Media Library&rsquo;s category view.
+</div>
+<div class="feature-card">
+  <h3>Capabilities <span class="badge wip">Testing</span></h3>
+  <ul>
+    <li><strong>Persona-aware</strong> &mdash; recommendations reflect the active AI persona&rsquo;s style and format</li>
+    <li><strong>Conversational interface</strong> &mdash; multi-turn chat to refine recommendations</li>
+    <li><strong>Category-scoped</strong> &mdash; draws from the active library category</li>
+    <li><strong>Drag-to-deck</strong> &mdash; recommended tracks can be dragged directly to Deck A/B or the playlist queue</li>
+    <li><strong>Animated braille spinner</strong> progress indicator with phase messages during AI processing</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Playlist Generator Pro</h2>
+<div class="box">
+  AI-powered playlist generation with fine-grained control over output, broadcast element insertion,
+  and persona-influenced track selection.
+</div>
+<div class="feature-card">
+  <h3>Capabilities <span class="badge wip">Testing</span></h3>
+  <ul>
+    <li><strong>Source selector</strong> &mdash; choose which library categories to draw from</li>
+    <li><strong>AI Intel prioritization</strong> &mdash; tracks with saved AI research are weighted higher</li>
+    <li><strong>Broadcast element insertion</strong> &mdash; station IDs, sweepers, jingles, and ads at configurable intervals</li>
+    <li><strong>Duration targeting</strong> &mdash; generate playlists for specific time blocks (1h, 2h, 4h, custom)</li>
+    <li><strong>Persona influence</strong> &mdash; the active persona shapes track selection, ordering, and element placement</li>
+    <li><strong>Animated braille spinner</strong> with phase messages (Analyzing library, Selecting tracks, Arranging flow, Inserting elements)</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Daypart Scheduler Pro</h2>
+<div class="box">
+  A 24-hour visual timeline for scheduling AI personas across the broadcast day.
+  Each surface can have its own daypart schedule, persisted in the <code>daypart_schedule</code> table.
+</div>
+<div class="feature-card">
+  <h3>Capabilities <span class="badge wip">Testing</span></h3>
+  <ul>
+    <li><strong>24h timeline</strong> &mdash; visual hour-by-hour grid showing which persona is active</li>
+    <li><strong>Persona per time block</strong> &mdash; assign different personas to morning drive, midday, afternoon, evening, overnight</li>
+    <li><strong>AI auto-schedule</strong> &mdash; let the AI suggest a daypart layout based on station format and target audience</li>
+    <li><strong>Per-surface scheduling</strong> &mdash; each surface can have its own daypart schedule</li>
+    <li><strong>Database-backed</strong> &mdash; schedules persist across all 5 SQL backends</li>
+    <li><strong>Drag-to-resize</strong> time blocks in the visual editor</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Media Library AI Features</h2>
+<div class="box g">
+  AI capabilities integrated directly into the Media Library module, enhancing search,
+  categorization, and track discovery.
+</div>
+<div class="cols2">
+<div class="feature-card">
+  <h3>Search &amp; Discovery <span class="badge done">Done</span></h3>
+  <ul>
+    <li><strong>FTS5 full-text search</strong> &mdash; SQLite FTS5 virtual table for fast search; LIKE fallback if FTS5 unavailable</li>
+    <li><strong>AI Intel badges</strong> &mdash; tracks with saved research display badge in <code>ColIntel</code> column</li>
+    <li><strong>FTS5 search scoped to category</strong> &mdash; restricts results to active category</li>
+    <li><strong>Album art cache</strong> &mdash; memory + disk cache with TagLib extraction</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Category Management <span class="badge done">Done</span></h3>
+  <ul>
+    <li><strong>7 preset categories</strong> &mdash; Music, Stingers, Station IDs, Sweepers, Jingles, Ads, Spoken Word</li>
+    <li><strong>Hierarchical tree</strong> &mdash; 3+ levels, expandable/collapsible</li>
+    <li><strong>Per-category persona</strong> &mdash; right-click to assign AI persona</li>
+    <li><strong>Scan-into-category</strong> &mdash; auto-assign tracks based on path or metadata</li>
+    <li><strong>7 new database tables</strong> + schema migration for existing databases</li>
+  </ul>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Upcoming</h2>
+<div class="box a">
+  Features planned for near-term development. These are in design or early implementation.
+</div>
+<table>
+  <tr><th>Feature</th><th>Description</th><th>Status</th></tr>
+  <tr>
+    <td><strong>AuxDeck 4-bus routing</strong></td>
+    <td>Route AuxDeck output to 4 independent buses (AIR, CUE, REC, MON) for advanced monitoring workflows</td>
+    <td><span class="badge pend">Planned</span></td>
+  </tr>
+  <tr>
+    <td><strong>Animated progress indicators</strong></td>
+    <td>Expand braille spinner animations to all long-running AI operations across the application</td>
+    <td><span class="badge pend">Planned</span></td>
+  </tr>
+  <tr>
+    <td><strong>Streaming token support</strong></td>
+    <td>Streaming/chunked AI responses with real-time token display, reducing perceived latency</td>
+    <td><span class="badge pend">Planned</span></td>
+  </tr>
+  <tr>
+    <td><strong>AI-powered show prep</strong></td>
+    <td>Automated pre-show research packets combining artist intel, trending topics, and daypart context</td>
+    <td><span class="badge pend">Planned</span></td>
+  </tr>
+  <tr>
+    <td><strong>Voice cloning integration</strong></td>
+    <td>AI voice synthesis for pre-recorded liners and sweepers using station voice talent samples</td>
+    <td><span class="badge pend">Planned</span></td>
+  </tr>
+</table>
+
+<footer>
+  Mcaster1Studio v0.4.0-beta &middot;
+  AI Integration Features &middot;
+  <a href="index.html">Documentation Home</a> &middot;
+  <a href="FEATURES.html">Feature Reference</a> &middot;
+  <a href="PLANNING.html">Project Plan</a> &middot;
+  Last updated: 2026-03-18 &middot;
+  <a href="https://mcaster1.com">mcaster1.com</a>
+</footer>
+</body>
+</html>

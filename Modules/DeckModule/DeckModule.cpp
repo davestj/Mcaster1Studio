@@ -86,7 +86,7 @@ void DeckModule::onAudioBlock(AudioBuffer& /*in*/, AudioBuffer& out) {
     switch (mode) {
     case 1:  // S-Curve — equal-power cosine (no volume dip at centre)
         gainA = std::cos(cf * (float)M_PI_2);
-        gainB = std::cos((1.0f - cf) * (float)M_PI_2);
+        gainB = std::sin(cf * (float)M_PI_2);
         break;
     case 2:  // Exponential — sharp transition
         gainA = (1.0f - cf) * (1.0f - cf);

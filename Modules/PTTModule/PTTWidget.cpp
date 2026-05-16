@@ -1,6 +1,7 @@
 #include "PTTWidget.h"
 #include "PTTModule.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -18,24 +19,6 @@
 #include <QSettings>
 #include <QMediaDevices>
 #include <QAudioDevice>
-
-// ─── Status colors (fixed, not theme-dependent) ───────────────────────────────
-static const char* kLiveColor         = "#ef4444";
-static const char* kArmedColor        = "#f59e0b";
-static const char* kOffColor          = "#334155";
-
-// ─── Theme-aware background colors ───────────────────────────────────────────
-namespace {
-    struct PttColors { QString bg, panel, border, text, dark; };
-    PttColors pttColors() {
-        using T = ThemeManager::Theme;
-        switch (ThemeManager::instance()->currentTheme()) {
-        case T::Light:   return { "#f0f0f0","#fafafa","#cccccc","#1a1814","#e0e0e0" };
-        case T::Classic: return { "#ede0cc","#f5ead0","#c0a878","#2a1810","#ddd0b8" };
-        default:         return { "#0c1a2e","#102035","#1e3a5f","#c8d8e8","#0a1628" };
-        }
-    }
-} // namespace
 
 // ─── PTTButtonWidget — inner painted button ───────────────────────────────────
 /// We embed a dedicated sub-widget for painting the round PTT button.
@@ -63,11 +46,12 @@ protected:
     void paintEvent(QPaintEvent*) override {
         QPainter p(this);
         p.setRenderHint(QPainter::Antialiasing);
+        const auto tp = ThemePalette::forCurrentTheme();
 
         const QRect r = rect().adjusted(6, 6, -6, -6);
 
         // Outer ring
-        const QColor ringColor = m_pressed ? QColor(kLiveColor) : QColor(kOffColor);
+        const QColor ringColor = m_pressed ? tp.error : tp.border;
         p.setPen(QPen(ringColor, 4));
         p.setBrush(Qt::NoBrush);
         p.drawEllipse(r);
@@ -75,13 +59,13 @@ protected:
         // Inner fill with radial gradient
         QRadialGradient grad(r.center(), r.width() / 2.0);
         if (m_pressed) {
-            grad.setColorAt(0.0, QColor("#ff6b6b"));
-            grad.setColorAt(0.5, QColor(kLiveColor));
-            grad.setColorAt(1.0, QColor("#991b1b"));
+            grad.setColorAt(0.0, tp.error.lighter(140));
+            grad.setColorAt(0.5, tp.error);
+            grad.setColorAt(1.0, tp.error.darker(200));
         } else {
-            grad.setColorAt(0.0, QColor("#1e3a5f"));
-            grad.setColorAt(0.5, QColor("#162c48"));
-            grad.setColorAt(1.0, QColor("#0c1a2e"));
+            grad.setColorAt(0.0, tp.border);
+            grad.setColorAt(0.5, tp.panelBg);
+            grad.setColorAt(1.0, tp.bg);
         }
         p.setPen(Qt::NoPen);
         p.setBrush(grad);
@@ -90,15 +74,19 @@ protected:
         // "PTT" label
         QFont font("Segoe UI", 14, QFont::Bold);
         p.setFont(font);
-        p.setPen(m_pressed ? QColor("#ffffff") : QColor("#7090b0"));
+        p.setPen(m_pressed ? QColor("#ffffff") : tp.textMuted);
         p.drawText(rect(), Qt::AlignCenter, "PTT");
 
         // Glow ring when live
         if (m_pressed) {
+            QColor glowColor = tp.error;
             QRadialGradient glow(r.center(), r.width() * 0.7);
-            glow.setColorAt(0.6, QColor(0xef, 0x44, 0x44, 0));
-            glow.setColorAt(0.8, QColor(0xef, 0x44, 0x44, 80));
-            glow.setColorAt(1.0, QColor(0xef, 0x44, 0x44, 0));
+            glowColor.setAlpha(0);
+            glow.setColorAt(0.6, glowColor);
+            glowColor.setAlpha(80);
+            glow.setColorAt(0.8, glowColor);
+            glowColor.setAlpha(0);
+            glow.setColorAt(1.0, glowColor);
             p.setBrush(glow);
             p.setPen(Qt::NoPen);
             p.drawEllipse(rect());
@@ -165,7 +153,10 @@ void PTTWidget::buildUi() {
         f.setBold(true);
         f.setPointSize(10);
         m_stateLabel->setFont(f);
-        m_stateLabel->setStyleSheet(QString("color: %1;").arg(kOffColor));
+        {
+            const auto tp = ThemePalette::forCurrentTheme();
+            m_stateLabel->setStyleSheet(QString("color: %1;").arg(tp.border.name()));
+        }
         row->addWidget(m_stateLabel);
 
         row->addStretch(1);
@@ -236,13 +227,16 @@ void PTTWidget::buildUi() {
         m_vuMeter->setValue(0);
         m_vuMeter->setMinimumHeight(12);
         m_vuMeter->setTextVisible(false);
-        m_vuMeter->setStyleSheet(
-            "QProgressBar::chunk {"
-            "  background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-            "    stop:0 #22c55e, stop:0.6 #22c55e,"
-            "    stop:0.75 #f59e0b, stop:0.9 #ef4444, stop:1 #ef4444);"
-            "}"
-        );
+        {
+            const auto tp = ThemePalette::forCurrentTheme();
+            m_vuMeter->setStyleSheet(QString(
+                "QProgressBar::chunk {"
+                "  background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
+                "    stop:0 %1, stop:0.6 %1,"
+                "    stop:0.75 %2, stop:0.9 %3, stop:1 %3);"
+                "}"
+            ).arg(tp.vuGreen.name(), tp.vuYellow.name(), tp.vuRed.name()));
+        }
         meterRow->addWidget(m_vuMeter);
 
         root->addLayout(meterRow);
@@ -331,9 +325,10 @@ void PTTWidget::onStateChanged(M1::PTTModule::State newState) {
     applyLedStyle(newState);
     applyButtonStyle(newState);
 
-    const QString stateColor = (newState == M1::PTTModule::State::Live)   ? kLiveColor
-                             : (newState == M1::PTTModule::State::Armed) ? kArmedColor
-                                                                         : kOffColor;
+    const auto tp = ThemePalette::forCurrentTheme();
+    const QString stateColor = (newState == M1::PTTModule::State::Live)   ? tp.error.name()
+                             : (newState == M1::PTTModule::State::Armed) ? tp.warning.name()
+                                                                         : tp.border.name();
     switch (newState) {
     case M1::PTTModule::State::Off:   m_stateLabel->setText("OFF");   break;
     case M1::PTTModule::State::Armed: m_stateLabel->setText("ARMED"); break;
@@ -345,15 +340,16 @@ void PTTWidget::onStateChanged(M1::PTTModule::State newState) {
 
 void PTTWidget::applyLedStyle(M1::PTTModule::State s) {
     if (!m_ledLabel) return;
+    const auto tp = ThemePalette::forCurrentTheme();
     QString color;
     switch (s) {
-    case M1::PTTModule::State::Off:    color = kOffColor;   break;
-    case M1::PTTModule::State::Armed:  color = kArmedColor; break;
-    case M1::PTTModule::State::Live:   color = kLiveColor;  break;
+    case M1::PTTModule::State::Off:    color = tp.border.name();  break;
+    case M1::PTTModule::State::Armed:  color = tp.warning.name(); break;
+    case M1::PTTModule::State::Live:   color = tp.error.name();   break;
     }
     m_ledLabel->setStyleSheet(QString(
-        "background: %1; border-radius: 8px; border: 1px solid #334155;"
-    ).arg(color));
+        "background: %1; border-radius: 8px; border: 1px solid %2;"
+    ).arg(color, tp.border.name()));
 }
 
 void PTTWidget::applyButtonStyle(M1::PTTModule::State /*s*/) {
@@ -374,7 +370,7 @@ void PTTWidget::pollLevelMeter() {
 }
 
 void PTTWidget::applyTheme() {
-    const auto c = pttColors();
+    const auto tp = ThemePalette::forCurrentTheme();
     setStyleSheet(QString(
         "PTTWidget { background-color:%1; border:1px solid %2; border-radius:6px; }"
         "QLabel { color:%3; font-family:'Segoe UI'; }"
@@ -383,14 +379,15 @@ void PTTWidget::applyTheme() {
         "QProgressBar::chunk { border-radius:2px; }"
         "QDial { background:%1; }"
         "QComboBox { background:%5; color:%3; border:1px solid %2; border-radius:3px;"
-        "  font-size:9px; padding:2px 4px; }"
+        "  font-size:12px; padding:2px 4px; }"
         "QComboBox::drop-down { border:none; width:16px; }"
         "QComboBox QAbstractItemView { background:%5; color:%3;"
         "  border:1px solid %2; selection-background-color:%2; }"
-    ).arg(c.bg, c.border, c.text, c.dark, c.panel));
+    ).arg(tp.bg.name(), tp.border.name(), tp.text.name(),
+          tp.cardBg.name(), tp.panelBg.name()));
 
     if (m_sepLine)
-        m_sepLine->setStyleSheet(QString("background:%1;").arg(c.border));
+        m_sepLine->setStyleSheet(QString("background:%1;").arg(tp.border.name()));
 }
 
 void PTTWidget::onDeviceChanged(int index) {

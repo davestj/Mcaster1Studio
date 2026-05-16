@@ -1,4 +1,5 @@
 #include "SurfaceSchedulerDialog.h"
+#include "ThemePalette.h"
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QPushButton>
@@ -155,7 +156,7 @@ void SurfaceSchedulerDialog::refreshList() {
             + "  " + ev.label;
         auto* item = new QListWidgetItem(line, m_list);
         item->setData(Qt::UserRole, ev.id);
-        if (!ev.enabled) item->setForeground(QColor("#808080"));
+        if (!ev.enabled) item->setForeground(ThemePalette::forCurrentTheme().textDisabled);
     }
     if (selRow >= 0 && selRow < m_list->count())
         m_list->setCurrentRow(selRow);

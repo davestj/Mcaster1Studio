@@ -1,6 +1,7 @@
 #include "SubSurfaceTabBar.h"
 #include "ModuleRegistry.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QScrollArea>
@@ -15,16 +16,19 @@
 #include <QContextMenuEvent>
 
 // ─── Palette of auto-assigned colors for new sub-surfaces ────────────────────
-static const QList<QColor> kSubColors = {
-    QColor("#0ea5e9"),  // Mcaster Blue
-    QColor("#7c3aed"),  // Purple
-    QColor("#22c55e"),  // Green
-    QColor("#f59e0b"),  // Amber
-    QColor("#ef4444"),  // Red
-    QColor("#38bdf8"),  // Cyan
-    QColor("#a855f7"),  // Violet
-    QColor("#f97316"),  // Orange
-};
+static QList<QColor> kSubColors() {
+    auto tp = ThemePalette::forCurrentTheme();
+    return {
+        tp.accent,           // Mcaster Blue (theme-aware)
+        QColor("#7c3aed"),   // Purple
+        QColor("#22c55e"),   // Green
+        QColor("#f59e0b"),   // Amber
+        QColor("#ef4444"),   // Red
+        tp.info,             // Cyan (theme-aware)
+        QColor("#a855f7"),   // Violet
+        QColor("#f97316"),   // Orange
+    };
+}
 
 // ─── OnAirButton ─────────────────────────────────────────────────────────────
 OnAirButton::OnAirButton(QWidget* parent)
@@ -104,7 +108,7 @@ void OnAirButton::contextMenuEvent(QContextMenuEvent* e) {
 void OnAirButton::applyModeStyle() {
     // Common base: border-radius 3px, 9px bold, 2px 6px padding
     static const char* kBase =
-        "  border-radius: 3px; font-size: 9px; font-weight: 700; padding: 2px 6px;";
+        "  border-radius: 3px; font-size: 12px; font-weight: 700; padding: 2px 6px;";
 
     switch (m_mode) {
     case StatusMode::OffAir:
@@ -256,7 +260,7 @@ void SubSurfaceTabChip::leaveEvent(QEvent*) {
 
 void SubSurfaceTabChip::updateAppearance() {
     if (!m_label) return;
-    const bool light = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const bool light = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro);
 
     if (m_selected) {
         // Bright white text on the colored tab
@@ -275,7 +279,7 @@ void SubSurfaceTabChip::paintEvent(QPaintEvent*) {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing, true);
 
-    const bool light = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const bool light = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro);
     const QRectF r = QRectF(rect()).adjusted(0.5, 0.5, -0.5, 0);
     const qreal rad = 7.0;
 
@@ -487,14 +491,15 @@ SubSurfaceTabBar::SubSurfaceTabBar(const QString& defaultName,
 }
 
 void SubSurfaceTabBar::applyTheme() {
-    const bool light = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+    const bool light = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::EnterprisePro);
 
     // Tab bar strip background — contrasts with the tab chips
     const QString barBg   = light ? "#d8d4ce" : "#0a1628";
     const QString btnBg   = light ? "#ccc8c2" : "#12263d";
     const QString btnText = light ? "#504a44" : "#8ab4d8";
-    const QString btnBord = light ? "#b8b4ae" : "#1e3a5f";
-    const QString btnHov  = light ? "#bfbbb5" : "#1e3a5f";
+    const auto tp = ThemePalette::forCurrentTheme();
+    const QString btnBord = light ? "#b8b4ae" : tp.border.name();
+    const QString btnHov  = light ? "#bfbbb5" : tp.border.name();
     const QString btnHovT = light ? "#2a2420" : "#c8d8f0";
 
     setStyleSheet(QString(
@@ -592,8 +597,11 @@ int SubSurfaceTabBar::addSubSurface(const QString& name, const QColor& color) {
     m_chips.append(chip);
 
     const int newIdx = m_chips.size() - 1;
-    setCurrentIndex(newIdx);
+    // Emit subSurfaceAdded FIRST so the panel is created in the stack,
+    // THEN switch to it. Otherwise setCurrentIndex fires currentChanged
+    // before the panel exists.
     emit subSurfaceAdded(newIdx, name, color);
+    setCurrentIndex(newIdx);
     return newIdx;
 }
 
@@ -652,8 +660,9 @@ void SubSurfaceTabBar::onChipClicked(SubSurfaceTabChip* chip) {
 
 void SubSurfaceTabBar::onAddClicked() {
     // Pick next color from palette, cycling
-    const QColor col = kSubColors.value(m_chips.size() % kSubColors.size(),
-                                         QColor("#0ea5e9"));
+    const auto colors = kSubColors();
+    const QColor col = colors.value(m_chips.size() % colors.size(),
+                                     ThemePalette::forCurrentTheme().accent);
     const QString name = QString("Sub-Surface %1").arg(m_chips.size() + 1);
     addSubSurface(name, col);
 }
@@ -668,8 +677,9 @@ void SubSurfaceTabBar::onSessionMenuClicked() {
             "Name:", QLineEdit::Normal,
             QString("Sub-Surface %1").arg(m_chips.size() + 1), &ok);
         if (!ok || name.isEmpty()) return;
-        const QColor col = kSubColors.value(m_chips.size() % kSubColors.size(),
-                                             QColor("#0ea5e9"));
+        const auto colors = kSubColors();
+        const QColor col = colors.value(m_chips.size() % colors.size(),
+                                         ThemePalette::forCurrentTheme().accent);
         addSubSurface(name, col);
     });
 

@@ -3,6 +3,7 @@
 #include "DbServerEntry.h"
 #include "SurfaceDbContext.h"
 #include "DatabaseFactory.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -15,6 +16,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDateTime>
+#include <QCoreApplication>
 #include <QStandardPaths>
 #include <QDir>
 #include <QDebug>
@@ -142,18 +144,20 @@ void DatabaseWidget::buildUi() {
 }
 
 void DatabaseWidget::setStatusLed(bool connected) {
-    const QString color = connected ? "#22c55e" : "#6b7280";
+    const auto pal = ThemePalette::forCurrentTheme();
+    const QColor color = connected ? pal.success : pal.textDisabled;
     m_statusLed->setStyleSheet(
         QString("background: %1; border-radius: 7px; border: 1px solid %2;")
-            .arg(color, connected ? "#166534" : "#4b5563"));
+            .arg(color.name(), color.darker(130).name()));
 }
 
 void DatabaseWidget::appendLog(const QString& level, const QString& msg) {
     const QString ts = QDateTime::currentDateTime().toString("HH:mm:ss");
-    QString color = "#94a3b8";
-    if (level == "OK")    color = "#22c55e";
-    if (level == "ERROR") color = "#ef4444";
-    if (level == "WARN")  color = "#f59e0b";
+    const auto pal = ThemePalette::forCurrentTheme();
+    QString color = pal.textMuted.name();
+    if (level == "OK")    color = pal.success.name();
+    if (level == "ERROR") color = pal.error.name();
+    if (level == "WARN")  color = pal.warning.name();
     m_logOutput->append(QString("<span style='color:%1'>[%2] [%3] %4</span>")
                             .arg(color, ts, level, msg.toHtmlEscaped()));
 }
@@ -264,7 +268,7 @@ void DatabaseWidget::onInitializeDatabase() {
         // Build the SQLite file path from the server path + schema name
         QString baseDir = server->sqlitePath;
         if (baseDir.isEmpty())
-            baseDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+            baseDir = QCoreApplication::applicationDirPath() + "/data";
         QDir dir(baseDir);
         if (!dir.exists()) dir.mkpath(".");
         dbPath = dir.absoluteFilePath(ctx.schemaName + ".db");
@@ -363,7 +367,7 @@ void DatabaseWidget::onRefreshTables() {
     if (server->isSQLite()) {
         QString baseDir = server->sqlitePath;
         if (baseDir.isEmpty())
-            baseDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+            baseDir = QCoreApplication::applicationDirPath() + "/data";
         dbPath = QDir(baseDir).absoluteFilePath(ctx.schemaName + ".db");
     }
 

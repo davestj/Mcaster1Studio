@@ -1,7 +1,7 @@
 #include "DbServerEntry.h"
 #include "DatabaseFactory.h"
+#include <QCoreApplication>
 #include <QSettings>
-#include <QStandardPaths>
 #include <QDir>
 #include <QFileInfo>
 #include <QDebug>
@@ -192,10 +192,10 @@ void DbServerRegistry::migrateFromLegacy() {
 // ─── Test connection ─────────────────────────────────────────────────────────
 QString DbServerRegistry::testConnection(const DbServerEntry& entry) {
     if (entry.isSQLite()) {
-        // For SQLite, just verify the directory is writable
+        // For SQLite, just verify the directory is writable (portable: <appDir>/data/)
         QString path = entry.sqlitePath;
         if (path.isEmpty()) {
-            path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+            path = QCoreApplication::applicationDirPath() + "/data";
         } else {
             path = QFileInfo(path).absolutePath();
         }

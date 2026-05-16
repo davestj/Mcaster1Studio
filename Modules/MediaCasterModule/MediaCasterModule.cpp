@@ -12,6 +12,7 @@
 
 #include "MediaCasterModule.h"
 #include "GraphicsEngineModule.h"
+#include "ThemePalette.h"
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -73,8 +74,10 @@ public:
         m_placeholder = new QLabel("No Media Loaded", this);
         m_placeholder->setAlignment(Qt::AlignCenter);
         m_placeholder->setObjectName("MediaCasterPlaceholder");
+        const auto pal = ThemePalette::forCurrentTheme();
         m_placeholder->setStyleSheet(
-            "background: #0a0a14; color: #666; font-size: 16px; font-style: italic;");
+            QString("background: %1; color: %2; font-size: 16px; font-style: italic;")
+                .arg(pal.bg.name(), pal.textDisabled.name()));
         lay->addWidget(m_placeholder);
 
         // We start with placeholder visible

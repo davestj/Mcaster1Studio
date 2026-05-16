@@ -67,7 +67,7 @@
 <body>
 
 <h1>Mcaster1Studio</h1>
-<p class="sub">Feature Reference &mdash; All implemented capabilities &mdash; Last updated: 2026-03-10 (v0.2.0)</p>
+<p class="sub">Feature Reference &mdash; All implemented capabilities &mdash; Last updated: 2026-03-19 (v0.4.0-beta)</p>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <h2>Window &amp; Shell</h2>
@@ -602,6 +602,75 @@
 </p>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>AuxDeck Module &mdash; Independent Audio Routing</h2>
+<div class="box g">
+  The <strong>AuxDeck Module</strong> (<code>com.mcaster1.auxdeck</code>) provides fully independent auxiliary
+  audio players with <strong>dual-bus routing</strong>: each AuxDeck has its own AIR output and CUE output,
+  each routed to a separate physical audio device via PortAudio. Both buses can output simultaneously,
+  enabling preview-before-broadcast workflows. 26 output devices are enumerated across WASAPI, DirectSound,
+  MME, and ASIO host APIs.
+</div>
+
+<h3>Use Cases</h3>
+<div class="cols2">
+<div class="feature-card">
+  <h3>DJ Preview / Cueing</h3>
+  <ul>
+    <li>Load upcoming tracks on an AuxDeck, route <strong>CUE</strong> to headphones (separate device), preview before going on-air</li>
+    <li>Toggle CUE off when done, toggle <strong>AIR</strong> on to send to broadcast</li>
+    <li>Both buses are fully independent &mdash; on/off control flanking the Mute button</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Interview Playback</h3>
+  <ul>
+    <li>During a podcast or radio show, use an AuxDeck to play sound bites, clips, or pre-recorded segments</li>
+    <li>Route to a separate audio device for studio monitor while the main decks continue playing music on-air</li>
+    <li>Independent volume and transport controls per AuxDeck</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Jingle / Stinger Deck</h3>
+  <ul>
+    <li>Dedicated AuxDeck for instant jingle playback</li>
+    <li>Route <strong>AIR</strong> to the broadcast output for immediate on-air insertion</li>
+    <li>Hot cue buttons (H1&ndash;H4) for instant jump to pre-set jingle start points</li>
+  </ul>
+</div>
+<div class="feature-card">
+  <h3>Multi-Room Audio</h3>
+  <ul>
+    <li>Route different AuxDecks to different physical audio devices</li>
+    <li>Examples: lobby speakers, studio monitors, streaming encoder input</li>
+    <li>Each AuxDeck is independent with its own AIR and CUE device &mdash; device collision prevention blocks the same device on both buses</li>
+  </ul>
+</div>
+</div>
+<div class="feature-card" style="margin-top:12px">
+  <h3>Recording Preview</h3>
+  <ul>
+    <li>Record on one AuxDeck while previewing the recording on another AuxDeck's CUE output before deciding to broadcast it</li>
+    <li>Per-bus routing: dedicated PortAudio stream when a specific device is selected, global fallback when &ldquo;(Use Global Default)&rdquo; is chosen</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>DeckPlayer &amp; AutoDJ Improvements</h2>
+<div class="box g">
+  The core DeckPlayer and AutoDJ modules received significant layout and reliability improvements
+  in the v0.4.0-beta release cycle.
+</div>
+<ul>
+  <li><strong>Crossfader</strong> top-aligned between Deck A and Deck B in the center column</li>
+  <li><strong>Playlist/AutoDJ permanently embedded</strong> below crossfader &mdash; auto-created when deck exists</li>
+  <li><strong>AutoDJ auto-plays</strong> first track immediately when enabled (500ms delayed trigger)</li>
+  <li><strong>S-curve crossfade</strong> corrected &mdash; equal-power sin/cos prevents clipping at center</li>
+  <li><strong>Loop boundary guard</strong> &mdash; prevents infinite loop when loopOut &lt;= loopIn</li>
+  <li><strong>Ring buffer overflow</strong> &mdash; StreamReader uses int64_t indices for weeks of streaming</li>
+  <li><strong>Rich ICY metadata</strong> &mdash; DeckA/DeckB emit full artist/title/album/genre/year/BPM</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <h2>Known Refinements Pending (Phase C)</h2>
 <div class="box a">
   <ul style="margin-top:6px">
@@ -620,9 +689,9 @@
 </div>
 
 <footer>
-  Mcaster1Studio v0.2.0-alpha &middot;
-  Phases 1&ndash;11 + A&ndash;I + CH + PD + HL complete &middot;
-  Last updated: 2026-03-10 &middot;
+  Mcaster1Studio v0.4.0-beta &middot;
+  Phases 1&ndash;12 + A&ndash;I + CH + PD + DB + Golden Path + Portable Install complete &middot;
+  Last updated: 2026-03-19 &middot;
   <a href="https://mcaster1.com">mcaster1.com</a>
 </footer>
 </body>

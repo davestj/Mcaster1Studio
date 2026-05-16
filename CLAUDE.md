@@ -3,13 +3,15 @@
 This file provides persistent context for Claude Code sessions working on Mcaster1Studio.
 Update this file whenever architectural decisions change or new patterns are established.
 
+**MANDATORY: Read `STANDARDS.md` before making any changes. It contains hard rules about portable storage, SQL dialects, theme system, and code signing that MUST be followed.**
+
 ---
 
 ## Project Identity
 
 - **Name:** Mcaster1Studio
 - **Type:** Broadcast Automation Software Suite (C++20 + Qt6)
-- **Version:** 0.3.0-alpha (Phases 1–12 + A–I + CH + PD + DB + AuxDeck + Installer + Golden Path Threading complete)
+- **Version:** 0.4.0-beta (Phases 1–12 + A–I + CH + PD + DB + AuxDeck + Installer + Golden Path Threading + Portable Install + Code Signing + Theme Overhaul + Media Library Upgrade + AI Persona System + Artist Intel + Playlist Generator Pro + Daypart Scheduler complete)
 - **Root:** `C:/Users/dstjohn/dev/00_mcaster1.com/Mcaster1Studio/`
 - **Part of:** Mcaster1 broadcast ecosystem
 
@@ -23,6 +25,36 @@ Update this file whenever architectural decisions change or new patterns are est
 | Qt 6.10.2 msvc (incomplete) | `C:/Qt/6.10.2/msvc2022_64` — missing Qt6Config.cmake |
 
 **Always use Qt 6.8.3 for builds until 6.9.1 or 6.10.2 MSVC is properly installed.**
+
+## Portable / Self-Contained Architecture
+
+**CRITICAL: Mcaster1Studio is a PORTABLE application. NOTHING is written outside the install directory.**
+
+| Data | Location | Notes |
+|------|----------|-------|
+| Settings (INI) | `<appDir>/config/Mcaster1/Mcaster1Studio.ini` | QSettings IniFormat, set in main.cpp |
+| Surface configs | `<appDir>/config/surfaces/surface_*.yaml` | Per-surface type YAML files |
+| SQLite databases | `<appDir>/data/*.db` | Default: `mcaster1studio.db` + per-surface DBs |
+| Debug log | `<appDir>/logs/mcaster1studio_debug.log` | Truncated on each launch |
+| Crash dump | `<appDir>/logs/mcaster1studio_crash.dmp` | Written on unhandled exception |
+| Layout YAML | `<appDir>/mcaster1_studio_layout.yaml` | Window/dock geometry |
+| Themes | `<appDir>/themes/*.qss` | Dark, Classic, Light |
+| Plugins | `<appDir>/plugins/{modules,effects}/*.dll` | SDK plugin DLLs |
+
+**How this works in code:**
+- `main.cpp` calls `QSettings::setDefaultFormat(QSettings::IniFormat)` + `QSettings::setPath()` to redirect ALL QSettings to `<appDir>/config/`
+- All `QStandardPaths::AppDataLocation` references have been replaced with `QCoreApplication::applicationDirPath() + "/data"`
+- All `QStandardPaths::AppConfigLocation` references replaced with `applicationDirPath() + "/config/surfaces"`
+- No Windows Registry usage (except Add/Remove Programs entry from NSIS installer)
+
+## Code Signing
+
+- **Certificate:** `C:/Users/dstjohn/dev/00_mcaster1.com/SIGNING-KEYS/Mcaster1CodeSigning.pfx`
+- **Subject:** CN=David St. John, O=Mcaster1 Software, L=Lynden, S=Washington, C=US
+- **Algorithm:** RSA 4096-bit, SHA256, valid 2026-03-14 to 2031-03-14
+- **CMake post-build:** Auto-signs Mcaster1Studio.exe if PFX + signtool found (graceful skip otherwise)
+- **NSIS installer:** Bundles .cer, imports to Root + TrustedPublisher stores, signs installer .exe
+- **Shared across:** Mcaster1Studio, Mcaster1AudioPipe, Mcaster1AMP, Mcaster1DSPEncoder
 
 ## CMake Configure Command
 
@@ -65,6 +97,35 @@ VU Meter + Video capture (AV projection) + Media library (worship songs).
 All built-in modules use reverse-DNS IDs: `com.mcaster1.<name>`
 Effects use: `com.mcaster1.fx.<name>`
 
+## DeckPlayer Module Architecture
+
+**CRITICAL: The Playlist/AutoDJ is PERMANENTLY EMBEDDED in the DeckPlayer. NEVER remove it.**
+
+```
+┌──────────┬──────────────┬──────────┐
+│          │  CROSSFADER  │          │
+│          │     PTT      │          │
+│  Deck A  │──────────────│  Deck B  │
+│          │  PLAYLIST    │          │
+│          │  AUTO DJ     │          │
+└──────────┴──────────────┴──────────┘
+```
+
+- **DeckWidget** (`Modules/DeckModule/DeckWidget.h`) — top-level container with HBox layout
+- **Center column** (VBox): Crossfader → PTT → Playlist/AutoDJ (fills remaining space)
+- **setPlaylistModule()** — embeds PlaylistWidget in center column, auto-created by MainWindow
+- **MainWindow** auto-creates `PlaylistModule` whenever a deck exists, regardless of surface config
+- Playlist module included in default configs for alpha, beta, dj, church, company, custom surfaces
+
+### ThemePalette System
+
+- **`Core/include/ThemePalette.h`** — central color registry, per-theme palettes
+- **`ThemePalette::forCurrentTheme()`** — returns palette for active theme (EnterprisePro or Classic)
+- **`ThemePalette::isLightTheme()`** — convenience for paint code branching
+- Registration hook in `ThemePalette.cpp` avoids Core→UI circular dependency
+- MainWindow registers the provider at startup via `themePaletteRegisterProvider()`
+- All widgets use ThemePalette instead of hardcoded hex colors
+
 ## ICY Protocol Rules
 
 ### CRITICAL — ALWAYS FOLLOW:
@@ -92,12 +153,15 @@ Effects use: `com.mcaster1.fx.<name>`
 ## Theming System Rules
 
 ### NEVER do this in widget code:
-- Call `setStyleSheet()` with hardcoded colors on individual widgets — this breaks theme switching and causes dark bleed
+- Call `setStyleSheet()` with hardcoded colors on individual widgets — use `ThemePalette::forCurrentTheme()` or QSS objectName rules instead
 - Use font sizes below 12px in any widget stylesheet
+- Remove the Playlist/AutoDJ from DeckWidget — it is **permanently embedded** in the DeckPlayer center column
 
 ### ALWAYS do this:
 - `setObjectName("UniqueName")` on any widget needing custom theme colors
-- Add QSS rules in all three theme files: `dark.qss`, `classic.qss`, `light.qss`
+- Add QSS rules in both theme files: `enterprise-pro.qss`, `classic.qss`
+- Use `ThemePalette::forCurrentTheme()` for custom paint code and dynamic styling
+- When editing DeckWidget.cpp, verify `setPlaylistModule()` and `m_playlistWidget` still exist after edits
 - Minimum font sizes: **12px** (body), **14px** (medium), **16px** (large/header) — Enterprise Pro requirement
 - Transport/control SVG icons must be 32×32 viewBox with linearGradient + shine + feDropShadow for 3D look
 
@@ -128,6 +192,8 @@ Effects use: `com.mcaster1.fx.<name>`
 - Allocate memory or call Qt APIs inside `onAudioBlock()` / PortAudio callback.
 - Use `QApplication::setStyle("Windows11")` — it ignores QSS. Use `"Fusion"`.
 - Create a file literally named `VERSION` at project root (collides with C++20 `<version>`).
+- Use `QStandardPaths::AppDataLocation`, `AppConfigLocation`, or Windows Registry for config/data — **PORTABLE APP: all paths relative to `applicationDirPath()`**.
+- Use `QSettings` with `NativeFormat` — always use `IniFormat` (set globally in `main.cpp`).
 
 ### ALWAYS do this:
 - `qputenv("QT_MEDIA_BACKEND", "ffmpeg")` BEFORE `QApplication` — WMF backend can't decode OGG/Vorbis and has unreliable QAudioDecoder.
@@ -165,7 +231,7 @@ Effects use: `com.mcaster1.fx.<name>`
 ## Database (Phase H + Multi-Backend)
 
 - **IDatabase** abstract interface (`Core/include/IDatabase.h`) — pure virtual base with `executeQuery()` + `tableNames()`
-- **SqliteManager** (default) — embedded SQLite3, zero-config, WAL mode, `AppData/Mcaster1Studio/mcaster1studio.db`
+- **SqliteManager** (default) — embedded SQLite3, zero-config, WAL mode, `<appDir>/data/mcaster1studio.db`
 - **DatabaseManager** — MySQL/MariaDB, for enterprise multi-user deployments
 - **Legacy factory:** `MediaLibraryModule::createDatabase()` still reads `QSettings("database/backend")` for backward compat
 - **Fallback:** If MySQL connection fails, auto-falls back to SQLite

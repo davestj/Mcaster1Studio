@@ -2,6 +2,7 @@
 #include "version.h"
 #include <QApplication>
 #include <QStyleFactory>
+#include <QSettings>
 #include <QDir>
 #include <QDebug>
 #include <QFile>
@@ -52,8 +53,8 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS* ep) {
             g_logFile->flush();
         }
     }
-    // Write minidump
-    const QString dumpPath = QDir::currentPath() + "/mcaster1studio_crash.dmp";
+    // Write minidump (portable: logs/ subdirectory)
+    const QString dumpPath = QDir::currentPath() + "/logs/mcaster1studio_crash.dmp";
     HANDLE hFile = CreateFileW(dumpPath.toStdWString().c_str(), GENERIC_WRITE,
                                0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -79,8 +80,12 @@ int main(int argc, char* argv[]) {
     // Must be set BEFORE QApplication is constructed.
     qputenv("QT_MEDIA_BACKEND", "ffmpeg");
 
-    // Install file-based debug logger
-    g_logFile = new QFile(QDir::currentPath() + "/mcaster1studio_debug.log");
+    // Install file-based debug logger (portable: logs/ subdirectory)
+    {
+        const QString logDir = QDir::currentPath() + "/logs";
+        QDir().mkpath(logDir);
+        g_logFile = new QFile(logDir + "/mcaster1studio_debug.log");
+    }
     if (g_logFile->open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         qInstallMessageHandler(fileMessageHandler);
     }
@@ -101,7 +106,19 @@ int main(int argc, char* argv[]) {
     // (plugins/, themes/, etc.)
     QDir::setCurrent(QCoreApplication::applicationDirPath());
 
+    // ── Portable mode ─────────────────────────────────────────────────
+    // Store ALL settings as INI files inside the install directory.
+    // No Windows Registry, no AppData, no Roaming profile.
+    // QSettings("Mcaster1","Mcaster1Studio") → <appDir>/config/Mcaster1/Mcaster1Studio.ini
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const QString configDir = appDir + "/config";
+    QDir().mkpath(configDir);
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, configDir);
+    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, configDir);
+
     qInfo() << "Starting" << MCASTER1STUDIO_APP_NAME << "v" << MCASTER1STUDIO_VERSION_STRING;
+    qInfo() << "Portable config:" << configDir;
     qInfo() << "Qt version:" << qVersion();
 
     MainWindow win;

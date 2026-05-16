@@ -8,6 +8,8 @@
 #include <QLabel>
 #include <QFrame>
 #include <QSettings>
+#include "ThemePalette.h"
+#include "ThemeManager.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -15,13 +17,8 @@
 
 namespace M1 {
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Colour palette (consistent with project dark.qss)
-// ─────────────────────────────────────────────────────────────────────────────
-static constexpr char kPanelBg[]   = "#0c1a2e";
-static constexpr char kBorder[]    = "#1e3a5f";
-static constexpr char kText[]      = "#e2e8f0";
-static constexpr char kAccent[]    = "#0ea5e9";
+// ─── Colour helper ───────────────────────────────────────────────────────────
+static QString col(const QColor& c) { return c.name(); }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constructor
@@ -192,11 +189,6 @@ QWidget* SonicMaximizer::createPanel(QWidget* parent)
 {
     auto* panel = new QWidget(parent);
     panel->setMinimumHeight(100);
-    panel->setStyleSheet(QString(
-        "QWidget { background: %1; }"
-        "QLabel  { color: %2; background: transparent; }"
-        "QDial   { background: %1; }"
-    ).arg(kPanelBg).arg(kText));
 
     auto* hLayout = new QHBoxLayout(panel);
     hLayout->setContentsMargins(16, 10, 16, 10);
@@ -207,21 +199,20 @@ QWidget* SonicMaximizer::createPanel(QWidget* parent)
                          int initVal, const QString& suffix)
         -> std::pair<QDial*, QLabel*>
     {
-        auto* col = new QWidget(panel);
-        col->setStyleSheet("background: transparent;");
-        auto* vLayout = new QVBoxLayout(col);
+        auto* knobCol = new QWidget(panel);
+        knobCol->setStyleSheet("background: transparent;");
+        auto* vLayout = new QVBoxLayout(knobCol);
         vLayout->setContentsMargins(0, 0, 0, 0);
         vLayout->setSpacing(4);
 
         // Parameter name label (top)
-        auto* lbl = new QLabel(labelText, col);
+        auto* lbl = new QLabel(labelText, knobCol);
+        lbl->setObjectName("sonicKnobName");
         lbl->setAlignment(Qt::AlignHCenter);
-        lbl->setStyleSheet(QString(
-            "QLabel { color: %1; font: 9pt; background: transparent; }"
-        ).arg(kText));
 
         // Rotary knob
-        auto* dial = new QDial(col);
+        auto* dial = new QDial(knobCol);
+        dial->setObjectName("sonicDial");
         dial->setRange(0, 100);
         dial->setValue(initVal);
         dial->setFixedSize(64, 64);
@@ -229,22 +220,17 @@ QWidget* SonicMaximizer::createPanel(QWidget* parent)
         dial->setWrapping(false);
         dial->setToolTip(tooltip);
         dial->setCursor(Qt::PointingHandCursor);
-        dial->setStyleSheet(QString(
-            "QDial { background: %1; border: 2px solid %2; border-radius: 32px; }"
-        ).arg(kPanelBg).arg(kBorder));
 
         // Value readout
-        auto* valLbl = new QLabel(QString("%1%2").arg(initVal).arg(suffix), col);
+        auto* valLbl = new QLabel(QString("%1%2").arg(initVal).arg(suffix), knobCol);
+        valLbl->setObjectName("sonicKnobValue");
         valLbl->setAlignment(Qt::AlignHCenter);
-        valLbl->setStyleSheet(QString(
-            "QLabel { color: %1; font: bold 10pt; background: transparent; }"
-        ).arg(kAccent));
 
         vLayout->addWidget(lbl, 0, Qt::AlignHCenter);
         vLayout->addWidget(dial, 0, Qt::AlignHCenter);
         vLayout->addWidget(valLbl, 0, Qt::AlignHCenter);
 
-        hLayout->addWidget(col);
+        hLayout->addWidget(knobCol);
         return {dial, valLbl};
     };
 
@@ -281,6 +267,39 @@ QWidget* SonicMaximizer::createPanel(QWidget* parent)
             m_coeffsDirty.store(true, std::memory_order_release);
             processVal->setText(QString("%1%").arg(v));
         });
+
+    // ── Apply theme styles ────────────────────────────────────────────────
+    auto applyTheme = [panel]() {
+        const auto p = ThemePalette::forCurrentTheme();
+        panel->setStyleSheet(QString(
+            "QWidget { background: %1; }"
+            "QLabel  { color: %2; background: transparent; }"
+            "QDial   { background: %1; }"
+        ).arg(col(p.panelBg), col(p.text)));
+
+        // Knob name labels
+        for (auto* lbl : panel->findChildren<QLabel*>("sonicKnobName"))
+            lbl->setStyleSheet(QString(
+                "QLabel { color: %1; font: 9pt; background: transparent; }"
+            ).arg(col(p.text)));
+
+        // Dials
+        for (auto* dial : panel->findChildren<QDial*>("sonicDial"))
+            dial->setStyleSheet(QString(
+                "QDial { background: %1; border: 2px solid %2; border-radius: 32px; }"
+            ).arg(col(p.panelBg), col(p.border)));
+
+        // Value labels
+        for (auto* lbl : panel->findChildren<QLabel*>("sonicKnobValue"))
+            lbl->setStyleSheet(QString(
+                "QLabel { color: %1; font: bold 10pt; background: transparent; }"
+            ).arg(col(p.accent)));
+    };
+
+    applyTheme();
+
+    QObject::connect(ThemeManager::instance(), &ThemeManager::themeChanged,
+                     panel, [applyTheme]() { applyTheme(); });
 
     return panel;
 }

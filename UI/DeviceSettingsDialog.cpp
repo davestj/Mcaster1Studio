@@ -1,5 +1,6 @@
 #include "DeviceSettingsDialog.h"
 #include "SurfaceTabBar.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -69,7 +70,9 @@ DeviceSettingsDialog::DeviceSettingsDialog(M1::IAudioEngine* engine,
             "※ Supports ASIO, WASAPI, WDM-KS, DirectSound, and Mcaster1AudioPipe virtual devices.",
             globalPage);
         note->setWordWrap(true);
-        note->setStyleSheet("color:#888888; font-size:9px;");
+        note->setStyleSheet(
+            QString("color:%1; font-size:12px;")
+                .arg(ThemePalette::forCurrentTheme().textMuted.name()));
         lay->addRow(note);
 
         populateDevices();
@@ -97,7 +100,9 @@ DeviceSettingsDialog::DeviceSettingsDialog(M1::IAudioEngine* engine,
             "Supports virtual audio cables and Mcaster1AudioPipe loopback devices.",
             surfacePage);
         info->setWordWrap(true);
-        info->setStyleSheet("color:#888888; font-size:9px;");
+        info->setStyleSheet(
+            QString("color:%1; font-size:12px;")
+                .arg(ThemePalette::forCurrentTheme().textMuted.name()));
         lay->addWidget(info);
 
         m_surfaceTable = new QTableWidget(surfacePage);

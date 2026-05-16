@@ -130,10 +130,10 @@ void WaveformView::paintEvent(QPaintEvent*) {
     }
 
     if (!m_player || m_player->totalSamples() <= 0) {
-        // Show "drop file" hint on sandy background
-        p.setPen(QColor(150, 138, 120, 200));
+        // Empty state — no track loaded
+        p.setPen(QColor(150, 138, 120, 120));
         p.setFont(QFont("Consolas", 9, QFont::Bold));
-        p.drawText(rect(), Qt::AlignCenter, "DROP AUDIO FILE");
+        p.drawText(rect(), Qt::AlignCenter, "NO TRACK LOADED");
         return;
     }
 

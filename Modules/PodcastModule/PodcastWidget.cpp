@@ -1,6 +1,7 @@
 #include "PodcastWidget.h"
 #include "PodcastModule.h"
 #include "ThemeManager.h"
+#include "ThemePalette.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -17,32 +18,11 @@
 #include <QDebug>
 #include <cmath>
 
-// ─── Theme palette ────────────────────────────────────────────────────────────
-namespace {
-struct PodPal {
-    QString bg, panel, border, text, muted, inputBg;
-};
-PodPal podPalette() {
-    using T = ThemeManager::Theme;
-    switch (ThemeManager::instance()->currentTheme()) {
-    case T::Light:
-        return { "#f5f3f0", "#ffffff",  "#d8d4ce", "#1a1814", "#6b6560", "#ffffff" };
-    case T::Classic:
-        return { "#ede0cc", "#f0e8d8",  "#bfb090", "#2a1810", "#806040", "#f5ead0" };
-    default: // Dark
-        return { "#0c1a2e", "#102035",  "#1e3a5f", "#c8d8e8", "#4a6080", "#0a1628" };
-    }
-}
-} // namespace
-
 // ─── Button style helpers ─────────────────────────────────────────────────────
 // Transport buttons keep semantic colors (red/amber/blue/gray) in all themes.
 // Only the disabled state and border adapt to the theme.
-static QString btnStyle(const char* bg) {
-    const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
-    const QString border   = isLight ? "#c0b8ae" : "#1e3a5f";
-    const QString disBg    = isLight ? "#e8e4de" : "#1e3a5f";
-    const QString disTx    = isLight ? "#a0968e" : "#4a6080";
+static QString btnStyle(const QString& bg) {
+    const auto p = ThemePalette::forCurrentTheme();
     return QString(
         "QPushButton {"
         "  background: %1;"
@@ -51,10 +31,10 @@ static QString btnStyle(const char* bg) {
         "  border-radius: 4px;"
         "  padding: 6px 14px;"
         "  font-weight: bold;"
-        "  font-size: 11px;"
+        "  font-size: 12px;"
         "}"
         "QPushButton:disabled { background: %3; color: %4; }"
-    ).arg(bg, border, disBg, disTx);
+    ).arg(bg, p.border.name(), p.panelBg.name(), p.textMuted.name());
 }
 
 // ─── TrackStrip ───────────────────────────────────────────────────────────────
@@ -65,17 +45,17 @@ TrackStrip::TrackStrip(int trackIndex, M1::PodcastModule* module, QWidget* paren
     , m_module(module)
 {
     setMinimumHeight(32);
-    const auto p = podPalette();
+    const auto p = ThemePalette::forCurrentTheme();
     setStyleSheet(QString(
         "TrackStrip { background: %1; border: 1px solid %2; border-radius: 4px; }"
-    ).arg(p.panel, p.border));
+    ).arg(p.panelBg.name(), p.border.name()));
 
     auto* row = new QHBoxLayout(this);
     row->setContentsMargins(8, 4, 8, 4);
     row->setSpacing(8);
 
     m_nameLabel = new QLabel(module->trackName(trackIndex), this);
-    m_nameLabel->setStyleSheet(QString("color: %1; font-size: 10px; font-weight: bold;").arg(p.text));
+    m_nameLabel->setStyleSheet(QString("color: %1; font-size: 12px; font-weight: bold;").arg(p.text.name()));
     m_nameLabel->setFixedWidth(64);
     row->addWidget(m_nameLabel);
 
@@ -92,10 +72,11 @@ TrackStrip::TrackStrip(int trackIndex, M1::PodcastModule* module, QWidget* paren
         "QProgressBar::chunk {"
         "  border-radius: 2px;"
         "  background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-        "    stop:0 #22c55e, stop:0.65 #22c55e,"
-        "    stop:0.80 #f59e0b, stop:0.92 #ef4444, stop:1 #ef4444);"
+        "    stop:0 %3, stop:0.65 %3,"
+        "    stop:0.80 %4, stop:0.92 %5, stop:1 %5);"
         "}"
-    ).arg(p.border, p.inputBg));
+    ).arg(p.border.name(), p.inputBg.name(),
+          p.vuGreen.name(), p.vuYellow.name(), p.vuRed.name()));
     row->addWidget(m_levelMeter, 1);
 }
 
@@ -138,16 +119,16 @@ PodcastWidget::PodcastWidget(M1::PodcastModule* module, QWidget* parent)
 }
 
 void PodcastWidget::applyTheme() {
-    const auto p = podPalette();
+    const auto p = ThemePalette::forCurrentTheme();
     setStyleSheet(QString(R"(
         PodcastWidget { background: %1; }
         QGroupBox {
             color: %3; border: 1px solid %2; border-radius: 4px;
-            margin-top: 8px; padding-top: 8px; font-size: 9px;
+            margin-top: 8px; padding-top: 8px; font-size: 12px;
         }
         QGroupBox::title { subcontrol-origin: margin; left: 8px; top: 1px; }
         QLabel { color: %3; font-family: 'Segoe UI'; }
-        QLabel[objectName="MutedLabel"] { color: %4; font-size: 9px; }
+        QLabel[objectName="MutedLabel"] { color: %4; font-size: 12px; }
         QLineEdit {
             background: %5; color: %3; border: 1px solid %2;
             border-radius: 3px; padding: 4px;
@@ -156,14 +137,15 @@ void PodcastWidget::applyTheme() {
             background: %5; color: %3; border: 1px solid %2; border-radius: 3px;
         }
         QListWidget::item:selected { background: %2; }
-    )").arg(p.bg, p.border, p.text, p.muted, p.inputBg));
+    )").arg(p.bg.name(), p.border.name(), p.text.name(),
+            p.textMuted.name(), p.inputBg.name()));
 
     // Update TrackStrip backgrounds (they style themselves in their own constructor)
     for (auto* strip : m_tracks) {
         if (strip) {
             strip->setStyleSheet(QString(
                 "TrackStrip { background: %1; border: 1px solid %2; border-radius: 4px; }"
-            ).arg(p.panel, p.border));
+            ).arg(p.panelBg.name(), p.border.name()));
         }
     }
 }
@@ -185,9 +167,9 @@ void PodcastWidget::buildUi() {
         QFont f("Courier New", 20, QFont::Bold);
         m_timeLabel->setFont(f);
         {
-            const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
+            const auto tp = ThemePalette::forCurrentTheme();
             m_timeLabel->setStyleSheet(QString("color: %1; letter-spacing: 2px;")
-                .arg(isLight ? "#16a34a" : "#22c55e"));
+                .arg(tp.success.name()));
         }
         timeRow->addWidget(m_timeLabel);
 
@@ -201,23 +183,25 @@ void PodcastWidget::buildUi() {
         auto* transRow   = new QHBoxLayout(transGroup);
         transRow->setSpacing(6);
 
+        const auto tp = ThemePalette::forCurrentTheme();
+
         m_armBtn = new QPushButton("ARM", this);
-        m_armBtn->setStyleSheet(btnStyle("#3b82f6"));
+        m_armBtn->setStyleSheet(btnStyle(tp.info.name()));
         m_armBtn->setToolTip("Arm the recorder — goes to standby");
         transRow->addWidget(m_armBtn);
 
         m_recBtn = new QPushButton("REC", this);
-        m_recBtn->setStyleSheet(btnStyle("#ef4444"));
+        m_recBtn->setStyleSheet(btnStyle(tp.error.name()));
         m_recBtn->setToolTip("Start / resume recording");
         transRow->addWidget(m_recBtn);
 
         m_pauseBtn = new QPushButton("PAUSE", this);
-        m_pauseBtn->setStyleSheet(btnStyle("#f59e0b"));
+        m_pauseBtn->setStyleSheet(btnStyle(tp.warning.name()));
         m_pauseBtn->setToolTip("Pause recording");
         transRow->addWidget(m_pauseBtn);
 
         m_stopBtn = new QPushButton("STOP", this);
-        m_stopBtn->setStyleSheet(btnStyle("#475569"));
+        m_stopBtn->setStyleSheet(btnStyle(tp.textMuted.name()));
         m_stopBtn->setToolTip("Stop and finalize recording");
         transRow->addWidget(m_stopBtn);
 
@@ -259,11 +243,13 @@ void PodcastWidget::buildUi() {
 
         auto* chapBtnRow = new QHBoxLayout;
         m_addChapBtn = new QPushButton("Add Chapter at Current Time", chapGroup);
-        m_addChapBtn->setStyleSheet(btnStyle("#1e40af"));
+        { const auto p2 = ThemePalette::forCurrentTheme();
+          m_addChapBtn->setStyleSheet(btnStyle(p2.accent.name())); }
         chapBtnRow->addWidget(m_addChapBtn);
 
         m_delChapBtn = new QPushButton("Remove Selected", chapGroup);
-        m_delChapBtn->setStyleSheet(btnStyle("#475569"));
+        { const auto p2 = ThemePalette::forCurrentTheme();
+          m_delChapBtn->setStyleSheet(btnStyle(p2.textMuted.name())); }
         chapBtnRow->addWidget(m_delChapBtn);
 
         chapBtnRow->addStretch(1);
@@ -291,7 +277,8 @@ void PodcastWidget::buildUi() {
         pathRow->addWidget(m_exportPath, 1);
 
         m_browseBtn = new QPushButton("Browse", expGroup);
-        m_browseBtn->setStyleSheet(btnStyle("#475569"));
+        { const auto p2 = ThemePalette::forCurrentTheme();
+          m_browseBtn->setStyleSheet(btnStyle(p2.textMuted.name())); }
         m_browseBtn->setMinimumWidth(60);
         pathRow->addWidget(m_browseBtn);
 
@@ -300,7 +287,8 @@ void PodcastWidget::buildUi() {
         auto* actionRow = new QHBoxLayout;
 
         m_exportBtn = new QPushButton("Export WAV", expGroup);
-        m_exportBtn->setStyleSheet(btnStyle("#166534"));
+        { const auto p2 = ThemePalette::forCurrentTheme();
+          m_exportBtn->setStyleSheet(btnStyle(p2.success.name())); }
         actionRow->addWidget(m_exportBtn);
 
         m_exportStatus = new QLabel("", expGroup);
@@ -335,10 +323,11 @@ void PodcastWidget::updateTransportButtons(M1::PodcastModule::State s) {
     m_stopBtn->setEnabled( s == State::Recording || s == State::Paused || s == State::Armed);
 
     // Highlight active state button
+    const auto tp = ThemePalette::forCurrentTheme();
     const bool isRec = (s == State::Recording);
     m_recBtn->setStyleSheet(isRec
-        ? btnStyle("#ef4444") + "QPushButton { border: 2px solid #fca5a5; }"
-        : btnStyle("#ef4444"));
+        ? btnStyle(tp.error.name()) + "QPushButton { border: 2px solid " + tp.error.lighter(150).name() + "; }"
+        : btnStyle(tp.error.name()));
 }
 
 void PodcastWidget::onAddChapter() {
@@ -416,11 +405,12 @@ void PodcastWidget::onExportWav() {
 
 void PodcastWidget::onExportFinished(bool success, const QString& path) {
     m_exportBtn->setEnabled(true);
+    const auto tp = ThemePalette::forCurrentTheme();
     if (success) {
-        m_exportStatus->setStyleSheet("color: #16a34a; font-size: 9px;");
+        m_exportStatus->setStyleSheet(QString("color: %1; font-size: 12px;").arg(tp.success.name()));
         m_exportStatus->setText(QString("Exported: %1").arg(path));
     } else {
-        m_exportStatus->setStyleSheet("color: #dc2626; font-size: 9px;");
+        m_exportStatus->setStyleSheet(QString("color: %1; font-size: 12px;").arg(tp.error.name()));
         m_exportStatus->setText("Export failed — see log.");
     }
 }
@@ -448,14 +438,14 @@ void PodcastWidget::updateTimeDisplay() {
 
     // Flash red during recording
     const auto state = m_module->sessionState();
+    const auto tp = ThemePalette::forCurrentTheme();
     if (state == M1::PodcastModule::State::Recording) {
         static bool flash = false;
         flash = !flash;
-        m_timeLabel->setStyleSheet(flash ? "color: #dc2626; letter-spacing: 2px;"
-                                         : "color: #f87171; letter-spacing: 2px;");
-    } else {
-        const bool isLight = (ThemeManager::instance()->currentTheme() == ThemeManager::Theme::Light);
         m_timeLabel->setStyleSheet(QString("color: %1; letter-spacing: 2px;")
-            .arg(isLight ? "#16a34a" : "#22c55e"));
+            .arg(flash ? tp.error.name() : tp.error.lighter(140).name()));
+    } else {
+        m_timeLabel->setStyleSheet(QString("color: %1; letter-spacing: 2px;")
+            .arg(tp.success.name()));
     }
 }

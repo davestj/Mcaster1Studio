@@ -3,6 +3,7 @@
 
 #include "SwitchCasterModule.h"
 #include "GraphicsEngineModule.h"
+#include "ThemePalette.h"
 #include "LyricsCasterModule.h"
 #include "ScriptureCasterModule.h"
 #include "AnnounceCasterModule.h"
@@ -34,7 +35,9 @@ public:
         setMinimumSize(160, 90);
         setAlignment(Qt::AlignCenter);
         setObjectName("SwitchPreviewLabel");
-        setStyleSheet("background: #111; border: 2px solid #333; border-radius: 4px;");
+        const auto pal = ThemePalette::forCurrentTheme();
+        setStyleSheet(QString("background: %1; border: 2px solid %2; border-radius: 4px;")
+            .arg(pal.bg.name(), pal.border.name()));
     }
     void setFrame(const QImage& img) {
         m_frame = img;
@@ -48,7 +51,8 @@ protected:
     void paintEvent(QPaintEvent*) override {
         QPainter p(this);
         p.setRenderHint(QPainter::SmoothPixmapTransform);
-        p.fillRect(rect(), QColor(0x11, 0x11, 0x11));
+        const auto pal = ThemePalette::forCurrentTheme();
+        p.fillRect(rect(), pal.bg);
 
         if (!m_frame.isNull()) {
             const QSize scaled = m_frame.size().scaled(size() - QSize(4, 4), Qt::KeepAspectRatio);
@@ -56,18 +60,18 @@ protected:
             const int y = (height() - scaled.height()) / 2;
             p.drawImage(QRect(x, y, scaled.width(), scaled.height()), m_frame);
         } else {
-            p.setPen(QColor(0x66, 0x66, 0x66));
+            p.setPen(pal.textDisabled);
             p.drawText(rect(), Qt::AlignCenter, "No Signal");
         }
 
         // Live indicator
         if (m_live) {
             p.setPen(Qt::NoPen);
-            p.setBrush(QColor(0xef, 0x44, 0x44, 200));
+            p.setBrush(QColor(pal.error.red(), pal.error.green(), pal.error.blue(), 200));
             p.drawRoundedRect(6, 6, 40, 18, 4, 4);
             p.setPen(Qt::white);
             QFont f = font();
-            f.setPixelSize(11);
+            f.setPixelSize(12);
             f.setBold(true);
             p.setFont(f);
             p.drawText(QRect(6, 6, 40, 18), Qt::AlignCenter, "LIVE");

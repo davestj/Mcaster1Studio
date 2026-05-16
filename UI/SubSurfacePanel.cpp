@@ -2,6 +2,7 @@
 #include "ModuleDock.h"
 #include "SurfaceTray.h"
 #include "IModule.h"
+#include "ThemePalette.h"
 #include <QHBoxLayout>
 #include <QScrollArea>
 #include <QSplitter>
@@ -55,11 +56,13 @@ SubSurfacePanel::SubSurfacePanel(const QString& name, QWidget* parent)
     root->setContentsMargins(0, 0, 0, 0);
     root->addWidget(m_scroll);
 
+    const QString dropColor = ThemePalette::forCurrentTheme().accent.name();
+
     m_dropIndicator = new QFrame(m_canvas);
     m_dropIndicator->setFrameShape(QFrame::VLine);
     m_dropIndicator->setFrameShadow(QFrame::Plain);
     m_dropIndicator->setStyleSheet(
-        "background:#0ea5e9; border:none; min-width:3px; max-width:3px;");
+        QString("background:%1; border:none; min-width:3px; max-width:3px;").arg(dropColor));
     m_dropIndicator->setFixedWidth(3);
     m_dropIndicator->hide();
     m_dropIndicator->raise();
@@ -68,7 +71,7 @@ SubSurfacePanel::SubSurfacePanel(const QString& name, QWidget* parent)
     m_hDropIndicator->setFrameShape(QFrame::HLine);
     m_hDropIndicator->setFrameShadow(QFrame::Plain);
     m_hDropIndicator->setStyleSheet(
-        "background:#0ea5e9; border:none; min-height:3px; max-height:3px;");
+        QString("background:%1; border:none; min-height:3px; max-height:3px;").arg(dropColor));
     m_hDropIndicator->setFixedHeight(3);
     m_hDropIndicator->hide();
     m_hDropIndicator->raise();

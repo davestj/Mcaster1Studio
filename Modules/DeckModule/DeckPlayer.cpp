@@ -128,7 +128,9 @@ void DeckPlayer::loadFile(const QString& path) {
                     line = line.mid(6).trimmed();
                 if (line.startsWith("http://", Qt::CaseInsensitive) ||
                     line.startsWith("https://", Qt::CaseInsensitive)) {
-                    loadUrl(QUrl(line));
+                    QUrl extracted(line);
+                    if (!extracted.isValid() || !extracted.scheme().startsWith("http")) continue;
+                    loadUrl(extracted);
                     return;
                 }
                 if (!line.isEmpty() && !line.startsWith('#') && !lower.endsWith(".pls")) {
@@ -536,7 +538,7 @@ void DeckPlayer::processBlock(float* out, int frames, int outChannels, float gai
         qint64 iFrame = posFP >> kSubFrameBits;
 
         // Handle loop wrap-around
-        if (loopOn && loopOut > 0 && iFrame >= loopOut) {
+        if (loopOn && loopOut > loopIn && loopIn >= 0 && iFrame >= loopOut) {
             posFP = loopIn << kSubFrameBits;
             iFrame = loopIn;
         }

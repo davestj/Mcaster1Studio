@@ -88,6 +88,16 @@ if(LAME_LIB_RELEASE OR LAME_LIB_DEBUG)
     )
     target_link_libraries(EncoderModule PUBLIC lame_enc)
     target_compile_definitions(EncoderModule PRIVATE HAVE_LAME)
+    # Copy the runtime DLL to build output so the app can actually load it
+    set(LAME_DLL "${CMAKE_SOURCE_DIR}/external/lame/bin/libmp3lame.dll")
+    if(EXISTS "${LAME_DLL}")
+        add_custom_command(TARGET EncoderModule POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${LAME_DLL}"
+                "$<TARGET_FILE_DIR:EncoderModule>/libmp3lame.dll"
+            COMMENT "Copying libmp3lame.dll to build output"
+        )
+    endif()
     message(STATUS "[Encoder] LAME found: ${LAME_LIB_RELEASE}")
 else()
     message(STATUS "[Encoder] LAME not found — MP3 encoding not available")

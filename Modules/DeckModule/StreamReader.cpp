@@ -41,14 +41,14 @@ void StreamReader::close() {
 
 // ─── RT-safe ring buffer read ────────────────────────────────────────────────
 int StreamReader::readPcm(float* out, int maxFrames) noexcept {
-    const int w = m_ringW.load(std::memory_order_acquire);
-    const int r = m_ringR.load(std::memory_order_relaxed);
-    const int avail = w - r;
-    const int frames = std::min(avail, maxFrames);
+    const int64_t w = m_ringW.load(std::memory_order_acquire);
+    const int64_t r = m_ringR.load(std::memory_order_relaxed);
+    const int64_t avail = w - r;
+    const int frames = static_cast<int>(std::min(avail, static_cast<int64_t>(maxFrames)));
     if (frames <= 0) return 0;
 
     for (int i = 0; i < frames; ++i) {
-        const int off = ((r + i) & kRingMask) * 2;
+        const int off = static_cast<int>(((r + i) & kRingMask) * 2);
         out[i * 2]     = m_ring[off];
         out[i * 2 + 1] = m_ring[off + 1];
     }
@@ -57,18 +57,18 @@ int StreamReader::readPcm(float* out, int maxFrames) noexcept {
 }
 
 int StreamReader::bufferedFrames() const noexcept {
-    return m_ringW.load(std::memory_order_acquire)
-         - m_ringR.load(std::memory_order_acquire);
+    return static_cast<int>(m_ringW.load(std::memory_order_acquire)
+         - m_ringR.load(std::memory_order_acquire));
 }
 
 void StreamReader::ringWrite(const float* stereoData, int frames) {
-    const int w = m_ringW.load(std::memory_order_relaxed);
-    const int r = m_ringR.load(std::memory_order_acquire);
-    const int used = w - r;
+    const int64_t w = m_ringW.load(std::memory_order_relaxed);
+    const int64_t r = m_ringR.load(std::memory_order_acquire);
+    const int64_t used = w - r;
     if (used + frames > kRingFrames) return; // drop if full
 
     for (int i = 0; i < frames; ++i) {
-        const int off = ((w + i) & kRingMask) * 2;
+        const int off = static_cast<int>(((w + i) & kRingMask) * 2);
         m_ring[off]     = stereoData[i * 2];
         m_ring[off + 1] = stereoData[i * 2 + 1];
     }
@@ -291,6 +291,17 @@ void StreamReader::run() {
         }
 
         av_packet_unref(pkt);
+    }
+
+    // ── Flush resampler ───────────────────────────────────────────
+    if (swrCtx) {
+        int outSamples = swr_get_out_samples(swrCtx, 0);
+        if (outSamples > 0) {
+            std::vector<float> outBuf(static_cast<size_t>(outSamples) * 2);
+            uint8_t* outPtr = reinterpret_cast<uint8_t*>(outBuf.data());
+            int flushed = swr_convert(swrCtx, &outPtr, outSamples, nullptr, 0);
+            if (flushed > 0) ringWrite(outBuf.data(), flushed);
+        }
     }
 
     // ── Cleanup ──────────────────────────────────────────────────

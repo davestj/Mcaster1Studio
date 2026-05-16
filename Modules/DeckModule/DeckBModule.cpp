@@ -2,6 +2,7 @@
 #include "DeckPlayer.h"
 #include "DeckWidget.h"
 #include "IPlugin.h"
+#include <QFileInfo>
 #include <QSettings>
 #include <QDebug>
 #include <algorithm>
@@ -24,8 +25,22 @@ DeckBModule::~DeckBModule() {
 void DeckBModule::initialize() {
     auto publishMeta = [this]() {
         IcyMetadata meta;
-        meta.streamTitle = m_player->loadedPath();
-        meta.trackTitle  = m_player->loadedPath();
+        meta.trackTitle  = m_player->tagTitle();
+        meta.trackArtist = m_player->tagArtist();
+        meta.trackAlbum  = m_player->tagAlbum();
+        meta.trackGenre  = m_player->tagGenre();
+        meta.trackYear   = m_player->tagYear();
+        if (m_player->bpm() > 0.0f)
+            meta.trackBpm = QString::number(static_cast<int>(m_player->bpm()));
+        // Build ICY 1.x StreamTitle
+        if (!meta.trackArtist.isEmpty() && !meta.trackTitle.isEmpty())
+            meta.streamTitle = meta.trackArtist + " - " + meta.trackTitle;
+        else if (!meta.trackTitle.isEmpty())
+            meta.streamTitle = meta.trackTitle;
+        else {
+            const QFileInfo fi(m_player->loadedPath());
+            meta.streamTitle = fi.completeBaseName();
+        }
         emit metadataReady(meta);
     };
     connect(m_player, &DeckPlayer::loadingFinished, this, publishMeta);

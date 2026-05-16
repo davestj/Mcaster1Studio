@@ -74,7 +74,7 @@
 <body>
 
 <h1>Mcaster1Studio</h1>
-<p class="sub">Broadcast Automation Software Suite &mdash; Project Plan &amp; Status &mdash; Last updated: 2026-03-10 (v0.2.0)</p>
+<p class="sub">Broadcast Automation Software Suite &mdash; Project Plan &amp; Status &mdash; Last updated: 2026-03-19 (v0.4.0-beta)</p>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <h2>Phase Status</h2>
@@ -218,8 +218,8 @@
   <div class="c"><span class="badge bnew">Planned</span></div>
 
   <div class="c">12</div>
-  <div class="c">Installer + Polish + AuxDeck &mdash; NSIS installer, test harnesses, AudioPipe integration</div>
-  <div class="c">AuxDeckModule (per-deck audio routing) &middot; NSIS installer (user-dir install) &middot; Mcaster1AudioPipe prefs integration &middot; Auto version bump &middot; 6 test harnesses &middot; Getting Started guide &middot; 43 built-in modules</div>
+  <div class="c">Installer + Polish + AuxDeck &mdash; NSIS installer, test harnesses, AudioPipe integration, dual-bus routing</div>
+  <div class="c">AuxDeckModule (dual-bus AIR/CUE routing, 26 devices) &middot; NSIS installer (user-dir install) &middot; Mcaster1AudioPipe prefs integration &middot; Auto version bump &middot; 6 test harnesses &middot; Getting Started guide &middot; 43 built-in modules</div>
   <div class="c"><span class="badge bd">&#10003; Done</span></div>
 </div>
 
@@ -366,6 +366,7 @@
   <strong>Completed in Phase 12:</strong>
   <ul style="margin-top:8px">
     <li><strong>AuxDeckModule (<code>com.mcaster1.auxdeck</code>)</strong> &mdash; Custom auxiliary deck with per-deck audio device routing. Each instance gets an independent custom name, AIR OUT device, CUE OUT device, volume, VU meters, and full transport controls (load/play/pause/stop/CUE). Mcaster1AudioPipe virtual devices appear automatically in device lists. Users can add multiple AUX Decks per surface for dedicated playback channels (jingles, interviews, background music).</li>
+    <li><strong>AuxDeck dual-bus audio routing</strong> &mdash; AIR and CUE each have independent PortAudio output streams. AIR/CUE toggle buttons flank the Mute button with fully independent on/off control. Both buses can output simultaneously to different physical devices. Device collision prevention blocks the same device on both AIR and CUE. Per-bus routing: dedicated PA stream when a specific device is selected, global fallback when &ldquo;(Use Global Default)&rdquo;. 26 output devices enumerated via PortAudio (WASAPI, DirectSound, MME, ASIO).</li>
     <li><strong>Mcaster1AudioPipe integration</strong> &mdash; New section in Preferences &gt; Audio page shows AudioPipe installation status, path (<code>C:\Users\USERNAME\Mcaster1\Mcaster1AudioPipes\Mcaster1AudioPipe.exe</code>), launch button, and refresh pipe devices button. Virtual audio pipe devices appear in all PortAudio device dropdowns.</li>
     <li><strong>Auto version bump</strong> &mdash; <code>cmake/AutoBuildNumber.cmake</code> increments a persistent <code>BUILD_NUMBER</code> file on each CMake configure. <code>version.h.in</code> now exposes <code>MCASTER1STUDIO_BUILD_NUMBER</code> and <code>MCASTER1STUDIO_VERSION_FULL</code> (e.g. "0.3.0.42").</li>
     <li><strong>NSIS installer</strong> &mdash; <code>installer/installer.nsi</code> (406 lines): installs to <code>C:\Users\USERNAME\Mcaster1\Mcaster1Studio</code> (no admin required), copies all runtime files (Qt DLLs, vcpkg DLLs, themes, plugins), creates Desktop + Start Menu shortcuts + Getting Started link + Uninstaller. <code>installer/build-installer.bat</code> automates the full build-and-package workflow.</li>
@@ -715,10 +716,10 @@ User-Agent: Mcaster1Studio/1.0.0
 </table>
 
 <footer>
-  Mcaster1Studio v0.3.0-alpha &middot;
-  Phases 1&ndash;12 + A&ndash;I + CH + PD + HL + DB + Golden Path complete &middot;
+  Mcaster1Studio v0.4.0-beta &middot;
+  Phases 1&ndash;12 + A&ndash;I + CH + PD + DB + Golden Path + Portable Install + Code Signing complete &middot;
   43 built-in modules &middot; 8 test harnesses (284+ tests) &middot; Per-surface thread pools &middot; NSIS installer &middot;
-  Last updated: 2026-03-14 &middot;
+  Last updated: 2026-03-19 &middot;
   <a href="https://mcaster1.com">mcaster1.com</a>
 </footer>
 </body>

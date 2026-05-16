@@ -23,6 +23,7 @@ class VUMeterModule;
 class DeckModule;
 class DeckAModule;
 class DeckBModule;
+class AuxDeckModule;
 class MediaLibraryModule;
 class EncoderModule;
 class EffectsRackModule;
@@ -40,7 +41,7 @@ class HealthModule;
 /// MainWindow — top-level application window for Mcaster1Studio.
 ///
 /// Surface life-cycle:
-///   - On startup: load saved YAML configs from AppConfigLocation/surfaces/
+///   - On startup: load saved YAML configs from <appDir>/config/surfaces/
 ///   - On "+" / Surfaces menu: open a new surface tab, load or create its YAML config
 ///   - On exit: save all open surface configs back to YAML
 ///
@@ -172,6 +173,7 @@ private:
     M1::HealthModule*       m_health   = nullptr;
     QueueModule*            m_queue      = nullptr;
     CrossfaderModule*       m_crossfader = nullptr;
+    QList<M1::AuxDeckModule*> m_auxDecks;   // all AuxDeck instances for audio callback + CUE
 
     // Pop-out window management
     QMap<SurfaceWidget*, SurfaceWindow*> m_poppedOutWindows;

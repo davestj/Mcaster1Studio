@@ -81,6 +81,19 @@ public:
     /// Uses dialect-specific types and syntax.
     virtual QString createMediaItemsTableSql(const QString& tablePrefix = {}) const;
 
+    /// CREATE TABLE statements for all auxiliary tables (categories, playlists, etc.)
+    virtual QString createLibraryCategoriesTableSql(const QString& prefix = {}) const;
+    virtual QString createTrackCategoriesTableSql(const QString& prefix = {}) const;
+    virtual QString createPlaylistsTableSql(const QString& prefix = {}) const;
+    virtual QString createPlaylistTracksTableSql(const QString& prefix = {}) const;
+    virtual QString createArtistIntelTableSql(const QString& prefix = {}) const;
+    virtual QString createStreamFavoritesTableSql(const QString& prefix = {}) const;
+    virtual QString createAiPersonasTableSql(const QString& prefix = {}) const;
+    virtual QString createDaypartScheduleTableSql(const QString& prefix = {}) const;
+
+    /// Returns all DDL for complete schema (media_items + all auxiliary tables).
+    QStringList createFullSchemaSql(const QString& prefix = {}) const;
+
     // ── LIMIT/OFFSET ──────────────────────────────────────────────────
     /// LIMIT clause for SELECT (e.g., "LIMIT 10 OFFSET 5").
     /// MSSQL uses TOP or OFFSET...FETCH instead.

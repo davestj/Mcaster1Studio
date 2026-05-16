@@ -1,8 +1,8 @@
 #include "SurfaceConfig.h"
+#include <QCoreApplication>
 #include <QFile>
 #include <QTextStream>
 #include <QDir>
-#include <QStandardPaths>
 #include <QDebug>
 
 namespace M1 {
@@ -264,6 +264,7 @@ SurfaceConfig SurfaceConfig::defaultForType(const QString& typeStr) {
     if (typeStr == "alpha" || typeStr == "beta") {
         addMod("com.mcaster1.vumeter");
         addMod("com.mcaster1.deck");
+        addMod("com.mcaster1.playlist");
         addMod("com.mcaster1.library");
         addMod("com.mcaster1.encoder");
         addMod("com.mcaster1.metadata");
@@ -271,6 +272,7 @@ SurfaceConfig SurfaceConfig::defaultForType(const QString& typeStr) {
     } else if (typeStr == "dj") {
         addMod("com.mcaster1.vumeter");
         addMod("com.mcaster1.deck");
+        addMod("com.mcaster1.playlist");
         addMod("com.mcaster1.effects");
         addMod("com.mcaster1.library");
         addMod("com.mcaster1.encoder");
@@ -284,6 +286,7 @@ SurfaceConfig SurfaceConfig::defaultForType(const QString& typeStr) {
         addMod("com.mcaster1.vumeter");
         addMod("com.mcaster1.ptt");
         addMod("com.mcaster1.deck");
+        addMod("com.mcaster1.playlist");
         addMod("com.mcaster1.video");
         addMod("com.mcaster1.library");
         addMod("com.mcaster1.encoder");
@@ -296,13 +299,14 @@ SurfaceConfig SurfaceConfig::defaultForType(const QString& typeStr) {
     } else if (typeStr == "company") {
         addMod("com.mcaster1.vumeter");
         addMod("com.mcaster1.deck");
+        addMod("com.mcaster1.playlist");
         addMod("com.mcaster1.library");
         addMod("com.mcaster1.encoder");
-        addMod("com.mcaster1.playlist");
     } else {
         // Custom / fallback
         addMod("com.mcaster1.vumeter");
         addMod("com.mcaster1.deck");
+        addMod("com.mcaster1.playlist");
         addMod("com.mcaster1.library");
         addMod("com.mcaster1.encoder");
     }
@@ -311,9 +315,9 @@ SurfaceConfig SurfaceConfig::defaultForType(const QString& typeStr) {
 }
 
 // ─── Config file path ─────────────────────────────────────────────────────────
+// Portable: all surface YAML configs live inside <appDir>/config/surfaces/
 QString SurfaceConfig::configPath(const QString& typeStr) {
-    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)
-                      + "/Mcaster1Studio/surfaces";
+    const QString dir = QCoreApplication::applicationDirPath() + "/config/surfaces";
     QDir().mkpath(dir);
     return dir + "/surface_" + typeStr + ".yaml";
 }

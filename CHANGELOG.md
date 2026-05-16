@@ -2,6 +2,148 @@
 
 All notable changes to Mcaster1Studio are documented in this file.
 
+## [0.4.0-beta] — 2026-03-19
+
+### Theme System Overhaul
+- Deleted dark.qss — Enterprise Pro is now the default theme
+- ThemePalette central color registry (Core/include/ThemePalette.h)
+- Stripped 200+ hardcoded setStyleSheet calls across 45+ files
+- Module dock framing with steel-blue borders on white cards
+- Font size compliance — all violations raised to 12px minimum
+
+### Media Library Upgrade (ported from Mcaster1AMP)
+- FTS5 full-text search (LIKE fallback if FTS5 unavailable)
+- Library categories sidebar — 7 preset (Music, Stingers, Station IDs, Sweepers, Jingles, Ads, Spoken Word)
+- Hierarchical category tree (3+ levels, expandable/collapsible)
+- Album art cache (memory + disk + TagLib extraction)
+- AI Intel badges in track list (ColIntel column)
+- Right-click: Set Rating (0-5 stars), AutoDJ Weight, Assign to Category
+- Right-click: Play in AUX Deck on CUE device
+- Scan-into-category with auto-assignment
+- FTS5 search scoped to active category
+- 7 new database tables + schema migration for existing databases
+
+### AI Persona System
+- 15 preset AI personas (7 Radio DJ genres, 3 Podcast styles, Sports, TV News, Church, Social, Producer)
+- ai_personas + daypart_schedule tables in all 5 SQL dialects
+- PersonaManager with 3-tier resolution (daypart > surface > global)
+- Preferences > AI: persona combo + editable system prompt (500 char max)
+- Per-category persona assignment via right-click context menu
+- Personas power AI recommendations, playlist generation, and artist intel
+
+### Artist Intel Dialog
+- Full window: Overview, Discography, Images, DJ Script tabs
+- 8 AI Research buttons (Touring History, Musical Influences, Awards & Charts, Broadcaster Script, Fan Base & Impact, Full Timeline, Gear & Equipment, Discovery)
+- Multi-turn "Ask AI" chat with conversation context
+- Save/load per-tab as JSON (overview + research tabs independently)
+- Right-click tab: Refresh Report, Save Individual Report as HTML
+- Auto-retry on busy (5s delay), user-friendly error messages
+- Save confirmation dialog showing DB path, table, record ID
+- AI Intel badges appear in library track list after saving
+
+### AI-Powered Category Features
+- AI DJ Agent Browser — interactive conversational recommendations with persona
+- Playlist Generator Pro — source selector, AI Intel prioritization, broadcast element insertion
+- Daypart Scheduler Pro — 24h visual timeline, persona per time block, AI auto-schedule
+- Animated braille spinner progress indicators with phase messages
+
+### DeckPlayer Module
+- Crossfader top-aligned between decks, PTT below
+- Playlist/AutoDJ permanently embedded in center column (DO NOT REMOVE)
+- AutoDJ auto-plays first track on enable
+- DeckA/DeckB rich ICY metadata (artist, title, album, genre, year, BPM)
+- S-curve crossfade gain fix, loop boundary guard, ring buffer overflow fix
+- libmp3lame.dll auto-copy via CMake post-build
+
+### AuxDeck Module v3.0
+- Full DeckPlayer-class: seek, hot cues (4), loop, cue point, pitch/speed
+- BPM display with ±2% nudge, album art, metadata stats grid, state badge
+- Tabbed panel: Track History, Recordings, Config
+- Recording capability (WAV format, auto-naming)
+- Per-deck PortAudio output stream for independent CUE device routing
+- CUE/AIR device combos apply immediately on selection
+- Dual-bus audio routing — AIR and CUE each have independent PortAudio output streams
+- AIR/CUE toggle buttons flanking Mute — fully independent on/off control
+- Both buses can output simultaneously to different physical devices
+- Device collision prevention — same device blocked on both AIR and CUE
+- Per-bus routing: dedicated PA stream when specific device selected, global fallback when "(Use Global Default)"
+- 26 output devices enumerated via PortAudio (WASAPI, DirectSound, MME, ASIO)
+
+### Infrastructure
+- Sub-surface tab switching fix (panel created before currentChanged fires)
+- Portable app: all QSettings → INI in <appDir>/config/
+- Code signing: CMake post-build + NSIS cert import + installer signing
+- Version bump cadence: VERSION.txt, CHANGELOG, docs, installer all in sync
+- SQL dialect sync: every new table added to all 5 backends simultaneously
+- Preferences dialog: minimize/maximize/resize buttons, screen-aware sizing, centered on available geometry
+- AI Integration page wrapped in QScrollArea for long content
+- STANDARDS.md created — mandatory rules for portable storage, SQL dialects, theme system, version bumps
+- Waveform placeholder changed from "DROP AUDIO FILE" to "NO TRACK LOADED"
+
+## [0.3.1-beta] — 2026-03-17
+
+### Portable Self-Contained Architecture
+- **All data stays in install directory** — config, databases, logs, themes, plugins
+- QSettings redirected from Windows Registry to `<appDir>/config/Mcaster1/Mcaster1Studio.ini` (INI format)
+- SQLite databases default to `<appDir>/data/` instead of AppData
+- Surface YAML configs moved to `<appDir>/config/surfaces/`
+- Debug logs and crash dumps moved to `<appDir>/logs/`
+- Zero writes to AppData, LocalAppData, Registry, or Roaming profiles
+
+### Code Signing
+- **CMake post-build** auto-signs Mcaster1Studio.exe via signtool (SHA256, RSA 4096-bit cert)
+- **NSIS installer** imports .cer to current-user Root + TrustedPublisher stores before binaries land
+- **Installer .exe** itself is signed — eliminates SmartScreen warnings
+- Shared cert covers all Mcaster1 apps (Studio, AudioPipe, AMP, DSPEncoder)
+
+### Installer Overhaul
+- NSIS installer output: `Mcaster1Studio-0.3.1-beta-setup.exe`
+- Installs to `C:\Users\<username>\Mcaster1\Mcaster1Studio` (no admin, user profile)
+- Wildcard DLL staging — copies ALL build output DLLs, nothing missed
+- MSVC C++ runtime DLLs (msvcp140, vcruntime140, concrt140) bundled from VS2022 Redist
+- libmp3lame.dll auto-discovered from known locations
+- Fresh zeroed-out config INI created on new install (preserved on upgrade)
+- Portable directory structure: config/, data/, logs/, themes/, docs/, plugins/, certs/
+- Components page for optional sections (shortcuts, cert import)
+
+### Theme System Overhaul
+- **Deleted dark.qss** entirely — replaced by Enterprise Pro as default theme
+- Renamed `light.qss` → `enterprise-pro.qss`
+- **ThemeManager** enum: `{ EnterprisePro, Classic }`, default = EnterprisePro
+- Old "dark" and "light" saved settings auto-migrate to EnterprisePro
+- **ThemePalette** (`Core/include/ThemePalette.h`) — central color registry for all widgets
+  - Per-theme palettes: bg, panelBg, text, border, accent, success/warning/error, VU colors, deck identity
+  - `ThemePalette::forCurrentTheme()` — single call replaces all inline color lookups
+  - Registration hook avoids Core→UI circular dependency
+- **Stripped 200+ hardcoded `setStyleSheet()` calls** across 45+ files
+  - All replaced with ThemePalette lookups or objectName-based QSS rules
+  - Fixes theme bleed-through that plagued dark→enterprise-pro switching
+- **Font size compliance** — all violations raised to 12px minimum
+- **Module dock framing** — visible steel-blue borders, gradient title bars, white card backgrounds on darker surface canvas
+- Adding future themes = one new palette in ThemePalette.cpp + one new .qss file
+
+### DeckPlayer Module Redesign
+- **Crossfader top-aligned** in center column between Deck A and Deck B
+- **PTT panel** flush below crossfader
+- **Playlist/AutoDJ permanently embedded** in DeckPlayer center column below crossfader+PTT
+  - Auto-created by MainWindow whenever a deck exists, regardless of surface config
+  - Fills remaining vertical space between the decks
+  - DO NOT REMOVE — this is a permanent architectural decision
+- **DeckA/DeckB rich metadata** — loadingFinished now emits full ICY fields (artist, title, album, genre, year, BPM)
+- Playlist module added to default configs for alpha, beta, dj, church, company, and custom surfaces
+
+### DeckPlayer Audio Fixes
+- **S-Curve crossfade** corrected — equal-power sin/cos prevents clipping at center position
+- **Loop boundary guard** — prevents infinite loop when loopOut <= loopIn
+- **Ring buffer overflow** — StreamReader uses int64_t indices, safe for weeks of continuous streaming
+- **M3U/PLS validation** — validates extracted URLs before passing to StreamReader
+- **Resampler flush** — flushes remaining samples on stream disconnect
+- **libmp3lame.dll** — CMake post-build auto-copy from `external/lame/bin/` to build output
+
+### Version Bump Cadence
+- VERSION.txt at project root tracks current release
+- All docs, CHANGELOG, installer, CMakeLists.txt, vcpkg.json bumped in sync
+
 ## [0.3.0-alpha] — 2026-03-14
 
 ### Phase DB — Database Multi-Backend (5 drivers)

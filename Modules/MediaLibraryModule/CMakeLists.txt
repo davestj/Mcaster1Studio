@@ -10,6 +10,12 @@ add_library(MediaLibraryModule STATIC
     LibraryModel.cpp
     LibraryWidget.cpp
     MusicBrainzLookup.cpp
+    AlbumArtCache.cpp
+    AiTrackIntel.cpp
+    ArtistIntelDialog.cpp
+    LibraryCategoryPanel.cpp
+    ScanProgressDialog.cpp
+    PersonaManager.cpp
     MediaLibraryModule.cpp
     DatabaseManager.h
     SqliteManager.h
@@ -20,6 +26,12 @@ add_library(MediaLibraryModule STATIC
     LibraryModel.h
     LibraryWidget.h
     MusicBrainzLookup.h
+    AlbumArtCache.h
+    AiTrackIntel.h
+    ArtistIntelDialog.h
+    LibraryCategoryPanel.h
+    ScanProgressDialog.h
+    PersonaManager.h
     MediaLibraryModule.h
 )
 

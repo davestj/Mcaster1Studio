@@ -17,8 +17,10 @@
 #include <array>
 #include <cmath>
 
+class QVBoxLayout;
 class CrossfaderWidget;
-namespace M1 { class PTTModule; }
+class PlaylistWidget;
+namespace M1 { class PTTModule; class PlaylistModule; }
 
 // ─── DeckInlineMeter ─────────────────────────────────────────────────────────
 /// Compact hi-res vertical L/R VU meter with smooth continuous-fill bars.
@@ -192,10 +194,22 @@ private:
     QTimer* m_pollTimer = nullptr;
 };
 
-// ─── DeckWidget ──────────────────────────────────────────────────────────────
-/// Container: Deck A | [Fade Control / PTT panel] | Deck B
-/// PTT panel is always visible below CrossfaderWidget; controls are
-/// disabled until setPTTModule() is called.
+// ─── DeckWidget (DeckPlayer Module) ──────────────────────────────────────────
+/// Layout:
+///   ┌──────────┬──────────────┬──────────┐
+///   │          │  CROSSFADER  │          │
+///   │          │     PTT      │          │
+///   │  Deck A  │──────────────│  Deck B  │
+///   │          │  PLAYLIST    │          │
+///   │          │  AUTO DJ     │          │
+///   └──────────┴──────────────┴──────────┘
+///
+/// The Playlist/AutoDJ module is EMBEDDED in the center column between
+/// the decks, underneath the crossfader and PTT panel.
+/// It is auto-created by MainWindow whenever a deck exists.
+///
+/// DO NOT REMOVE THE AUTO DJ MODULE FROM THIS WIDGET.
+/// DO NOT TOUCH THE PLAYLIST/AUTODJ EMBEDDING CODE.
 class DeckWidget : public QWidget {
     Q_OBJECT
 
@@ -209,6 +223,9 @@ public:
 
     /// Attach a PTT module — reveals the compact strip below the decks.
     void setPTTModule(M1::PTTModule* ptt);
+
+    /// Embed Playlist/AutoDJ in the center column below crossfader+PTT.
+    void setPlaylistModule(M1::PlaylistModule* playlist);
 
     /// Populate browser tabs on both panels (called from MainWindow)
     void setLibraryItems(const QList<M1::MediaItem>& items);
@@ -239,4 +256,8 @@ private:
     QComboBox*        m_micCombo  = nullptr;
     QProgressBar*     m_pttMeter  = nullptr;
     QTimer*           m_pttPoll   = nullptr;
+
+    // ── Embedded Playlist/AutoDJ ──
+    QVBoxLayout*      m_centerCol = nullptr;
+    PlaylistWidget*   m_playlistWidget = nullptr;
 };

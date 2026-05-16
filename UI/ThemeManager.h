@@ -6,9 +6,8 @@ class QSettings;
 /// ThemeManager — singleton that loads and applies application QSS themes.
 ///
 /// Themes are QSS files embedded as Qt resources:
-///   :/themes/dark.qss     — Deep navy broadcast console (default)
-///   :/themes/classic.qss  — Warm brown SAM Broadcaster 4 style, nickel/chrome buttons
-///   :/themes/light.qss    — Clean white/silver professional theme
+///   :/themes/enterprise-pro.qss  — Clean white/blue professional (DEFAULT)
+///   :/themes/classic.qss         — Warm brown SAM Broadcaster 4 style
 ///
 /// Usage:
 ///   ThemeManager::instance()->applyTheme(ThemeManager::Theme::Classic);
@@ -17,7 +16,7 @@ class ThemeManager : public QObject {
     Q_OBJECT
 
 public:
-    enum class Theme { Dark, Classic, Light };
+    enum class Theme { EnterprisePro, Classic };
 
     static ThemeManager* instance();
 
@@ -37,7 +36,7 @@ private:
     explicit ThemeManager(QObject* parent = nullptr);
     static ThemeManager* s_instance;
 
-    Theme m_theme = Theme::Dark;
+    Theme m_theme = Theme::EnterprisePro;
 };
 
 Q_DECLARE_METATYPE(ThemeManager::Theme)
